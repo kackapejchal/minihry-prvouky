@@ -1,11 +1,27 @@
 import React, { useState, Suspense } from 'react';
 import { GAME_REGISTRY, GameType, GameConfig } from '../constants/gameRegistry';
 import { Button } from './ui/button';
-import { Settings, Play } from 'lucide-react';
+import { Settings, Play, Leaf, Clock, ShieldCheck, Orbit, Flag, LayoutGrid, type LucideIcon } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import Container5 from '../imports/Container-9188-1388';
 import { PRVOUKA_GAME_GROUPS, prvoukaLandingGame } from '../prvouka/registry';
 import PRVOUKA_PHOTO_CREDITS from '../prvouka/photo-credits.json';
+
+/** Dlaždice kategorií na telefonu: krátký název a ikona. „3. ročník: …“ se rozdělí na štítek a název. */
+const CATEGORY_TILES: Record<string, { short: string; icon: LucideIcon }> = {
+  'Poznávám přírodu': { short: 'Příroda', icon: Leaf },
+  'Orientace v čase': { short: 'Čas', icon: Clock },
+  'Bezpečí a zdraví': { short: 'Bezpečí', icon: ShieldCheck },
+  '3. ročník: Vesmír a Země': { short: 'Vesmír', icon: Orbit },
+  '3. ročník: Naše republika': { short: 'Republika', icon: Flag },
+};
+
+function categoryTile(title: string) {
+  const grade = title.match(/^(\d+\. ročník):\s*(.*)$/);
+  const rest = grade ? grade[2] : title;
+  const meta = CATEGORY_TILES[title];
+  return { label: meta?.short ?? rest, icon: meta?.icon ?? LayoutGrid, grade: grade ? grade[1] : null };
+}
 
 interface AdminPanelProps {
   onConfigureGame: (gameId: GameType) => void;
@@ -230,10 +246,10 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
     games: group.games
       .map((id) => prvoukaLandingGame(id))
       .filter((game): game is NonNullable<typeof game> => Boolean(game))
-      .map((game) => ({ id: game.id, name: game.name, description: game.description, bg: game.bg, image: game.image, emoji: game.icon, imagePosition: game.imagePosition })),
+      .map((game) => ({ id: game.id, name: game.name, description: game.description, bg: game.bg, image: game.image, emoji: game.icon, imagePosition: game.imagePosition, isModel: Boolean(game.model) && game.model !== 'hvezdy' })),
   }));
 
-  const gameGroups: Array<{ title: string; games: Array<{ id: string; name: string; description: string; bg: string; image?: string; emoji?: string; imagePosition?: string }> }> =
+  const gameGroups: Array<{ title: string; games: Array<{ id: string; name: string; description: string; bg: string; image?: string; emoji?: string; imagePosition?: string; isModel?: boolean }> }> =
     isPrvouka ? prvoukaGameGroups : mathGameGroups;
 
   // Filtrování kategorií podle vybrané kategorie
@@ -247,10 +263,10 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
   return (
     <div className="min-h-screen bg-white font-visby">
       {/* Header Section with Blue Background - zmenšeno o 30% */}
-      <div className="relative bg-[#dee4f1] rounded-[32px] mx-[30px] max-w-[1320px] xl:mx-auto mt-[28px] mb-8 overflow-hidden h-[395px]">
+      <div className="relative bg-[#dee4f1] rounded-[32px] mx-4 sm:mx-[30px] max-w-[1320px] xl:mx-auto mt-4 sm:mt-[28px] mb-8 overflow-hidden lg:h-[395px]">
         
-        <div className="relative z-10 px-6 md:px-12 py-0 md:py-4">
-          <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+        <div className="relative z-10 px-6 md:px-12 pt-4 pb-2 lg:py-4">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-6 lg:gap-8">
             <div className="flex-1">
               {/* VIVID BOOKS Logo s SVG */}
               <div className="mb-2">
@@ -282,15 +298,15 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
             {/* Right side - Notebooks image and buttons */}
             <div className="flex flex-col items-center gap-4 w-full lg:w-auto">
               {/* Header Buttons */}
-              <div className="flex flex-row gap-3 w-full lg:w-auto mb-4">
-                <button className="px-4 md:px-6 py-2 md:py-3 border-2 border-[#4e5871] text-[#4e5871] rounded-lg hover:bg-[#4e5871] hover:text-white transition-colors text-xs md:text-sm">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto lg:mb-4">
+                <button className="px-4 md:px-6 py-3 border-2 border-[#4e5871] text-[#4e5871] rounded-lg hover:bg-[#4e5871] hover:text-white transition-colors text-sm whitespace-nowrap">
                   {isPrvouka ? 'Prvouka: 1.–3. ročník' : 'Matematika: 1. ročník'}
                 </button>
                 <a 
                   href="https://app.vividbooks.com/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="px-4 md:px-6 py-2 md:py-3 bg-[#4e5871] text-white rounded-lg hover:bg-[#3d4660] transition-colors flex items-center justify-center gap-2 text-xs md:text-sm no-underline"
+                  className="px-4 md:px-6 py-3 bg-[#4e5871] text-white rounded-lg hover:bg-[#3d4660] transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap no-underline"
                 >
                   Otevřít vividbooks učebnice
                   <span className="rotate-180">↑</span>
@@ -299,13 +315,13 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
               
               {/* Notebooks Image */}
               {isPrvouka ? (
-                <div className="mb-4 relative h-72 md:h-80 w-[420px] max-w-full" aria-label="Pracovní učebnice prvouky">
+                <div className="mb-2 lg:mb-4 relative h-60 sm:h-72 md:h-80 w-[300px] sm:w-[420px] max-w-full" aria-label="Pracovní učebnice prvouky">
                   {PRVOUKA_COVERS.map((src, index) => (
                     <img
                       key={src}
                       src={src}
                       alt=""
-                      className="absolute top-6 h-56 md:h-64 w-auto rounded-md object-contain"
+                      className="absolute top-6 h-44 sm:h-56 md:h-64 w-auto rounded-md object-contain"
                       style={{
                         left: `${index * 22}%`,
                         transform: `rotate(${[-6, 2, 8, 14][index]}deg) translateY(${[0, 10, 22, 36][index]}px)`,
@@ -330,29 +346,59 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
       </div>
 
       {/* Category Navigation */}
-      <div className="max-w-full px-4 md:px-8 mb-8">
+      {/* Na telefonu dlaždice s ikonou (jako v Početníčku), na počítači pilulky v jedné řadě. */}
+      <div className="md:hidden px-4 mb-8">
+        <div className="grid grid-cols-3 gap-2">
+          {[null, ...categories].map((category) => {
+            const active = selectedCategory === category;
+            const tile = category ? categoryTile(category) : { label: 'Všechny', icon: LayoutGrid, grade: null };
+            const Icon = tile.icon;
+            const bg = category ? gameGroups.find((group) => group.title === category)?.games[0]?.bg ?? '#eef1f8' : '#eef1f8';
+            return (
+              <button
+                key={category ?? 'vse'}
+                type="button"
+                onClick={() => setSelectedCategory(category)}
+                aria-label={category ?? 'Všechny hry'}
+                className="relative flex flex-col items-center justify-center gap-1 rounded-2xl px-1 pt-3 pb-2.5 text-[13px] font-semibold leading-tight transition-all"
+                style={active ? { background: '#4a43e8', color: '#fff', boxShadow: '0 4px 12px rgba(74,67,232,0.3)' } : { background: bg, color: '#4e5871' }}
+              >
+                <Icon className="w-5 h-5" strokeWidth={2.2} aria-hidden="true" />
+                {tile.label}
+                {tile.grade ? (
+                  <span
+                    className="absolute -top-2 right-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+                    style={{ background: '#fff', color: '#4a43e8', boxShadow: '0 1px 3px rgba(78,88,113,0.25)' }}
+                  >
+                    {tile.grade}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="hidden md:block max-w-full px-8 mb-8">
         <div className="flex flex-wrap justify-center gap-3">
-          {/* Tlačítko pro zobrazení všech kategorií */}
           <button
             onClick={() => setSelectedCategory(null)}
             className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
               selectedCategory === null
-                ? 'bg-[#4a43e8] text-white shadow-lg'
-                : 'bg-white text-[#4e5871] border-2 border-[#4e5871] hover:bg-[#4e5871] hover:text-white'
+                ? 'bg-[#4a43e8] text-white shadow-[0_4px_12px_rgba(74,67,232,0.3)]'
+                : 'bg-[#eef1f8] text-[#4e5871] hover:bg-[#e2e7f3]'
             }`}
           >
             Všechny hry
           </button>
-          
-          {/* Tlačítka pro jednotlivé kategorie */}
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
+              className={`px-6 py-3 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
                 selectedCategory === category
-                  ? 'bg-[#4a43e8] text-white shadow-lg'
-                  : 'bg-white text-[#4e5871] border-2 border-[#4e5871] hover:bg-[#4e5871] hover:text-white'
+                  ? 'bg-[#4a43e8] text-white shadow-[0_4px_12px_rgba(74,67,232,0.3)]'
+                  : 'bg-[#eef1f8] text-[#4e5871] hover:bg-[#e2e7f3]'
               }`}
             >
               {category}
@@ -428,7 +474,7 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
                           className="w-1/2 bg-[#4a43e8] hover:bg-[#3d36d6] text-white px-4 py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
                         >
                           <Play className="w-4 h-4" />
-                          Hraj
+                          {game.isModel ? 'Otevřít model' : 'Hraj'}
                         </button>
                       </div>
                     </div>

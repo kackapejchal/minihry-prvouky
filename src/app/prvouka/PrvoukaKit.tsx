@@ -43,7 +43,8 @@ export function useIsMobile(): boolean {
 export function useDesktopScale(): number {
   const compute = () => {
     if (typeof window === 'undefined') return 1;
-    return Math.max(0.85, Math.min(2.4, Math.min(window.innerWidth / 1100, window.innerHeight / 700)));
+    // Spodní mez je nízko, aby se i v nízkém okně notebooku vešlo zadání, úloha i skóre dole.
+    return Math.max(0.55, Math.min(2.4, Math.min(window.innerWidth / 1100, window.innerHeight / 760)));
   };
   const [scale, setScale] = useState(compute);
   useEffect(() => {
@@ -68,13 +69,13 @@ export function PrvoukaProgress({ current, total, lives, maxLives = 3 }: { curre
   return (
     <div
       className="flex items-center gap-3 sm:gap-5 rounded-full px-4 sm:px-5 py-2 sm:py-2.5"
-      style={{ background: '#FAFAFA', border: '1px solid #E8E8E8' }}
+      style={{ background: PRVOUKA_COLORS.CARD_BG, border: `2px solid ${PRVOUKA_COLORS.CARD_BORDER}` }}
     >
       <div className="flex items-center gap-2 sm:gap-3">
-        <div className="rounded-full overflow-hidden" style={{ backgroundColor: '#E8E8E8', height: isMobile ? 8 : 12 * s, width: isMobile ? 120 : 190 * s }}>
-          <div className="h-full transition-all duration-300" style={{ width: `${progress}%`, backgroundColor: '#93C5FD' }} />
+        <div className="rounded-full overflow-hidden" style={{ backgroundColor: '#F3E6D4', height: isMobile ? 8 : 12 * s, width: isMobile ? 120 : 190 * s }}>
+          <div className="h-full transition-all duration-300" style={{ width: `${progress}%`, backgroundColor: PRVOUKA_COLORS.CARD_BORDER }} />
         </div>
-        <div style={{ color: '#6B7280', fontSize: isMobile ? 22 : 28 * s, fontWeight: 500, minWidth: isMobile ? 70 : 95 * s, textAlign: 'right' }}>
+        <div style={{ color: PRVOUKA_COLORS.TEXT, fontSize: isMobile ? 22 : 28 * s, fontWeight: 600, minWidth: isMobile ? 70 : 95 * s, textAlign: 'right' }}>
           {current}/{total}
         </div>
       </div>

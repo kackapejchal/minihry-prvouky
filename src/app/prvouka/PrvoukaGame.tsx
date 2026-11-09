@@ -84,6 +84,7 @@ export function PrvoukaGame({ prvoukaGameId, defaultBackground, defaultGrade, se
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; hint?: string } | null>(null);
   const [locked, setLocked] = useState(false);
   const [result, setResult] = useState<'success' | 'failure' | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
   const livesRef = useRef(lives);
   livesRef.current = lives;
 
@@ -97,6 +98,7 @@ export function PrvoukaGame({ prvoukaGameId, defaultBackground, defaultGrade, se
     if (locked || !question) return;
     setLocked(true);
     if (!isCorrect) setLives((value) => Math.max(0, value - 1));
+    else setCorrectCount((value) => value + 1);
     setFeedback({ isCorrect, hint: question.hint });
   }, [locked, question]);
 
@@ -115,6 +117,7 @@ export function PrvoukaGame({ prvoukaGameId, defaultBackground, defaultGrade, se
     setSeed(Math.floor(Math.random() * 1e9));
     setIndex(0);
     setLives(MAX_LIVES);
+    setCorrectCount(0);
     setFeedback(null);
     setLocked(false);
     setResult(null);
@@ -129,9 +132,11 @@ export function PrvoukaGame({ prvoukaGameId, defaultBackground, defaultGrade, se
   }
 
   return (
-    <div className="w-full flex flex-col overflow-hidden" style={{ backgroundColor, minHeight: '100svh', color: PRVOUKA_COLORS.TEXT }}>
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 sm:gap-6 p-3 sm:p-6 md:p-8 min-h-0" style={{ paddingTop: isMobile ? 24 : 40 * s }}>
-        <div className="flex items-center justify-center gap-3 text-center" style={{ maxWidth: '92vw' }}>
+    <div className="w-full flex flex-col overflow-hidden" style={{ backgroundColor, height: '100svh', color: PRVOUKA_COLORS.TEXT }}>
+      {/* Zadání je ve všech hrách na stejném místě nahoře, úloha se centruje do zbylého prostoru
+          a postup je vždy dole – při přepínání úloh a her nic neposkakuje. */}
+      <div className="flex-1 flex flex-col items-center gap-4 sm:gap-6 px-3 sm:px-6 md:px-8 min-h-0" style={{ paddingTop: isMobile ? 16 : 20 * s, paddingBottom: isMobile ? 24 : settings ? Math.max(76, 64 * s) : 28 * s }}>
+        <div className="flex items-center justify-center gap-3 text-center flex-shrink-0" style={{ maxWidth: '92vw', minHeight: isMobile ? 56 : 64 * s }}>
           <h1 style={{ fontSize: isMobile ? 26 : 46 * s, fontWeight: 700, lineHeight: 1.15, color: PRVOUKA_COLORS.TEXT }}>{question.prompt}</h1>
           {canSpeak() ? (
             <button
@@ -146,9 +151,13 @@ export function PrvoukaGame({ prvoukaGameId, defaultBackground, defaultGrade, se
           ) : null}
         </div>
 
-        <QuestionView key={`${seed}:${index}`} question={question} illustrations={illustrations} locked={locked} onAnswer={answer} />
+        <FitToSpace>
+          <QuestionView key={`${seed}:${index}`} question={question} illustrations={illustrations} locked={locked} onAnswer={answer} />
+        </FitToSpace>
 
-        <PrvoukaProgress current={index + 1} total={total} lives={lives} maxLives={MAX_LIVES} />
+        <div className="flex-shrink-0">
+          <PrvoukaProgress current={index + 1} total={total} lives={lives} maxLives={MAX_LIVES} />
+        </div>
       </div>
 
       <AnimatePresence>
@@ -163,8 +172,51 @@ export function PrvoukaGame({ prvoukaGameId, defaultBackground, defaultGrade, se
           failureText={['Zkus to znovu! 🤔', 'Další pokus! 💪', 'Neboj se, zvládneš to! 🌟'][seed % 3]}
           showContinueButton
           displayType="gameComplete"
+          // Při prohře (došla srdíčka) se počítá jen z úloh, které dítě stihlo.
+          score={{ correct: correctCount, total: result === 'success' ? total : index + 1 }}
         />
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Úloha vyplní prostor mezi zadáním a skóre. Když je okno nízké (notebook, rozdělená
+ * obrazovka), celá se zmenší, aby skóre dole zůstalo vidět.
+ */
+function FitToSpace({ children }: { children: React.ReactNode }) {
+  const outerRef = useRef<HTMLDivElement | null>(null);
+  const innerRef = useRef<HTMLDivElement | null>(null);
+  const [fit, setFit] = useState(1);
+
+  useEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+    const measure = () => {
+      // offsetWidth/Height nejsou ovlivněné transformací, měří se přirozená velikost.
+      const needH = inner.offsetHeight;
+      const needW = inner.offsetWidth;
+      if (!needH || !needW) return;
+      const next = Math.min(1, outer.clientHeight / needH, outer.clientWidth / needW);
+      setFit((prev) => (Math.abs(prev - next) > 0.01 ? next : prev));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(outer);
+    observer.observe(inner);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={outerRef} className="flex-1 w-full min-h-0 relative flex items-center justify-center">
+      <div
+        ref={innerRef}
+        className="flex flex-col items-center justify-center w-full"
+        style={{ transform: fit < 1 ? `scale(${fit})` : undefined, transformOrigin: 'center center', flexShrink: 0 }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -385,8 +437,11 @@ function ChoiceView({
         className="grid w-full"
         style={{
           gap: isMobile ? 10 : 16 * s,
-          maxWidth: (pictures ? 820 : 560) * (isMobile ? 1 : s),
+          // Čtyři možnosti ve dvou sloupcích potřebují víc místa, jinak se delší odpověď láme.
+          maxWidth: (pictures ? 820 : options.length === 4 ? 760 : 560) * (isMobile ? 1 : s),
           gridTemplateColumns: pictures ? `repeat(${options.length}, minmax(0, 1fr))` : options.length === 4 && !isMobile ? 'repeat(2, minmax(0, 1fr))' : '1fr',
+          // Všechny kartičky stejně vysoké – když se jedna zalomí, ostatní se srovnají s ní.
+          gridAutoRows: '1fr',
         }}
       >
         {options.map((option) => (
@@ -397,7 +452,7 @@ function ChoiceView({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             animate={{ scale: chosen === option.id ? 1.05 : 1 }}
-            className="flex flex-col items-center justify-center text-center"
+            className={`flex flex-col items-center text-center ${pictures ? 'justify-start' : 'justify-center'}`}
             style={{
               minHeight: pictures ? undefined : isMobile ? 56 : 84 * s,
               padding: pictures ? 10 : '12px 18px',
@@ -408,11 +463,19 @@ function ChoiceView({
               fontSize: isMobile ? 20 : 30 * s,
               fontWeight: 700,
               lineHeight: 1.2,
+              textWrap: 'balance',
               boxShadow: `0 4px 0 ${PRVOUKA_COLORS.CARD_BORDER}`,
             }}
           >
             {option.picture ? <PrvoukaPictureView picture={option.picture} illustrations={illustrations} size={isMobile ? 96 : 200 * s} height={isMobile ? 84 : 170 * s} /> : null}
-            {option.label ? <span style={{ fontSize: pictures ? (isMobile ? 16 : 20 * s) : undefined }}>{option.label}</span> : null}
+            {option.label ? (
+              pictures ? (
+                // Popisek má vždy místo na dva řádky, aby obrázky v řadě zůstaly ve stejné výšce.
+                <span className="flex items-center justify-center" style={{ fontSize: isMobile ? 16 : 20 * s, minHeight: `${2 * 1.2}em`, marginTop: 4 }}>{option.label}</span>
+              ) : (
+                <span>{option.label}</span>
+              )
+            ) : null}
           </motion.button>
         ))}
       </div>
@@ -450,9 +513,15 @@ function ClockView({
     return { hour: startHour, minute: startMinute };
   });
   const size = isMobile ? 260 : 430 * s;
+  const buttonSize = isMobile ? 64 : 84 * s;
   return (
     <div className="flex flex-col lg:flex-row items-center justify-center" style={{ gap: isMobile ? 16 : 48 * s }}>
-      {question.picture ? <PrvoukaPictureView picture={question.picture} illustrations={illustrations} size={isMobile ? 200 : 300 * s} height={isMobile ? 140 : 220 * s} /> : null}
+      {question.picture ? (
+        <PrvoukaPictureView picture={question.picture} illustrations={illustrations} size={isMobile ? 200 : 300 * s} height={isMobile ? 140 : 220 * s} />
+      ) : (
+        // Prázdné místo stejně široké jako tlačítko vpravo – ciferník tak stojí přesně uprostřed.
+        <div className="hidden lg:block flex-shrink-0" style={{ width: buttonSize }} aria-hidden="true" />
+      )}
       <div className="flex flex-col items-center" style={{ gap: 14 }}>
         <PrvoukaClock
           hour={time.hour}
@@ -470,7 +539,7 @@ function ClockView({
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         className="rounded-full flex items-center justify-center text-white"
-        style={{ width: isMobile ? 64 : 84 * s, height: isMobile ? 64 : 84 * s, backgroundColor: '#2C3F98', fontSize: isMobile ? 32 : 44 * s, fontWeight: 800, boxShadow: '0 5px 0 #1d2a6b' }}
+        style={{ width: buttonSize, height: buttonSize, backgroundColor: '#2C3F98', fontSize: isMobile ? 32 : 44 * s, fontWeight: 800, boxShadow: '0 5px 0 #1d2a6b', flexShrink: 0 }}
         aria-label="Hotovo"
       >
         ✓

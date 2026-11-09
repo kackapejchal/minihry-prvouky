@@ -99,18 +99,18 @@ const GameWrapper = ({ children, showBackButton, onBackToAdmin, onOpenSettings }
             <div className="flex items-center gap-3">
               <button
                 onClick={onBackToAdmin}
-                className="bg-white/90 hover:bg-white text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md shadow-md border border-gray-300 flex items-center gap-2 transition-colors text-sm"
+                className="bg-white hover:bg-[#f4f5fa] text-[#4e5871] font-bold px-5 py-2.5 rounded-full border-2 border-[#4e5871] shadow-[0_3px_0_#4e5871] hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none flex items-center gap-2 transition-all text-base"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                 </svg>
                 Všechny hry
               </button>
               <button
                 onClick={onOpenSettings}
-                className="bg-white/90 hover:bg-white text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md shadow-md border border-gray-300 flex items-center gap-2 transition-colors text-sm"
+                className="bg-white hover:bg-[#f4f5fa] text-[#4e5871] font-bold px-5 py-2.5 rounded-full border-2 border-[#4e5871] shadow-[0_3px_0_#4e5871] hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none flex items-center gap-2 transition-all text-base"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -245,9 +245,11 @@ export default function App() {
       ...Object.fromEntries(
         PRVOUKA_LANDING_GAMES.map((game) => [
           game.id,
-          game.model
+          game.model === 'hvezdy'
+            ? () => import('./prvouka/PrvoukaStars').then((module) => ({ default: module.PrvoukaStars }))
+            : game.model
             ? () => import('./prvouka/PrvoukaSpaceModel').then((module) => ({
-              default: (props: { settings?: Record<string, any> }) => <module.PrvoukaSpaceModel model={game.model!} {...props} />,
+              default: (props: { settings?: Record<string, any> }) => <module.PrvoukaSpaceModel model={game.model as 'soustava' | 'mesic'} {...props} />,
             }))
             : () => import('./prvouka/PrvoukaGame').then((module) => ({
               default: (props: { settings?: Record<string, any> }) => (

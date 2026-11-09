@@ -15,6 +15,8 @@ interface GameResultScreenProps {
   failureText?: string;
   showContinueButton?: boolean;
   displayType?: DisplayType;
+  /** Kolik úloh dítě zvládlo – ukáže se pod nápisem (prvoukové minihry). */
+  score?: { correct: number; total: number };
 }
 
 export function GameResultScreen({ 
@@ -24,7 +26,8 @@ export function GameResultScreen({
   successText = "SPRÁVNĚ!",
   failureText = "ZKUS TO ZNOVU!",
   showContinueButton = true,
-  displayType = 'gameComplete'
+  displayType = 'gameComplete',
+  score,
 }: GameResultScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [selectedVideo] = useState(getRandomCelebrationVideo);
@@ -107,19 +110,32 @@ export function GameResultScreen({
           </motion.div>
         </div>
 
+        {/* Výsledek: kolik úloh bylo správně */}
+        {score ? (
+          <motion.div
+            className="mb-5 flex items-baseline gap-3 rounded-full bg-white px-7 py-3"
+            style={{ boxShadow: '0 6px 20px rgba(78,88,113,0.15)', color: '#4e5871' }}
+            initial={{ opacity: 0, y: 12, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.3, type: 'spring', stiffness: 220, damping: 18 }}
+          >
+            <span className="text-xl sm:text-2xl font-semibold">Správně</span>
+            <span className="text-4xl sm:text-5xl font-black" style={{ color: isSuccess ? '#4CAF50' : '#F44336' }}>
+              {score.correct}
+            </span>
+            <span className="text-xl sm:text-2xl font-semibold">z {score.total}</span>
+          </motion.div>
+        ) : null}
+
         {/* Tlačítko pokračovat pod textem */}
         {showContinueButton && (
           <motion.button
             onClick={handleContinue}
-            className="px-8 py-3 bg-white rounded-full hover:shadow-xl transition-shadow"
-            style={{ 
-              color: '#333',
-              border: '2px solid #ddd'
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            // Stejný styl jako tlačítka Všechny hry / Nastavení dole, jen větší – je to hlavní akce obrazovky.
+            className="px-10 py-3.5 bg-white hover:bg-[#f4f5fa] rounded-full border-2 border-[#4e5871] text-[#4e5871] font-bold shadow-[0_4px_0_#4e5871] active:translate-y-[4px] active:shadow-none transition-colors"
+            whileHover={{ y: -2 }}
           >
-            <span className="text-lg">Pokračovat</span>
+            <span className="text-xl">Pokračovat</span>
           </motion.button>
         )}
       </div>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { prvoukaLandingGame } from '../prvouka/registry';
+import { defaultPrvoukaTopics, findPrvoukaGame } from '../prvouka/data/catalog';
+import type { PrvoukaGrade } from '../prvouka/data/types';
 import { GAME_REGISTRY, GameType, GameSetting, generateGameURL } from '../constants/gameRegistry';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -10,9 +12,35 @@ import { Checkbox } from './ui/checkbox';
 import { Slider } from './ui/slider';
 import { Switch } from './ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
-import { X, Copy, Play, RotateCcw, ExternalLink, ChevronDown, ChevronRight, Settings2, QrCode } from 'lucide-react';
+import { X, Copy, Play, RotateCcw, ExternalLink, ChevronDown, ChevronRight, Settings2, Link2, QrCode } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { ShareConfigQr, ShareQrOverlay } from './ShareConfigQr';
+
+/** Barvy a tvary převzaté z menu Početníčku (1. stupeň). */
+const ACCENT = '#5d6fc8';
+/** Zapnuté volby (zaškrtávátka, vypínače) – stejná fialová jako přepínače; zelená patří jen tlačítku Hrát. */
+const CHIP_ON = ACCENT;
+const SEGMENT = 'h-10 px-5 rounded-full text-[15px] font-bold whitespace-nowrap transition-all';
+
+/**
+ * „1/2/18–21“ (ročník/díl/strana) → „2. díl, s. 18–21“; jiný ročník než zvolený se vypíše celý
+ * („2. roč., 1. díl, s. 15“). Text, který tomu tvaru neodpovídá („celý rok“), zůstane.
+ */
+function formatWorkbookPages(raw: string, grade: number): string {
+  return raw
+    .split(/,\s*/)
+    .map((part) => {
+      const m = part.trim().match(/^(\d)\/(\d)\/(.+)$/);
+      if (!m) return part.trim();
+      const [, g, d, page] = m;
+      return Number(g) === grade ? `${d}. díl, s. ${page}` : `${g}. roč., ${d}. díl, s. ${page}`;
+    })
+    .join(' · ');
+}
+
+/** Rozbalovací karta (Pokročilá nastavení, Sdílet): tlačítko nahoře, obsah se rozbalí uvnitř téže karty. */
+const FOLD_CARD = 'rounded-3xl bg-white border border-[#e2e8f0]/70 shadow-[0_1px_3px_rgba(78,88,113,0.06)] overflow-hidden';
+const FOLD_TRIGGER = 'flex items-center gap-3 w-full px-6 py-4 text-left text-lg font-bold text-[#4e5871] hover:bg-[#f7f8fc] transition-colors';
 
 interface GameConfiguratorProps {
   gameId: GameType;
@@ -70,7 +98,8 @@ const getGameImage = (gameId: GameType): string | null => {
     buildNumber: 'https://jjpiguuubvmiobmixwgh.supabase.co/storage/v1/object/public/Admin%20math/Group%2021337.png'
   };
   
-  return gameImages[gameId] || prvoukaLandingGame(gameId)?.image || null;
+  const prvouka = prvoukaLandingGame(gameId);
+  return gameImages[gameId] || prvouka?.iconImage || prvouka?.image || null;
 };
 
 // Mapování her na popisky podle AdminPanel
@@ -134,6 +163,13 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
   const handleSettingChange = (key: string, value: any) => {
     setSettings(prev => {
       const newSettings = { ...prev, [key]: value };
+
+      // Prvouka: jiný ročník = jiná témata ze sešitu. Zaškrtnou se ta, která k ročníku patří.
+      if (key === 'grade') {
+        const landing = prvoukaLandingGame(gameId);
+        const data = landing ? findPrvoukaGame(landing.dataId) : undefined;
+        if (data && 'topics' in prev) newSettings.topics = defaultPrvoukaTopics(data, Number(value) as PrvoukaGrade);
+      }
       
       // Speciální logika pro matematickou křížovku - při změně level aktualizuj související parametry
       if (gameId === 'mathCrossword' && key === 'level') {
@@ -282,6 +318,17 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
     return entries;
   }, [basicSettings, gameId]);
 
+  /** Jedna volba bez rámečků: nadpis, šedý popisek a pod tím rovnou ovládání; oddělené tenkou čarou. */
+  const renderFlatSetting = (key: string, setting: GameSetting, isBasic: boolean) => (
+    <div key={key} className="space-y-3 pt-6 first:pt-0 border-t first:border-t-0 border-gray-200">
+      <div>
+        <Label className="block font-bold text-lg text-[#4e5871]">{setting.name}</Label>
+        {setting.description ? <p className="text-sm text-gray-500 mt-1">{setting.description}</p> : null}
+      </div>
+      {renderSettingInput(key, setting, isBasic)}
+    </div>
+  );
+
   const renderSettingInput = (key: string, setting: GameSetting, isBasic: boolean = false) => {
     const value = settings[key];
 
@@ -300,6 +347,30 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
         );
 
       case 'select':
+        // Málo možností (ročník, počet úloh, vzhled…) = pilulky jako v Početníčku, víc možností = rozbalovací seznam.
+        if ((setting.options?.length ?? 0) > 0 && (setting.options?.length ?? 0) <= 6) {
+          return (
+            // Spojený přepínač: jedna šedá kapsle, vybraná možnost je v ní plná fialová „pilulka“.
+            <div className="inline-flex max-w-full rounded-full p-1.5" style={{ background: '#eef1f8' }} role="radiogroup" aria-label={setting.name}>
+              {setting.options!.map((option) => {
+                const active = value?.toString() === option.value.toString();
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => handleSettingChange(key, typeof setting.defaultValue === 'number' ? Number(option.value) : option.value)}
+                    className={SEGMENT}
+                    style={active ? { background: ACCENT, color: '#fff', boxShadow: '0 2px 6px rgba(93,111,200,.35)' } : { background: 'transparent', color: '#4e5871' }}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        }
         return (
           <Select 
             value={value?.toString()} 
@@ -322,18 +393,17 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
           </Select>
         );
 
-      case 'boolean':
+      case 'boolean': {
+        const on = Boolean(value);
         return (
-          <div className="flex items-center space-x-4">
-            <Checkbox
-              id={key}
-              checked={value || false}
-              onCheckedChange={(checked) => handleSettingChange(key, checked)}
-              className={`${isBasic ? 'w-8 h-8' : 'w-6 h-6'}`}
-            />
-            <Label htmlFor={key} className={`${isBasic ? 'text-2xl' : 'text-lg'}`}>Zapnuto</Label>
-          </div>
+          <button type="button" role="switch" aria-checked={on} onClick={() => handleSettingChange(key, !on)} className="flex items-center gap-3 text-base font-semibold text-[#4e5871]">
+            <span className="relative inline-block w-11 h-6 rounded-full transition-colors" style={{ background: on ? CHIP_ON : '#d5dbeb' }}>
+              <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all" style={{ left: on ? 22 : 2 }} />
+            </span>
+            {on ? 'Zapnuto' : 'Vypnuto'}
+          </button>
         );
+      }
 
       case 'range':
         const [min, max] = value || [setting.min || 0, setting.max || 10];
@@ -356,31 +426,44 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
           </div>
         );
 
-      case 'multiselect':
-        const selectedValues = value || [];
+      case 'multiselect': {
+        const selectedValues: any[] = value || [];
+        // Témata jako seznam se zaškrtávátky: zelené políčko s fajfkou, strany ze sešitu šedě pod názvem.
         return (
-          <div className="space-y-4">
-            {setting.options?.map((option) => (
-              <div key={option.value} className="flex items-center space-x-4">
-                <Checkbox
-                  id={`${key}-${option.value}`}
-                  checked={selectedValues.includes(option.value)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      handleSettingChange(key, [...selectedValues, option.value]);
-                    } else {
-                      handleSettingChange(key, selectedValues.filter((v: any) => v !== option.value));
-                    }
-                  }}
-                  className={`${isBasic ? 'w-6 h-6' : 'w-5 h-5'}`}
-                />
-                <Label htmlFor={`${key}-${option.value}`} className={`${isBasic ? 'text-xl' : 'text-lg'}`}>
-                  {option.label}
-                </Label>
-              </div>
-            ))}
+          <div className="flex flex-col gap-0.5 -mx-2">
+            {setting.options?.map((option) => {
+              const on = selectedValues.includes(option.value);
+              const match = String(option.label).match(/^(.*?)\s*\(str\.\s*([^)]*)\)\s*$/);
+              const title = match ? match[1] : option.label;
+              const pages = match ? formatWorkbookPages(match[2], Number(settings.grade)) : null;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={on}
+                  onClick={() => handleSettingChange(key, on ? selectedValues.filter((v) => v !== option.value) : [...selectedValues, option.value])}
+                  className="flex items-center gap-3.5 w-full rounded-xl px-2 py-2 text-left text-[#4e5871] hover:bg-[#f4f6fb] transition-colors"
+                >
+                  <span
+                    className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                    style={on ? { background: CHIP_ON, border: `2px solid ${CHIP_ON}` } : { background: '#fff', border: '2px solid #c9d0e0' }}
+                    aria-hidden="true"
+                  >
+                    {on ? (
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="#fff" strokeWidth={3.2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                    ) : null}
+                  </span>
+                  <span className="flex flex-col leading-tight">
+                    <span className="text-[17px] font-semibold">{title}</span>
+                    {pages ? <span className="text-sm text-gray-500 mt-0.5">{pages}</span> : null}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         );
+      }
 
       default:
         return (
@@ -474,21 +557,21 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
 
         <div className="space-y-6 pb-8">
           {/* 1. Nastavení hry */}
-          <Card>
+          <Card className="rounded-3xl border-[#e2e8f0]/70 shadow-[0_1px_3px_rgba(78,88,113,0.06)]">
             <CardHeader>
-              <CardTitle className="text-3xl font-bold flex items-center justify-between">
-                <span>⚙️ Nastavení hry</span>
-                <Button 
-                  variant="outline" 
+              <CardTitle className="text-2xl font-bold flex items-center justify-between text-[#4e5871]">
+                <span>Nastavení hry</span>
+                <button
+                  type="button"
                   onClick={handleResetToDefaults}
-                  className="text-orange-600 border-orange-300 hover:bg-orange-50 text-lg px-6 py-3"
+                  className="inline-flex items-center gap-2 h-9 px-4 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] text-sm font-semibold text-[#4e5871] transition-colors"
                 >
-                  <RotateCcw className="w-5 h-5 mr-2" />
+                  <RotateCcw className="w-4 h-4" />
                   Obnovit
-                </Button>
+                </button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-8">
+            <CardContent className="space-y-6">
               {sortedBasicSettings.map(([key, setting]) => {
                 const isNumberRange = key === 'numberRange' || key.includes('Range') || key.includes('Number');
                 const isTimeBasedSwitch = key === 'timeBasedGame';
@@ -513,82 +596,61 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
                   );
                 }
                 
+                // Jedna úroveň: nadpis a pod ním rovnou volba, sekce oddělené jen tenkou čarou.
                 return (
-                  <div key={key} className={`space-y-4 p-6 rounded-xl border-2 ${isNumberRange ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
-                    <Label className={`block font-bold text-center ${isNumberRange ? 'text-2xl text-blue-800' : 'text-2xl text-gray-800'}`}>
+                  <div key={key} className="space-y-3 pt-6 first:pt-0 border-t first:border-t-0 border-gray-200">
+                    <Label className="block font-bold text-lg text-[#4e5871]">
                       {isNumberRange ? '🔢 ' : ''}{setting.name}
                     </Label>
-                    <div className={`bg-white p-4 rounded-lg border ${isNumberRange ? 'border-blue-300' : 'border-gray-300'}`}>
-                      {renderSettingInput(key, setting, true)}
-                    </div>
+                    {renderSettingInput(key, setting, true)}
                   </div>
                 );
               })}
+              {/* Hra bez základních voleb (modely): „pokročilé“ volby jsou jediné, patří rovnou sem. */}
+              {sortedBasicSettings.length === 0
+                ? Object.entries(advancedSettings).map(([key, setting]) => renderFlatSetting(key, setting, true))
+                : null}
             </CardContent>
           </Card>
 
-          {/* 2. Pokročilá nastavení */}
-          {Object.keys(advancedSettings).length > 0 && (
+          {/* 2. Pokročilá nastavení – tlačítko i obsah v jedné kartě */}
+          {sortedBasicSettings.length > 0 && Object.keys(advancedSettings).length > 0 && (
             <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-              <CollapsibleTrigger asChild>
-                <Card className="cursor-pointer hover:bg-orange-50 transition-colors">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-center text-center text-lg text-orange-700">
-                      <div className="flex items-center gap-3">
-                        <Settings2 className="w-5 h-5" />
-                        Pokročilá nastavení ({Object.keys(advancedSettings).length})
-                        {isAdvancedOpen ? 
-                          <ChevronDown className="w-5 h-5" /> : 
-                          <ChevronRight className="w-5 h-5" />
-                        }
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-sm text-gray-600 bg-yellow-50 p-3 rounded-lg border border-yellow-200 mb-4">
-                      <strong>💡 Tipy:</strong> Tato nastavení poskytují jemnější kontrolu nad hrou. Ve většině případů není potřeba je měnit.
-                    </div>
-                    <div className="space-y-4">
-                      {Object.entries(advancedSettings).map(([key, setting]) => (
-                        <div key={key} className="space-y-2 p-3 bg-gray-50 rounded-lg border">
-                          <Label className="text-base font-semibold text-gray-800">{setting.name}</Label>
-                          <div className="text-xs text-gray-500 mb-2">{setting.description}</div>
-                          <div className="bg-white p-2 rounded border">
-                            {renderSettingInput(key, setting, false)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
+              <div className={FOLD_CARD}>
+                <CollapsibleTrigger asChild>
+                  <button type="button" className={FOLD_TRIGGER}>
+                    <Settings2 className="w-5 h-5 flex-shrink-0" />
+                    <span className="flex flex-col items-start leading-tight">
+                      <span>Pokročilá nastavení</span>
+                      <span className="text-sm font-medium text-gray-500">Ve většině případů není potřeba je měnit</span>
+                    </span>
+                    <ChevronDown className={`w-5 h-5 ml-auto transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="px-6 pb-6 pt-5 space-y-6 border-t border-gray-200 mx-0">
+                    {Object.entries(advancedSettings).map(([key, setting]) => renderFlatSetting(key, setting, false))}
+                  </div>
+                </CollapsibleContent>
+              </div>
             </Collapsible>
           )}
 
-          {/* 3. Sdílet konfiguraci */}
+          {/* 3. Sdílet konfiguraci – tlačítko i obsah v jedné kartě */}
           <Collapsible open={isShareOpen} onOpenChange={setIsShareOpen}>
-            <CollapsibleTrigger asChild>
-              <Card className="cursor-pointer hover:bg-blue-50 transition-colors">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-center text-center text-lg text-blue-700">
-                    <div className="flex items-center gap-3">
-                      🔗 Sdílet konfiguraci
-                      {isShareOpen ? 
-                        <ChevronDown className="w-5 h-5" /> : 
-                        <ChevronRight className="w-5 h-5" />
-                      }
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4">
-              <Card>
-                <CardContent className="pt-6 space-y-4">
+            <div className={FOLD_CARD}>
+              <CollapsibleTrigger asChild>
+                <button type="button" className={FOLD_TRIGGER}>
+                  <Link2 className="w-5 h-5 flex-shrink-0" />
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>Sdílet konfiguraci</span>
+                    <span className="text-sm font-medium text-gray-500">Odkaz nebo QR kód s tímto nastavením</span>
+                  </span>
+                  <ChevronDown className={`w-5 h-5 ml-auto transition-transform ${isShareOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-6 pb-6 pt-5 space-y-4 border-t border-gray-200">
                   <ShareConfigQr url={generatedUrl} />
                   <div className="p-3 bg-gray-50 rounded-lg border">
                     <div className="text-xs text-gray-600 mb-2">Odkaz s nastavením:</div>
@@ -616,9 +678,9 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
                       Otevřít
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
+                </div>
+              </CollapsibleContent>
+            </div>
           </Collapsible>
         </div>
       </div>

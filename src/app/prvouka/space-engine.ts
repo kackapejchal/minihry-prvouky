@@ -352,8 +352,19 @@ export function drawMoonPhase(ctx: CanvasRenderingContext2D, x: number, y: numbe
   ctx.restore();
 }
 
+export type Eclipse = 'slunce' | 'mesic' | null;
+
 /** Pohled shora: Slunce svítí zleva, Měsíc obíhá kolem Země proti směru hodinových ručiček. */
-export function drawMoonOrbit(cv: HTMLCanvasElement, day: number, t: number, still: boolean) {
+/** Dole přes pohled leží ovládací lišta – dráha i popisky musí zůstat nad ní. */
+const ORBIT_TOOLBAR = 92;
+
+/** Rozložení pohledu shora (stejné pro kreslení i pro tažení Měsíce). */
+function orbitLayout(w: number, h: number) {
+  const hh = Math.max(200, h - ORBIT_TOOLBAR);
+  return { cx: w * 0.56, cy: hh * 0.53, R: Math.min(w * 0.3, hh * 0.36) };
+}
+
+export function drawMoonOrbit(cv: HTMLCanvasElement, day: number, t: number, still: boolean, eclipse: Eclipse = null) {
   const { w, h, dpr } = fitCanvas(cv);
   const ctx = cv.getContext('2d')!;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -366,8 +377,7 @@ export function drawMoonOrbit(cv: HTMLCanvasElement, day: number, t: number, sti
   ctx.strokeStyle = 'rgba(255,210,120,.35)'; ctx.lineWidth = 2;
   for (let i = 1; i <= 5; i++) { const y = (h * i) / 6; ctx.beginPath(); ctx.moveTo(12, y); ctx.lineTo(48, y); ctx.lineTo(42, y - 5); ctx.moveTo(48, y); ctx.lineTo(42, y + 5); ctx.stroke(); }
   label(ctx, 'světlo ze Slunce', 80, h / 6 - 12, '#ffd98a', fs - 1);
-  const cx = w * 0.56, cy = h * 0.52;
-  const R = Math.min(w * 0.3, h * 0.36);
+  const { cx, cy, R } = orbitLayout(w, h);
   const er = Math.max(16, R * 0.2);
   ctx.strokeStyle = 'rgba(160,180,255,.3)'; ctx.setLineDash([4, 6]);
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
@@ -376,24 +386,78 @@ export function drawMoonOrbit(cv: HTMLCanvasElement, day: number, t: number, sti
   const a = (day / SYNODIC) * Math.PI * 2;
   const mx = cx - R * Math.cos(a), my = cy + R * Math.sin(a);
   const mr = Math.max(9, er * 0.45);
+  if (eclipse === 'slunce') {
+    // Zatmění Slunce: Měsíc stojí přesně mezi Sluncem a Zemí a jeho stín dopadne na Zemi.
+    const g2 = ctx.createLinearGradient(mx, 0, cx - er, 0);
+    g2.addColorStop(0, 'rgba(0,0,0,.75)'); g2.addColorStop(1, 'rgba(0,0,0,.55)');
+    ctx.fillStyle = g2;
+    ctx.beginPath(); ctx.moveTo(mx, my - mr); ctx.lineTo(cx - er * 0.97, cy - er * 0.18); ctx.lineTo(cx - er * 0.97, cy + er * 0.18); ctx.lineTo(mx, my + mr); ctx.closePath(); ctx.fill();
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, er, 0, 6.283); ctx.clip();
+    const spot = ctx.createRadialGradient(cx - er, cy, 0, cx - er, cy, er * 0.45);
+    spot.addColorStop(0, 'rgba(0,0,0,.85)'); spot.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = spot; ctx.fillRect(cx - er, cy - er, er, er * 2);
+    ctx.restore();
+    label(ctx, 'stín Měsíce', (mx + cx - er) / 2, cy - er * 0.9, '#c9d2f0', fs - 1);
+  } else if (eclipse === 'mesic') {
+    // Zatmění Měsíce: Země stojí přesně mezi Sluncem a Měsícem a Měsíc zajde do jejího stínu.
+    const end = cx + R + mr * 4;
+    const g2 = ctx.createLinearGradient(cx, 0, end, 0);
+    g2.addColorStop(0, 'rgba(0,0,0,.7)'); g2.addColorStop(1, 'rgba(0,0,0,.35)');
+    ctx.fillStyle = g2;
+    ctx.beginPath(); ctx.moveTo(cx, cy - er); ctx.lineTo(end, cy - er * 0.75); ctx.lineTo(end, cy + er * 0.75); ctx.lineTo(cx, cy + er); ctx.closePath(); ctx.fill();
+    drawPlanet(ctx, SPACE_PLANETS[2], cx, cy, er, Math.PI);
+    label(ctx, 'stín Země', (cx + er + mx - mr) / 2, cy - er * 0.95, '#c9d2f0', fs - 1);
+  }
   ctx.strokeStyle = 'rgba(240,161,44,.55)'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 5]);
   ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(mx, my); ctx.stroke(); ctx.setLineDash([]);
   ctx.save();
   ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.283); ctx.clip();
   ctx.drawImage(moonTexture(), mx - mr, my - mr, mr * 2, mr * 2);
   ctx.fillStyle = 'rgba(2,4,14,.88)'; ctx.fillRect(mx, my - mr, mr, mr * 2);
+  // Ve stínu Země Měsíc zčervená.
+  if (eclipse === 'mesic') { ctx.fillStyle = 'rgba(150,45,20,.72)'; ctx.fillRect(mx - mr, my - mr, mr * 2, mr * 2); }
   ctx.restore();
-  label(ctx, 'Měsíc', mx, my - mr - 8, '#e8e6e0', fs);
+  // Půlka Měsíce otočená k Zemi = to, co ze Země vidíme. Podbarvená modře, stejně jako kroužek
+  // kolem Měsíce v okně „Takhle ho vidíme ze Země“ – stejná barva říká „tohle je totéž“.
+  const toEarth = Math.atan2(cy - my, cx - mx);
+  ctx.save();
+  ctx.fillStyle = 'rgba(127,211,255,.38)';
+  ctx.beginPath(); ctx.arc(mx, my, mr, toEarth - Math.PI / 2, toEarth + Math.PI / 2); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#7fd3ff'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(mx, my, mr + 4, toEarth - Math.PI / 2, toEarth + Math.PI / 2); ctx.stroke();
+  ctx.restore();
+  label(ctx, 'Měsíc', mx, my - mr - 10, '#e8e6e0', fs);
   MOON_PHASE_INFO.forEach((p) => {
     const pa = (p.at / SYNODIC) * Math.PI * 2;
     ctx.fillStyle = p.book ? 'rgba(240,161,44,.55)' : 'rgba(160,180,255,.35)';
     ctx.beginPath(); ctx.arc(cx - R * Math.cos(pa), cy + R * Math.sin(pa), 3, 0, 6.283); ctx.fill();
   });
-  label(ctx, 'Měsíc oběhne Zemi asi za 29 a půl dne', cx, h - 14, '#9aa6d1', fs - 2);
+  label(ctx, eclipse === 'slunce' ? 'Zatmění Slunce – Měsíc je přesně mezi Sluncem a Zemí' : eclipse === 'mesic' ? 'Zatmění Měsíce – Země je přesně mezi Sluncem a Měsícem' : 'Měsíc oběhne Zemi asi za 29 a půl dne', cx, Math.max(200, h - ORBIT_TOOLBAR) - 6, eclipse ? '#ffd98a' : '#9aa6d1', fs - 2);
+}
+
+/**
+ * Tažení Měsíce v pohledu shora: ze souřadnic myši/prstu spočítá den oběhu (stejná geometrie
+ * jako drawMoonOrbit) a řekne, jestli uživatel chytil Měsíc nebo aspoň jeho dráhu.
+ */
+export function moonOrbitPointer(cv: HTMLCanvasElement, clientX: number, clientY: number, day: number) {
+  const rect = cv.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
+  const px = clientX - rect.left, py = clientY - rect.top;
+  const { cx, cy, R } = orbitLayout(w, h);
+  const er = Math.max(16, R * 0.2);
+  const mr = Math.max(9, er * 0.45);
+  const a = (day / SYNODIC) * Math.PI * 2;
+  const mx = cx - R * Math.cos(a), my = cy + R * Math.sin(a);
+  const onMoon = Math.hypot(px - mx, py - my) <= mr + 18;
+  const onOrbit = Math.abs(Math.hypot(px - cx, py - cy) - R) <= 22;
+  let angle = Math.atan2(py - cy, cx - px);
+  if (angle < 0) angle += Math.PI * 2;
+  return { day: (angle / (Math.PI * 2)) * SYNODIC, onMoon, onOrbit };
 }
 
 /** Jak Měsíc vidíme ze Země, s nápovědou D (dorůstá) / C (couvá). */
-export function drawMoonSky(cv: HTMLCanvasElement, day: number, hintDC: boolean, t: number, still: boolean) {
+export function drawMoonSky(cv: HTMLCanvasElement, day: number, hintDC: boolean, t: number, still: boolean, eclipse: Eclipse = null) {
   const { w, h, dpr } = fitCanvas(cv);
   const ctx = cv.getContext('2d')!;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -403,13 +467,42 @@ export function drawMoonSky(cv: HTMLCanvasElement, day: number, hintDC: boolean,
   drawStars(ctx, w, h * 0.8, t, still);
   const r = Math.min(w, h) * 0.3;
   const x = w / 2, y = h * 0.47;
-  drawMoonPhase(ctx, x, y, r, day);
+  const fromNew = ((day % SYNODIC) + SYNODIC) % SYNODIC;
+  const isNew = Math.min(fromNew, SYNODIC - fromNew) < 1.2;
+  if (eclipse === 'slunce') {
+    // Slunce zakryté Měsícem: černý kotouč a kolem něj bílá záře (koróna).
+    const corona = ctx.createRadialGradient(x, y, r * 0.95, x, y, r * 1.9);
+    corona.addColorStop(0, 'rgba(255,255,255,.95)'); corona.addColorStop(0.25, 'rgba(220,235,255,.45)'); corona.addColorStop(1, 'rgba(200,220,255,0)');
+    ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(x, y, r * 1.9, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#05070f'; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill();
+  } else if (eclipse === 'mesic') {
+    // Měsíc ve stínu Země: vidíme ho, ale je tmavě červený.
+    drawMoonPhase(ctx, x, y, r, SYNODIC / 2);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.clip();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = '#b5482a'; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    ctx.restore();
+  } else if (isNew) {
+    // Při novu Měsíc nevidíme – jen přerušovaný obrys, ať nevypadá jako slabý úplněk.
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127,211,255,.75)'; ctx.lineWidth = 3; ctx.setLineDash([6, 8]);
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.stroke();
+    ctx.restore();
+    label(ctx, 'Měsíc teď nevidíme', x, y + 6, '#c9d2f0', Math.round(Math.max(14, r / 7)));
+  } else {
+    drawMoonPhase(ctx, x, y, r, day);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127,211,255,.8)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, r + 8, 0, 6.283); ctx.stroke();
+    ctx.restore();
+  }
   ctx.fillStyle = '#0a1128';
   ctx.beginPath(); ctx.moveTo(0, h); ctx.lineTo(0, h * 0.9);
   for (let i = 0; i <= 12; i++) ctx.lineTo((w * i) / 12, h * (0.88 + 0.03 * Math.sin(i * 1.7)));
   ctx.lineTo(w, h); ctx.fill();
   const idx = phaseIndex(day);
-  if (hintDC && (idx === 1 || idx === 2 || idx === 6 || idx === 7)) {
+  if (!eclipse && hintDC && (idx === 1 || idx === 2 || idx === 6 || idx === 7)) {
     const waxing = idx <= 2;
     ctx.save();
     ctx.font = `700 ${Math.round(r * 2.1)}px VisbyRound, system-ui, sans-serif`;

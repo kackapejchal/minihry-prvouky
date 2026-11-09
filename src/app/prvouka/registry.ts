@@ -11,7 +11,7 @@ const ILLUSTRATIONS = 'https://qypiuvqglsmxdsnyazih.supabase.co/storage/v1/objec
 export type PrvoukaGameType =
   | 'prvoukaZvirata' | 'prvoukaOvoce' | 'prvoukaHodiny' | 'prvoukaRokDen' | 'prvoukaBezpecnost'
   | 'prvoukaVesmir' | 'prvoukaMesic' | 'prvoukaPodminky' | 'prvoukaSymboly' | 'prvoukaZeme'
-  | 'prvoukaModelSoustava' | 'prvoukaModelMesic';
+  | 'prvoukaModelSoustava' | 'prvoukaModelMesic' | 'prvoukaHvezdy';
 
 export interface PrvoukaLandingGame {
   id: PrvoukaGameType;
@@ -31,13 +31,16 @@ export interface PrvoukaLandingGame {
   image: string;
   /** Výřez obrázku na kartě (`object-position`), když střed usekne hlavu. */
   imagePosition?: string;
+  /** Čtvercová ikona do okna s nastavením – když by čtvercový výřez z karty motiv usekl. */
+  iconImage?: string;
   /** Ročníky, které konfigurátor nabídne (výchozí 1. a 2.). */
   grades?: PrvoukaGrade[];
   /** Interaktivní model místo kvízu (Sluneční soustava, fáze Měsíce). */
-  model?: 'soustava' | 'mesic';
+  model?: 'soustava' | 'mesic' | 'hvezdy';
 }
 
 const TRETAK = `${import.meta.env.BASE_URL}prvouka/tretak/karty`;
+const TRETAK_IKONY = `${import.meta.env.BASE_URL}prvouka/tretak/ikony`;
 
 export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
   {
@@ -125,6 +128,19 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     model: 'mesic',
   },
   {
+    id: 'prvoukaHvezdy',
+    dataId: 'hvezdy',
+    name: 'Souhvězdí',
+    description: 'spoj hvězdy Velkého vozu a najdi Polárku.',
+    longDescription: 'Na noční obloze děti spojují hvězdy Velkého vozu, Kasiopeji a Oriona a podle vozu najdou Polárku, která ukazuje sever. V režimu Prohlížet jsou souhvězdí nakreslená i s popisem k promítnutí.',
+    icon: '✨',
+    bg: '#D0DBFF',
+    playBg: '#05081a',
+    image: `${import.meta.env.BASE_URL}prvouka/hvezdy-karta.svg`,
+    grades: [3],
+    model: 'hvezdy',
+  },
+  {
     id: 'prvoukaVesmir',
     dataId: 'vesmir',
     name: 'Sluneční soustava',
@@ -158,6 +174,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     bg: '#e0f2e6',
     playBg: '#E7F9EE',
     image: `${TRETAK}/podminky.jpg`,
+    iconImage: `${TRETAK_IKONY}/podminky.png`,
     grades: [3],
   },
   {
@@ -170,6 +187,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     bg: '#FFD3C5',
     playBg: '#FCEEEF',
     image: `${TRETAK}/symboly.jpg`,
+    iconImage: `${TRETAK_IKONY}/symboly.png`,
     grades: [3],
   },
   {
@@ -182,6 +200,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     bg: '#fcfbdc',
     playBg: '#FAF3D4',
     image: `${TRETAK}/zeme.jpg`,
+    iconImage: `${TRETAK_IKONY}/zeme.png`,
     grades: [3],
   },
 ];
@@ -197,7 +216,7 @@ export const PRVOUKA_GAME_GROUPS: Array<{ title: string; games: PrvoukaGameType[
   { title: 'Poznávám přírodu', games: ['prvoukaZvirata', 'prvoukaOvoce'] },
   { title: 'Orientace v čase', games: ['prvoukaHodiny', 'prvoukaRokDen'] },
   { title: 'Bezpečí a zdraví', games: ['prvoukaBezpecnost'] },
-  { title: '3. ročník: Vesmír a Země', games: ['prvoukaModelSoustava', 'prvoukaModelMesic', 'prvoukaVesmir', 'prvoukaMesic', 'prvoukaPodminky'] },
+  { title: '3. ročník: Vesmír a Země', games: ['prvoukaModelSoustava', 'prvoukaModelMesic', 'prvoukaHvezdy', 'prvoukaVesmir', 'prvoukaMesic', 'prvoukaPodminky'] },
   { title: '3. ročník: Naše republika', games: ['prvoukaSymboly', 'prvoukaZeme'] },
 ];
 
@@ -226,6 +245,20 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
         description: 'Přepnout jde i během promítání',
       },
       labels: { name: 'Popisky planet', type: 'boolean' as const, defaultValue: true, description: 'Jména planet u modelu' },
+    };
+  }
+  if (game.model === 'hvezdy') {
+    return {
+      mode: {
+        name: 'Začít v režimu',
+        type: 'select' as const,
+        defaultValue: 'hra',
+        options: [
+          { value: 'hra', label: 'Hra' },
+          { value: 'prohlizet', label: 'Prohlížet' },
+        ],
+        description: 'Přepnout jde i během hraní',
+      },
     };
   }
   if (game.model === 'mesic') {
