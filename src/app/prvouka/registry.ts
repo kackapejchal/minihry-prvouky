@@ -132,7 +132,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     dataId: 'hvezdy',
     name: 'Souhvězdí',
     description: 'spoj hvězdy Velkého vozu a najdi Polárku.',
-    longDescription: 'Na noční obloze děti spojují hvězdy Velkého vozu, Kasiopeji a Oriona a podle vozu najdou Polárku, která ukazuje sever. V režimu Prohlížet jsou souhvězdí nakreslená i s popisem k promítnutí.',
+    longDescription: 'Na noční obloze děti spojují hvězdy Velkého vozu, Kasiopeji a Oriona a podle vozu najdou Polárku, která ukazuje sever. V režimu Prohlížet je přes 20 souhvězdí s popisem a otočná mapa oblohy, která ukáže, co je vidět na jaře, v létě, na podzim a v zimě.',
     icon: '✨',
     bg: '#D0DBFF',
     playBg: '#05081a',

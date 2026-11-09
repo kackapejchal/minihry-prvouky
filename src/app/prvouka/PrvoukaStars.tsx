@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { GameResultScreen } from '../components/GameResultScreen';
 import { rng, prefersReducedMotion } from './space-engine';
-import { CONSTELLATIONS, POLARKA_TEXT, constellation, projectScene, projectSky, sceneStars, type Constellation, type SceneId, type SkyStar } from './stars-data';
+import { CONSTELLATIONS, POLARKA_TEXT, SEASONS, constellation, projectScene, projectSky, sceneStars, type Constellation, type SceneId, type Season, type SkyStar } from './stars-data';
 
 /**
  * Souhvězdí (3. ročník, vesmír): dva režimy.
@@ -15,24 +15,33 @@ import { CONSTELLATIONS, POLARKA_TEXT, constellation, projectScene, projectSky, 
 const NAV_SPACE = 'pb-20 lg:pb-5';
 const NAV_LEFT = 'lg:mb-16';
 type Mode = 'hra' | 'prohlizet';
-type Round = { type: 'connect'; c: Constellation['id'] } | { type: 'polarka' };
+type Round = { type: 'connect'; c: string } | { type: 'polarka' };
 const ROUNDS: Round[] = [{ type: 'connect', c: 'vuz' }, { type: 'polarka' }, { type: 'connect', c: 'kasiopeja' }, { type: 'connect', c: 'orion' }];
-const sceneOf = (r: Round): Constellation['id'] => (r.type === 'polarka' ? 'vuz' : r.c);
+const sceneOf = (r: Round): string => (r.type === 'polarka' ? 'vuz' : r.c);
 const GOLD = '#ffd98a';
 
 interface Placed { id: string; name: string; x: number; y: number; r: number; color: string; target: boolean }
 
+type SeasonFilter = Season | 'vse';
+interface Layout { placed: Placed[]; center: { x: number; y: number } }
+
 /** Rozmístění výřezu na plátno: hvězdy souhvězdí + rozptýlené hvězdy, na které jde taky klepnout. */
-function layoutScene(sceneId: SceneId, w: number, h: number, withPolarka: boolean): Placed[] {
+function layoutScene(sceneId: SceneId, w: number, h: number, withPolarka: boolean): Layout {
   const stars = sceneStars(sceneId, withPolarka);
   const all = sceneId === 'all';
   const proj = all ? projectSky(stars) : projectScene(stars);
   const xs = Object.values(proj).map((p) => p.x), ys = Object.values(proj).map((p) => p.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
   const padX = w * (all ? 0.08 : 0.14), padTop = h * (all ? 0.1 : 0.14), padBottom = h * (all ? 0.08 : 0.12);
-  const scale = Math.min((w - padX * 2) / Math.max(1e-6, maxX - minX), (h - padTop - padBottom) / Math.max(1e-6, maxY - minY));
-  const ox = (w - (maxX - minX) * scale) / 2 - minX * scale;
-  const oy = padTop + (h - padTop - padBottom - (maxY - minY) * scale) / 2 - minY * scale;
+  let scale = Math.min((w - padX * 2) / Math.max(1e-6, maxX - minX), (h - padTop - padBottom) / Math.max(1e-6, maxY - minY));
+  let ox = (w - (maxX - minX) * scale) / 2 - minX * scale;
+  let oy = padTop + (h - padTop - padBottom - (maxY - minY) * scale) / 2 - minY * scale;
+  if (all) {
+    // Celá obloha: pól (Polárka) přesně uprostřed, ať se mapa může otáčet jako otočná mapa.
+    const maxR = Math.max(...stars.map((s) => 90 - s.dec));
+    scale = Math.min(w - padX * 2, h - padTop - padBottom) / (2 * maxR);
+    ox = w / 2; oy = padTop + (h - padTop - padBottom) / 2;
+  }
   const k = Math.max(0.75, Math.min(1.4, Math.min(w, h) / 650)) * (all ? 0.7 : 1);
   const size = (mag: number) => Math.max(2.4, (5.6 - mag * 1.05)) * k;
   const placed: Placed[] = stars.map((s: SkyStar) => ({
@@ -48,7 +57,7 @@ function layoutScene(sceneId: SceneId, w: number, h: number, withPolarka: boolea
     if (placed.some((p) => Math.hypot(p.x - x, p.y - y) < Math.min(w, h) * 0.09)) continue;
     placed.push({ id: `d${placed.length}`, name: '', x, y, r: size(1.9 + rnd() * 1.4), color: rnd() < 0.2 ? '#ffe2b8' : '#ffffff', target: false });
   }
-  return placed;
+  return { placed, center: { x: ox, y: oy } };
 }
 
 function drawStar(ctx: CanvasRenderingContext2D, p: Placed, glow = 1) {
@@ -67,7 +76,10 @@ function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number
   ctx.fillStyle = color; ctx.fillText(text, x, y);
 }
 
-const ALL_TEXT = 'Všechna souhvězdí na jedné mapě. Uprostřed je Polárka – kolem ní se celá obloha během noci pomalu otáčí. Najednou je ale nikdy neuvidíme: některá souhvězdí jsou vidět v létě, jiná v zimě.';
+const ALL_TEXT = 'Všechna souhvězdí na jedné mapě. Uprostřed je Polárka – kolem ní se celá obloha během noci pomalu otáčí. Najednou je ale nikdy neuvidíme: některá souhvězdí jsou vidět v létě, jiná v zimě. Vyber roční období a mapa se otočí jako otočná mapa hvězdné oblohy.';
+const seasonOf = (id: Season) => SEASONS.find((s) => s.id === id)!;
+/** Natočení mapy: večerní obloha daného období dole (k jižnímu obzoru). */
+const seasonRotation = (f: SeasonFilter) => (f === 'vse' || f === 'cely-rok' ? 0 : Math.PI / 2 - (seasonOf(f).ra / 12) * Math.PI);
 
 const FAINT = (() => { const r = rng(5); return Array.from({ length: 260 }, () => ({ x: r(), y: r(), s: 0.4 + r() * 1.1, a: 0.2 + r() * 0.5, tw: r() * 6.28 })); })();
 
@@ -75,6 +87,10 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   const still = useMemo(prefersReducedMotion, []);
   const [mode, setMode] = useState<Mode>(settings?.mode === 'prohlizet' ? 'prohlizet' : 'hra');
   const [view, setView] = useState<SceneId>('vuz');
+  const [season, setSeason] = useState<SeasonFilter>('vse');
+  const rot = useRef(0);
+  const zoom = useRef({ z: 1, x: 0, y: 0 });
+  const lastT = useRef(0);
   // Hra
   const [round, setRound] = useState(0);
   // Spojovačka podle čísel: kolik hvězd z pořadí už dítě spojilo.
@@ -90,7 +106,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   const sceneId: SceneId = mode === 'prohlizet' ? view : sceneOf(ROUNDS[round]);
   // Ve hře je Polárka jen v kole „Najdi Polárku“ – v prvním kole je vůz přes celou oblohu.
   const withPolarka = mode === 'prohlizet' ? view === 'vuz' || view === 'all' : ROUNDS[round].type === 'polarka';
-  const placed = useMemo(() => layoutScene(sceneId, box.w, box.h, withPolarka), [sceneId, box.w, box.h, withPolarka]);
+  const { placed, center } = useMemo(() => layoutScene(sceneId, box.w, box.h, withPolarka), [sceneId, box.w, box.h, withPolarka]);
   const byId = useMemo(() => Object.fromEntries(placed.map((p) => [p.id, p])), [placed]);
   const r = ROUNDS[round];
   const c = r.type === 'connect' ? constellation(r.c) : null;
@@ -109,8 +125,8 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   const restart = () => { setCleanRounds(0); setFinished(false); resetRound(0); };
 
   // Kreslení: každé snímek (třpyt hvězd, blikání hvězdy, kde se začíná).
-  const stateRef = useRef({ mode, placed, byId, step, round, roundDone, view, mistakes });
-  stateRef.current = { mode, placed, byId, step, round, roundDone, view, mistakes };
+  const stateRef = useRef({ mode, placed, byId, center, step, round, roundDone, view, mistakes, season });
+  stateRef.current = { mode, placed, byId, center, step, round, roundDone, view, mistakes, season };
   useEffect(() => {
     let raf = 0;
     const frame = (now: number) => {
@@ -132,6 +148,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
 
   function paint(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
     const st = stateRef.current;
+    const prevT = lastT.current; lastT.current = t;
     const g = ctx.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, '#05081a'); g.addColorStop(1, '#101a45');
     ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
@@ -171,17 +188,60 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
 
     if (st.mode === 'prohlizet') {
       const all = st.view === 'all';
-      const list = all ? CONSTELLATIONS : [constellation(st.view as Constellation['id'])];
-      for (const cons of list) for (const [a, b] of cons.edges) line(st.byId[a], st.byId[b], all ? 0.75 : 0.9);
-      if (st.view === 'vuz') polarkaGuide(true);
-      for (const p of st.placed) drawStar(ctx, p, p.id === 'polarka' ? 1.5 : 1);
-      for (const cons of list) {
-        const ts = cons.stars.map((s) => st.byId[s.id]);
-        const top = Math.min(...ts.map((p) => p.y)), cx = ts.reduce((a, p) => a + p.x, 0) / ts.length;
-        label(ctx, cons.name, cx, Math.max(fs + 6, top - (all ? 14 : 26)), GOLD, all ? fs - 1 : fs + 4);
-        if (!all) for (const id of cons.named ?? []) { if (id === 'polarka') continue; const p = st.byId[id]; label(ctx, p.name, p.x, p.y + p.r + fs + 6, '#dfe6ff', fs - 1); }
+      // 2 = vybrané období, 1 = vidět po celý rok (k vybranému období), 0 = jindy
+      const lvl = (cons: Constellation) => (!all || st.season === 'vse' || cons.season === st.season ? 2 : cons.season === 'cely-rok' ? 1 : 0);
+      const list = all ? CONSTELLATIONS : [constellation(st.view)];
+      const starLvl: Record<string, number> = { polarka: 2 };
+      for (const cons of list) for (const s of cons.stars) starLvl[s.id] = Math.max(starLvl[s.id] ?? 0, lvl(cons));
+      let pl = st.placed, by = st.byId;
+      if (all) {
+        // Otočná mapa: plynule natočit k vybranému ročnímu období a přiblížit jeho část oblohy.
+        // Plynulé dojetí podle skutečného času (stejně rychle i při trhaném vykreslování).
+        const k = 1 - Math.exp(-Math.min(0.5, Math.max(0, t - prevT)) * 5);
+        const ease = (cur: number, target: number) => (still || Math.abs(target - cur) < 1e-3 ? target : cur + (target - cur) * k);
+        let d = seasonRotation(st.season) - rot.current;
+        d = Math.atan2(Math.sin(d), Math.cos(d));
+        rot.current = ease(rot.current, rot.current + d);
+        const ca = Math.cos(rot.current), sa = Math.sin(rot.current), { x: cx, y: cy } = st.center;
+        const turned = st.placed.map((p) => ({ ...p, x: cx + (p.x - cx) * ca - (p.y - cy) * sa, y: cy + (p.x - cx) * sa + (p.y - cy) * ca }));
+        let tz = 1, tcx = w / 2, tcy = h / 2;
+        if (st.season !== 'vse') {
+          const vis = turned.filter((p) => starLvl[p.id] === 2); // souhvězdí období + Polárka
+          const x0 = Math.min(...vis.map((p) => p.x)), x1 = Math.max(...vis.map((p) => p.x));
+          const y0 = Math.min(...vis.map((p) => p.y)), y1 = Math.max(...vis.map((p) => p.y));
+          tz = Math.min(2.4, (w * 0.84) / Math.max(1, x1 - x0), (h * 0.74) / Math.max(1, y1 - y0));
+          tcx = (x0 + x1) / 2; tcy = (y0 + y1) / 2 - (h * 0.02) / tz;
+        }
+        const z = zoom.current;
+        if (z.x === 0 && z.y === 0) { z.x = w / 2; z.y = h / 2; }
+        z.z = ease(z.z, tz); z.x = ease(z.x, tcx); z.y = ease(z.y, tcy);
+        pl = turned.map((p) => ({ ...p, x: w / 2 + (p.x - z.x) * z.z, y: h / 2 + (p.y - z.y) * z.z }));
+        by = Object.fromEntries(pl.map((p) => [p.id, p]));
       }
-      if (st.view === 'vuz' || st.view === 'maly-vuz' || all) { const p = st.byId.polarka; label(ctx, st.view === 'vuz' ? 'Polárka – sever' : 'Polárka', p.x, p.y - p.r - 14, '#7fd3ff', all ? fs - 1 : fs); }
+      for (const cons of list) { const l = lvl(cons); for (const [a, b] of cons.edges) line(by[a], by[b], l === 2 ? (all ? 0.75 : 0.9) : l === 1 ? 0.4 : 0.1); }
+      if (st.view === 'vuz') polarkaGuide(true);
+      for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.7 : 0.28; drawStar(ctx, p, p.id === 'polarka' ? 1.5 : 1); }
+      ctx.globalAlpha = 1;
+      const names: Array<{ x: number; y: number; half: number }> = [];
+      for (const cons of list) {
+        const l = lvl(cons);
+        if (l === 0) continue;
+        const ts = cons.stars.map((s) => by[s.id]);
+        const top = Math.min(...ts.map((p) => p.y)), cx = ts.reduce((a, p) => a + p.x, 0) / ts.length;
+        label(ctx, cons.name, cx, Math.max(fs + 6, top - (all ? 14 : 26)), l === 2 ? GOLD : 'rgba(255,217,138,.6)', all ? fs - (st.season === 'vse' ? 3 : l === 2 ? 0 : 3) : fs + 4);
+        // Jména jasných hvězd: u jednoho souhvězdí vždy, na celé obloze jen u vybraného období.
+        if (!all || (st.season !== 'vse' && l === 2)) for (const id of cons.named ?? []) {
+          if (id === 'polarka') continue;
+          const p = by[id], size = fs - 2, half = p.name.length * size * 0.29;
+          // Pod hvězdu, a když tam už je jiné jméno (Kastor a Pollux), tak nad ni.
+          const spots = [p.y + p.r + fs + (all ? 2 : 6), p.y - p.r - 8];
+          const y = spots.find((yy) => !names.some((b) => Math.abs(b.x - p.x) < b.half + half && Math.abs(b.y - yy) < size));
+          if (y === undefined) continue;
+          names.push({ x: p.x, y, half });
+          label(ctx, p.name, p.x, y, '#dfe6ff', size);
+        }
+      }
+      if (st.view === 'vuz' || st.view === 'maly-vuz' || all) { const p = by.polarka; label(ctx, st.view === 'vuz' ? 'Polárka – sever' : 'Polárka', p.x, all ? p.y + p.r + fs + 4 : p.y - p.r - 14, '#7fd3ff', all ? fs - 2 : fs); }
       return;
     }
 
@@ -210,14 +270,15 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
       const br = Math.max(11, fs * 0.62);
       for (const [id, list] of Object.entries(nums)) {
         const p = st.byId[id];
-        list.forEach((i, k) => {
+        // Číslo hvězdy, která už je spojená, zmizí – zůstanou jen ta, na která se ještě klepe.
+        list.filter((i) => i >= st.step).forEach((i, k) => {
           const bx = p.x + p.r + br + 4 + k * (br * 2 + 4), by = p.y - p.r - br - 2;
-          const done = i < st.step, isNext = i === st.step;
-          ctx.fillStyle = isNext ? '#f0a12c' : done ? 'rgba(255,217,138,.25)' : 'rgba(255,255,255,.92)';
+          const isNext = i === st.step;
+          ctx.fillStyle = isNext ? '#f0a12c' : 'rgba(255,255,255,.92)';
           ctx.beginPath(); ctx.arc(bx, by, br, 0, 6.283); ctx.fill();
           ctx.font = `700 ${Math.round(br * 1.15)}px VisbyRound, system-ui, sans-serif`;
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillStyle = isNext ? '#2a1700' : done ? 'rgba(255,217,138,.8)' : '#0f1d4d';
+          ctx.fillStyle = isNext ? '#2a1700' : '#0f1d4d';
           ctx.fillText(String(i + 1), bx, by + 1);
           ctx.textBaseline = 'alphabetic';
         });
@@ -296,7 +357,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
               </button>
             ))}
           </div>
-          <h2 className="text-3xl font-bold mt-3">{mode === 'prohlizet' ? (view === 'all' ? 'Celá obloha' : constellation(view).name) : r.type === 'polarka' ? 'Polárka' : c!.name}</h2>
+          <h2 className="text-3xl font-bold mt-3">{mode === 'prohlizet' ? (view === 'all' ? (season === 'vse' ? 'Celá obloha' : `Obloha ${seasonOf(season).on}`) : constellation(view).name) : r.type === 'polarka' ? 'Polárka' : c!.name}</h2>
           {mode === 'hra' ? (
             <div className="flex items-center gap-1.5 mt-2" aria-label={`Kolo ${round + 1} z ${ROUNDS.length}`}>
               {ROUNDS.map((_, i) => (
@@ -331,7 +392,24 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
             </>
           ) : (
             <>
-              <p className="text-base leading-relaxed text-[#4e5871]">{view === 'all' ? ALL_TEXT : constellation(view).text}</p>
+              <div>
+                <p className="text-sm font-bold text-[#56628a] mb-2">Roční období</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(['vse', 'jaro', 'leto', 'podzim', 'zima'] as SeasonFilter[]).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => { setSeason(f); setView('all'); }}
+                      aria-pressed={season === f}
+                      className="h-9 px-3 rounded-full text-sm font-bold transition-colors"
+                      style={season === f ? { background: '#f0a12c', color: '#2a1700' } : { background: '#f4f6fb', color: '#0f1d4d' }}
+                    >
+                      {f === 'vse' ? 'Všechna' : `${seasonOf(f).icon} ${seasonOf(f).name}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-base leading-relaxed text-[#4e5871]">{view === 'all' ? (season === 'vse' ? ALL_TEXT : seasonOf(season).text) : constellation(view).text}</p>
               {view === 'vuz' ? (
                 <div className="rounded-2xl bg-[#eef1f8] p-3">
                   <p className="text-sm font-bold text-[#0f1d4d]">Jak najít Polárku</p>
@@ -339,7 +417,6 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                 </div>
               ) : null}
               <div className="pt-1">
-                <p className="text-sm font-bold text-[#56628a] mb-2">Souhvězdí</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -348,9 +425,11 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                     style={{ background: view === 'all' ? '#fde9c6' : '#f4f6fb' }}
                   >
                     <span className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-xl" style={{ background: '#0b1236' }} aria-hidden="true">✨</span>
-                    Celá obloha – všechna najednou
+                    {season === 'vse' ? 'Celá obloha – všechna najednou' : `Obloha ${seasonOf(season).on} – na mapě`}
                   </button>
-                  {CONSTELLATIONS.map((cons) => (
+                  {(season === 'vse' ? (['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as Season[]) : [season, 'cely-rok' as Season]).map((sid) => [
+                    <p key={`h-${sid}`} className="col-span-2 text-sm font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
+                    ...CONSTELLATIONS.filter((cons) => cons.season === sid).map((cons) => (
                     <button
                       key={cons.id}
                       type="button"
@@ -361,7 +440,8 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                       <ConstellationIcon c={cons} />
                       <span className="min-w-0 leading-tight">{cons.name}</span>
                     </button>
-                  ))}
+                    )),
+                  ])}
                 </div>
               </div>
             </>

@@ -5,9 +5,20 @@
  */
 
 export interface SkyStar { id: string; name: string; ra: number; dec: number; mag: number; color?: string }
+/** Kdy je souhvězdí u nás nejlépe vidět večer. „cely-rok“ = blízko Polárky, nikdy nezapadne. */
+export type Season = 'cely-rok' | 'jaro' | 'leto' | 'podzim' | 'zima';
+export const SEASONS: Array<{ id: Season; name: string; on: string; icon: string; text: string; ra: number }> = [
+  { id: 'jaro', name: 'Jaro', on: 'na jaře', icon: '🌱', ra: 11.5, text: 'Na jaře večer vidíme vysoko na jihu Lva, Pannu se Spikou a Pastýře s oranžovým Arkturem. K Arkturu dovede oblouk oje Velkého vozu.' },
+  { id: 'leto', name: 'Léto', on: 'v létě', icon: '☀️', ra: 18.5, text: 'V létě večer je vysoko nad hlavou Letní trojúhelník: Vega v Lyře, Deneb v Labuti a Altair v Orlu. Nízko nad jihem svítí červený Antares ve Štíru.' },
+  { id: 'podzim', name: 'Podzim', on: 'na podzim', icon: '🍂', ra: 0.5, text: 'Na podzim večer je vysoko velký čtverec Pegase. Z jeho rohu vychází řada hvězd Andromedy a za ní je Perseus.' },
+  { id: 'zima', name: 'Zima', on: 'v zimě', icon: '❄️', ra: 6, text: 'Zimní obloha je nejjasnější z celého roku: Orion, Býk s Aldebaranem a Plejádami, Blíženci, Vozka s Capellou a Sírius ve Velkém psu – nejjasnější hvězda noční oblohy.' },
+  { id: 'cely-rok', name: 'Po celý rok', on: 'po celý rok', icon: '⭐', ra: 0, text: 'Tato souhvězdí jsou blízko Polárky. Celou noc kolem ní krouží a nikdy nezapadnou pod obzor, proto je u nás vidíme po celý rok.' },
+];
+
 export interface Constellation {
-  id: 'vuz' | 'maly-vuz' | 'kasiopeja' | 'labut' | 'lyra' | 'lev' | 'orion' | 'blizenci';
+  id: string;
   name: string;
+  season: Season;
   stars: SkyStar[];
   edges: Array<[string, string]>;
   /** Pořadí ve hře (spojovačka podle čísel), jen u souhvězdí, která jsou ve hře. Hvězda může mít dvě čísla. */
@@ -23,6 +34,7 @@ export const POLARKA: SkyStar = { id: 'polarka', name: 'Polárka', ra: 2.530, de
 export const CONSTELLATIONS: Constellation[] = [
   {
     id: 'vuz',
+    season: 'cely-rok',
     name: 'Velký vůz',
     stars: [
       { id: 'dubhe', name: 'Dubhe', ra: 11.062, dec: 61.75, mag: 1.8 },
@@ -39,6 +51,7 @@ export const CONSTELLATIONS: Constellation[] = [
   },
   {
     id: 'maly-vuz',
+    season: 'cely-rok',
     name: 'Malý vůz',
     stars: [
       { id: 'polarka', name: 'Polárka', ra: 2.530, dec: 89.26, mag: 2.0 },
@@ -55,6 +68,7 @@ export const CONSTELLATIONS: Constellation[] = [
   },
   {
     id: 'kasiopeja',
+    season: 'cely-rok',
     name: 'Kasiopeja',
     stars: [
       { id: 'caph', name: 'Caph', ra: 0.153, dec: 59.15, mag: 2.3 },
@@ -69,6 +83,7 @@ export const CONSTELLATIONS: Constellation[] = [
   },
   {
     id: 'labut',
+    season: 'leto',
     name: 'Labuť',
     stars: [
       { id: 'deneb', name: 'Deneb', ra: 20.690, dec: 45.28, mag: 1.3 },
@@ -83,6 +98,7 @@ export const CONSTELLATIONS: Constellation[] = [
   },
   {
     id: 'lyra',
+    season: 'leto',
     name: 'Lyra',
     stars: [
       { id: 'vega', name: 'Vega', ra: 18.616, dec: 38.78, mag: 0.0, color: '#dce9ff' },
@@ -97,6 +113,7 @@ export const CONSTELLATIONS: Constellation[] = [
   },
   {
     id: 'lev',
+    season: 'jaro',
     name: 'Lev',
     stars: [
       { id: 'regulus', name: 'Regulus', ra: 10.140, dec: 11.97, mag: 1.4 },
@@ -115,6 +132,7 @@ export const CONSTELLATIONS: Constellation[] = [
   },
   {
     id: 'orion',
+    season: 'zima',
     name: 'Orion',
     stars: [
       { id: 'betelgeuze', name: 'Betelgeuze', ra: 5.919, dec: 7.41, mag: 0.5, color: '#ffb58a' },
@@ -132,6 +150,7 @@ export const CONSTELLATIONS: Constellation[] = [
   },
   {
     id: 'blizenci',
+    season: 'zima',
     name: 'Blíženci',
     stars: [
       { id: 'kastor', name: 'Kastor', ra: 7.577, dec: 31.89, mag: 1.6 },
@@ -145,16 +164,274 @@ export const CONSTELLATIONS: Constellation[] = [
     text: 'Dvě jasné hvězdy vedle sebe, Kastor a Pollux, jsou jako dvojčata. Nejlépe je uvidíme v zimě.',
     named: ['kastor', 'pollux'],
   },
+  // ——— Po celý rok (kolem Polárky) ———
+  {
+    id: 'drak', name: 'Drak', season: 'cely-rok',
+    stars: [
+      { id: 'giausar', name: 'λ', ra: 11.523, dec: 69.33, mag: 3.8 },
+      { id: 'dra-kappa', name: 'κ', ra: 12.558, dec: 69.79, mag: 3.9 },
+      { id: 'thuban', name: 'Thuban', ra: 14.073, dec: 64.38, mag: 3.7 },
+      { id: 'edasich', name: 'Edasich', ra: 15.415, dec: 58.97, mag: 3.3 },
+      { id: 'dra-theta', name: 'θ', ra: 16.031, dec: 58.57, mag: 4.0 },
+      { id: 'dra-eta', name: 'η', ra: 16.400, dec: 61.51, mag: 2.7 },
+      { id: 'dra-zeta', name: 'ζ', ra: 17.146, dec: 65.71, mag: 3.2 },
+      { id: 'altais', name: 'Altais', ra: 19.209, dec: 67.66, mag: 3.1 },
+      { id: 'grumium', name: 'Grumium', ra: 17.892, dec: 56.87, mag: 3.7 },
+      { id: 'eltanin', name: 'Eltanin', ra: 17.943, dec: 51.49, mag: 2.2 },
+      { id: 'rastaban', name: 'Rastaban', ra: 17.507, dec: 52.30, mag: 2.8 },
+      { id: 'dra-nu', name: 'ν', ra: 17.537, dec: 55.18, mag: 4.9 },
+    ],
+    edges: [['giausar', 'dra-kappa'], ['dra-kappa', 'thuban'], ['thuban', 'edasich'], ['edasich', 'dra-theta'], ['dra-theta', 'dra-eta'], ['dra-eta', 'dra-zeta'], ['dra-zeta', 'altais'], ['altais', 'grumium'], ['grumium', 'eltanin'], ['eltanin', 'rastaban'], ['rastaban', 'dra-nu'], ['dra-nu', 'grumium']],
+    text: 'Dlouhé souhvězdí, které se jako had vine mezi Velkým a Malým vozem. Hlavu mu tvoří čtyři hvězdy. Je blízko Polárky, a proto ho vidíme po celý rok.',
+  },
+  {
+    id: 'cefeus', name: 'Cefeus', season: 'cely-rok',
+    stars: [
+      { id: 'alderamin', name: 'Alderamin', ra: 21.310, dec: 62.59, mag: 2.5 },
+      { id: 'alfirk', name: 'Alfirk', ra: 21.478, dec: 70.56, mag: 3.2 },
+      { id: 'errai', name: 'Errai', ra: 23.656, dec: 77.63, mag: 3.2 },
+      { id: 'cep-iota', name: 'ι', ra: 22.828, dec: 66.20, mag: 3.5 },
+      { id: 'cep-zeta', name: 'ζ', ra: 22.181, dec: 58.20, mag: 3.4 },
+    ],
+    edges: [['alderamin', 'alfirk'], ['alfirk', 'errai'], ['errai', 'cep-iota'], ['cep-iota', 'alfirk'], ['cep-iota', 'cep-zeta'], ['cep-zeta', 'alderamin']],
+    text: 'Pět hvězd ve tvaru domečku se špičatou střechou. Leží vedle Kasiopeji blízko Polárky a na obloze je po celý rok.',
+  },
+  // ——— Jaro ———
+  {
+    id: 'pastyr', name: 'Pastýř', season: 'jaro',
+    stars: [
+      { id: 'arktur', name: 'Arktur', ra: 14.261, dec: 19.18, mag: 0.0, color: '#ffc890' },
+      { id: 'izar', name: 'Izar', ra: 14.750, dec: 27.07, mag: 2.4 },
+      { id: 'boo-delta', name: 'δ', ra: 15.258, dec: 33.31, mag: 3.5 },
+      { id: 'nekkar', name: 'Nekkar', ra: 15.032, dec: 40.39, mag: 3.5 },
+      { id: 'seginus', name: 'Seginus', ra: 14.535, dec: 38.31, mag: 3.0 },
+      { id: 'boo-rho', name: 'ρ', ra: 14.531, dec: 30.37, mag: 3.6 },
+      { id: 'muphrid', name: 'Muphrid', ra: 13.911, dec: 18.40, mag: 2.7 },
+    ],
+    edges: [['arktur', 'izar'], ['izar', 'boo-delta'], ['boo-delta', 'nekkar'], ['nekkar', 'seginus'], ['seginus', 'boo-rho'], ['boo-rho', 'arktur'], ['arktur', 'muphrid']],
+    text: 'Hvězdy ve tvaru papírového draka nebo kornoutu. Na jeho špičce svítí oranžový Arktur, jedna z nejjasnějších hvězd. Najdeš ho, když prodloužíš oblouk oje Velkého vozu.',
+    named: ['arktur'],
+  },
+  {
+    id: 'koruna', name: 'Severní koruna', season: 'jaro',
+    stars: [
+      { id: 'crb-theta', name: 'θ', ra: 15.549, dec: 31.36, mag: 4.1 },
+      { id: 'crb-beta', name: 'β', ra: 15.464, dec: 29.11, mag: 3.7 },
+      { id: 'alphecca', name: 'Gemma', ra: 15.578, dec: 26.71, mag: 2.2 },
+      { id: 'crb-gamma', name: 'γ', ra: 15.712, dec: 26.30, mag: 3.8 },
+      { id: 'crb-delta', name: 'δ', ra: 15.827, dec: 26.07, mag: 4.6 },
+      { id: 'crb-eps', name: 'ε', ra: 15.960, dec: 26.88, mag: 4.2 },
+    ],
+    edges: [['crb-theta', 'crb-beta'], ['crb-beta', 'alphecca'], ['alphecca', 'crb-gamma'], ['crb-gamma', 'crb-delta'], ['crb-delta', 'crb-eps']],
+    text: 'Malý oblouk hvězd jako koruna nebo podkova. Leží hned vedle Pastýře. Nejlépe ji uvidíme koncem jara a v létě.',
+  },
+  {
+    id: 'panna', name: 'Panna', season: 'jaro',
+    stars: [
+      { id: 'spika', name: 'Spika', ra: 13.420, dec: -11.16, mag: 1.0, color: '#cfe0ff' },
+      { id: 'porrima', name: 'Porrima', ra: 12.694, dec: -1.45, mag: 2.7 },
+      { id: 'vir-delta', name: 'δ', ra: 12.927, dec: 3.40, mag: 3.4 },
+      { id: 'vindemiatrix', name: 'Vindemiatrix', ra: 13.036, dec: 10.96, mag: 2.8 },
+      { id: 'vir-zeta', name: 'ζ', ra: 13.578, dec: -0.60, mag: 3.4 },
+      { id: 'zaniah', name: 'Zaniah', ra: 12.332, dec: -0.67, mag: 3.9 },
+      { id: 'zavijava', name: 'Zavijava', ra: 11.845, dec: 1.76, mag: 3.6 },
+    ],
+    edges: [['zavijava', 'zaniah'], ['zaniah', 'porrima'], ['porrima', 'vir-delta'], ['vir-delta', 'vindemiatrix'], ['porrima', 'spika'], ['spika', 'vir-zeta'], ['vir-zeta', 'vir-delta']],
+    text: 'Velké jarní souhvězdí. Nejjasnější hvězda je modrobílá Spika. Najdeš ji, když oblouk oje Velkého vozu prodloužíš přes Arktur ještě dál.',
+    named: ['spika'],
+  },
+  // ——— Léto ———
+  {
+    id: 'orel', name: 'Orel', season: 'leto',
+    stars: [
+      { id: 'altair', name: 'Altair', ra: 19.846, dec: 8.87, mag: 0.8 },
+      { id: 'tarazed', name: 'Tarazed', ra: 19.771, dec: 10.61, mag: 2.7 },
+      { id: 'alshain', name: 'Alshain', ra: 19.922, dec: 6.41, mag: 3.7 },
+      { id: 'aql-zeta', name: 'ζ', ra: 19.090, dec: 13.86, mag: 3.0 },
+      { id: 'aql-delta', name: 'δ', ra: 19.425, dec: 3.11, mag: 3.4 },
+      { id: 'aql-theta', name: 'θ', ra: 20.188, dec: -0.82, mag: 3.2 },
+      { id: 'aql-lambda', name: 'λ', ra: 19.104, dec: -4.88, mag: 3.4 },
+    ],
+    edges: [['tarazed', 'altair'], ['altair', 'alshain'], ['alshain', 'aql-theta'], ['altair', 'aql-delta'], ['aql-delta', 'aql-lambda'], ['aql-delta', 'aql-zeta']],
+    text: 'Letní souhvězdí s jasnou hvězdou Altair. Altair, Vega z Lyry a Deneb z Labutě tvoří na letní obloze velký Letní trojúhelník.',
+    named: ['altair'],
+  },
+  {
+    id: 'herkules', name: 'Herkules', season: 'leto',
+    stars: [
+      { id: 'her-zeta', name: 'ζ', ra: 16.688, dec: 31.60, mag: 2.8 },
+      { id: 'her-eta', name: 'η', ra: 16.715, dec: 38.92, mag: 3.5 },
+      { id: 'her-pi', name: 'π', ra: 17.251, dec: 36.81, mag: 3.2 },
+      { id: 'her-eps', name: 'ε', ra: 17.005, dec: 30.93, mag: 3.9 },
+      { id: 'kornephoros', name: 'Kornephoros', ra: 16.504, dec: 21.49, mag: 2.8 },
+      { id: 'her-delta', name: 'δ', ra: 17.250, dec: 24.84, mag: 3.1 },
+      { id: 'her-theta', name: 'θ', ra: 17.938, dec: 37.25, mag: 3.9 },
+      { id: 'her-iota', name: 'ι', ra: 17.658, dec: 46.01, mag: 3.8 },
+      { id: 'her-sigma', name: 'σ', ra: 16.568, dec: 42.44, mag: 4.2 },
+    ],
+    edges: [['her-zeta', 'her-eta'], ['her-eta', 'her-pi'], ['her-pi', 'her-eps'], ['her-eps', 'her-zeta'], ['her-zeta', 'kornephoros'], ['her-eps', 'her-delta'], ['her-pi', 'her-theta'], ['her-theta', 'her-iota'], ['her-eta', 'her-sigma']],
+    text: 'Souhvězdí hrdiny Herkula. Poznáš ho podle čtyř hvězd do lichoběžníku uprostřed. Svítí slabě, ale v létě je vysoko na obloze.',
+  },
+  {
+    id: 'stir', name: 'Štír', season: 'leto',
+    stars: [
+      { id: 'acrab', name: 'Acrab', ra: 16.091, dec: -19.81, mag: 2.6 },
+      { id: 'dschubba', name: 'Dschubba', ra: 16.006, dec: -22.62, mag: 2.3 },
+      { id: 'sco-pi', name: 'π', ra: 15.981, dec: -26.11, mag: 2.9 },
+      { id: 'sco-sigma', name: 'σ', ra: 16.353, dec: -25.59, mag: 2.9 },
+      { id: 'antares', name: 'Antares', ra: 16.490, dec: -26.43, mag: 1.0, color: '#ff9c7a' },
+      { id: 'sco-tau', name: 'τ', ra: 16.598, dec: -28.22, mag: 2.8 },
+      { id: 'sco-eps', name: 'ε', ra: 16.836, dec: -34.29, mag: 2.3 },
+      { id: 'sco-mu', name: 'μ', ra: 16.864, dec: -38.05, mag: 3.0 },
+      { id: 'sco-zeta', name: 'ζ', ra: 16.910, dec: -42.36, mag: 3.6 },
+      { id: 'sco-eta', name: 'η', ra: 17.203, dec: -43.24, mag: 3.3 },
+      { id: 'sargas', name: 'Sargas', ra: 17.622, dec: -43.00, mag: 1.9 },
+      { id: 'sco-iota', name: 'ι', ra: 17.793, dec: -40.13, mag: 3.0 },
+      { id: 'sco-kappa', name: 'κ', ra: 17.708, dec: -39.03, mag: 2.4 },
+      { id: 'shaula', name: 'Shaula', ra: 17.560, dec: -37.10, mag: 1.6 },
+      { id: 'lesath', name: 'Lesath', ra: 17.513, dec: -37.30, mag: 2.7 },
+    ],
+    edges: [['acrab', 'dschubba'], ['dschubba', 'sco-pi'], ['dschubba', 'sco-sigma'], ['sco-sigma', 'antares'], ['antares', 'sco-tau'], ['sco-tau', 'sco-eps'], ['sco-eps', 'sco-mu'], ['sco-mu', 'sco-zeta'], ['sco-zeta', 'sco-eta'], ['sco-eta', 'sargas'], ['sargas', 'sco-iota'], ['sco-iota', 'sco-kappa'], ['sco-kappa', 'shaula'], ['shaula', 'lesath']],
+    text: 'Hvězdy ve tvaru háčku se zakrouceným ocasem. Uprostřed svítí červený Antares. U nás je v létě jen nízko nad jižním obzorem, takže konec ocasu často schová obzor.',
+    named: ['antares'],
+  },
+  {
+    id: 'strelec', name: 'Střelec', season: 'leto',
+    stars: [
+      { id: 'alnasl', name: 'Alnasl', ra: 18.097, dec: -30.42, mag: 3.0 },
+      { id: 'kaus-media', name: 'Kaus Media', ra: 18.350, dec: -29.83, mag: 2.7 },
+      { id: 'kaus-australis', name: 'Kaus Australis', ra: 18.403, dec: -34.38, mag: 1.8 },
+      { id: 'kaus-borealis', name: 'Kaus Borealis', ra: 18.466, dec: -25.42, mag: 2.8 },
+      { id: 'sgr-phi', name: 'φ', ra: 18.761, dec: -26.99, mag: 3.2 },
+      { id: 'nunki', name: 'Nunki', ra: 18.921, dec: -26.30, mag: 2.0 },
+      { id: 'sgr-tau', name: 'τ', ra: 19.116, dec: -27.67, mag: 3.3 },
+      { id: 'ascella', name: 'Ascella', ra: 19.044, dec: -29.88, mag: 2.6 },
+    ],
+    edges: [['alnasl', 'kaus-media'], ['alnasl', 'kaus-australis'], ['kaus-media', 'kaus-australis'], ['kaus-media', 'kaus-borealis'], ['kaus-borealis', 'sgr-phi'], ['kaus-media', 'sgr-phi'], ['sgr-phi', 'nunki'], ['nunki', 'sgr-tau'], ['sgr-tau', 'ascella'], ['ascella', 'sgr-phi'], ['ascella', 'kaus-australis']],
+    text: 'Jeho nejjasnější hvězdy vypadají jako čajová konvice. Nad ní je nejhustší a nejjasnější část Mléčné dráhy. U nás je v létě nízko nad jihem.',
+  },
+  // ——— Podzim ———
+  {
+    id: 'pegas', name: 'Pegas', season: 'podzim',
+    stars: [
+      { id: 'markab', name: 'Markab', ra: 23.079, dec: 15.21, mag: 2.5 },
+      { id: 'scheat', name: 'Scheat', ra: 23.063, dec: 28.08, mag: 2.4 },
+      { id: 'alpheratz', name: 'Alpheratz', ra: 0.140, dec: 29.09, mag: 2.1 },
+      { id: 'algenib', name: 'Algenib', ra: 0.221, dec: 15.18, mag: 2.8 },
+      { id: 'homam', name: 'Homam', ra: 22.691, dec: 10.83, mag: 3.4 },
+      { id: 'biham', name: 'Biham', ra: 22.170, dec: 6.20, mag: 3.5 },
+      { id: 'enif', name: 'Enif', ra: 21.736, dec: 9.88, mag: 2.4 },
+      { id: 'matar', name: 'Matar', ra: 22.717, dec: 30.22, mag: 2.9 },
+    ],
+    edges: [['markab', 'scheat'], ['scheat', 'alpheratz'], ['alpheratz', 'algenib'], ['algenib', 'markab'], ['markab', 'homam'], ['homam', 'biham'], ['biham', 'enif'], ['scheat', 'matar']],
+    text: 'Okřídlený kůň. Poznáš ho podle velkého čtverce ze čtyř hvězd, kterému se říká Podzimní čtverec. Jeho levá horní hvězda už patří Andromedě.',
+  },
+  {
+    id: 'andromeda', name: 'Andromeda', season: 'podzim',
+    stars: [
+      { id: 'alpheratz', name: 'Alpheratz', ra: 0.140, dec: 29.09, mag: 2.1 },
+      { id: 'and-delta', name: 'δ', ra: 0.656, dec: 30.86, mag: 3.3 },
+      { id: 'mirach', name: 'Mirach', ra: 1.162, dec: 35.62, mag: 2.1 },
+      { id: 'almach', name: 'Almach', ra: 2.065, dec: 42.33, mag: 2.1 },
+      { id: 'and-mu', name: 'μ', ra: 0.946, dec: 38.50, mag: 3.9 },
+      { id: 'and-nu', name: 'ν', ra: 0.830, dec: 41.08, mag: 4.5 },
+    ],
+    edges: [['alpheratz', 'and-delta'], ['and-delta', 'mirach'], ['mirach', 'almach'], ['mirach', 'and-mu'], ['and-mu', 'and-nu']],
+    text: 'Řada hvězd, která vychází z rohu Pegasova čtverce. Kousek vedle je slabý obláček – galaxie v Andromedě. Je to nejvzdálenější věc, kterou uvidíme pouhým okem.',
+  },
+  {
+    id: 'perseus', name: 'Perseus', season: 'podzim',
+    stars: [
+      { id: 'per-eta', name: 'η', ra: 2.845, dec: 55.90, mag: 3.8 },
+      { id: 'per-gamma', name: 'γ', ra: 3.080, dec: 53.51, mag: 2.9 },
+      { id: 'mirfak', name: 'Mirfak', ra: 3.405, dec: 49.86, mag: 1.8 },
+      { id: 'per-delta', name: 'δ', ra: 3.715, dec: 47.79, mag: 3.0 },
+      { id: 'per-eps', name: 'ε', ra: 3.964, dec: 40.01, mag: 2.9 },
+      { id: 'per-zeta', name: 'ζ', ra: 3.902, dec: 31.88, mag: 2.9 },
+      { id: 'algol', name: 'Algol', ra: 3.136, dec: 40.96, mag: 2.1 },
+    ],
+    edges: [['per-eta', 'per-gamma'], ['per-gamma', 'mirfak'], ['mirfak', 'per-delta'], ['per-delta', 'per-eps'], ['per-eps', 'per-zeta'], ['mirfak', 'algol']],
+    text: 'Souhvězdí hrdiny Persea. Je v něm zvláštní hvězda Algol, která každé necelé tři dny na pár hodin zeslábne. Vidíme ho na podzim a v zimě.',
+    named: ['algol'],
+  },
+  {
+    id: 'beran', name: 'Beran', season: 'podzim',
+    stars: [
+      { id: 'ari-41', name: '41', ra: 2.833, dec: 27.26, mag: 3.6 },
+      { id: 'hamal', name: 'Hamal', ra: 2.120, dec: 23.46, mag: 2.0 },
+      { id: 'sheratan', name: 'Sheratan', ra: 1.911, dec: 20.81, mag: 2.6 },
+      { id: 'mesarthim', name: 'Mesarthim', ra: 1.892, dec: 19.29, mag: 3.9 },
+    ],
+    edges: [['ari-41', 'hamal'], ['hamal', 'sheratan'], ['sheratan', 'mesarthim']],
+    text: 'Malé podzimní souhvězdí – jen pár hvězd v krátké lomené čáře. Nejjasnější z nich je Hamal.',
+    named: ['hamal'],
+  },
+  // ——— Zima ———
+  {
+    id: 'byk', name: 'Býk', season: 'zima',
+    stars: [
+      { id: 'aldebaran', name: 'Aldebaran', ra: 4.599, dec: 16.51, mag: 0.9, color: '#ffc89a' },
+      { id: 'elnath', name: 'Elnath', ra: 5.438, dec: 28.61, mag: 1.7 },
+      { id: 'tau-zeta', name: 'ζ', ra: 5.627, dec: 21.14, mag: 3.0 },
+      { id: 'tau-theta', name: 'θ', ra: 4.478, dec: 15.87, mag: 3.4 },
+      { id: 'tau-gamma', name: 'γ', ra: 4.330, dec: 15.63, mag: 3.7 },
+      { id: 'tau-delta', name: 'δ', ra: 4.382, dec: 17.54, mag: 3.8 },
+      { id: 'tau-eps', name: 'ε', ra: 4.477, dec: 19.18, mag: 3.5 },
+      { id: 'tau-lambda', name: 'λ', ra: 4.011, dec: 12.49, mag: 3.4 },
+      { id: 'plejady', name: 'Plejády', ra: 3.791, dec: 24.11, mag: 2.9, color: '#cfe0ff' },
+    ],
+    edges: [['tau-lambda', 'tau-gamma'], ['tau-gamma', 'tau-delta'], ['tau-delta', 'tau-eps'], ['tau-eps', 'elnath'], ['tau-gamma', 'tau-theta'], ['tau-theta', 'aldebaran'], ['aldebaran', 'tau-zeta']],
+    text: 'Hlavu býka tvoří hvězdy do písmene V. Oranžový Aldebaran je jeho oko. Kousek vedle svítí hvězdokupa Plejády, které se lidově říká Kuřátka.',
+    named: ['aldebaran', 'plejady'],
+  },
+  {
+    id: 'vozka', name: 'Vozka', season: 'zima',
+    stars: [
+      { id: 'capella', name: 'Capella', ra: 5.278, dec: 46.00, mag: 0.1, color: '#fff1c4' },
+      { id: 'menkalinan', name: 'Menkalinan', ra: 5.992, dec: 44.95, mag: 1.9 },
+      { id: 'aur-theta', name: 'θ', ra: 5.995, dec: 37.21, mag: 2.6 },
+      { id: 'elnath', name: 'Elnath', ra: 5.438, dec: 28.61, mag: 1.7 },
+      { id: 'hassaleh', name: 'Hassaleh', ra: 4.950, dec: 33.17, mag: 2.7 },
+    ],
+    edges: [['capella', 'menkalinan'], ['menkalinan', 'aur-theta'], ['aur-theta', 'elnath'], ['elnath', 'hassaleh'], ['hassaleh', 'capella']],
+    text: 'Pět hvězd do pětiúhelníku. Svítí v něm žlutá Capella, jedna z nejjasnějších hvězd zimní oblohy. Spodní hvězdu pětiúhelníku si Vozka půjčuje od Býka.',
+    named: ['capella'],
+  },
+  {
+    id: 'velky-pes', name: 'Velký pes', season: 'zima',
+    stars: [
+      { id: 'sirius', name: 'Sírius', ra: 6.752, dec: -16.72, mag: -1.5, color: '#e4eeff' },
+      { id: 'mirzam', name: 'Mirzam', ra: 6.378, dec: -17.96, mag: 2.0 },
+      { id: 'muliphein', name: 'Muliphein', ra: 7.063, dec: -15.63, mag: 4.1 },
+      { id: 'wezen', name: 'Wezen', ra: 7.140, dec: -26.39, mag: 1.8 },
+      { id: 'adhara', name: 'Adhara', ra: 6.977, dec: -28.97, mag: 1.5 },
+      { id: 'aludra', name: 'Aludra', ra: 7.402, dec: -29.30, mag: 2.4 },
+      { id: 'furud', name: 'Furud', ra: 6.339, dec: -30.06, mag: 3.0 },
+    ],
+    edges: [['mirzam', 'sirius'], ['sirius', 'muliphein'], ['sirius', 'wezen'], ['wezen', 'adhara'], ['adhara', 'furud'], ['wezen', 'aludra']],
+    text: 'Svítí v něm Sírius – nejjasnější hvězda noční oblohy. Najdeš ho, když prodloužíš Orionův pás doleva dolů.',
+    named: ['sirius'],
+  },
+  {
+    id: 'maly-pes', name: 'Malý pes', season: 'zima',
+    stars: [
+      { id: 'prokyon', name: 'Prokyon', ra: 7.655, dec: 5.22, mag: 0.4, color: '#fff6e0' },
+      { id: 'gomeisa', name: 'Gomeisa', ra: 7.453, dec: 8.29, mag: 2.9 },
+    ],
+    edges: [['prokyon', 'gomeisa']],
+    text: 'Jen dvě hvězdy, ale jedna z nich, Prokyon, patří k nejjasnějším. Prokyon, Sírius a Betelgeuze tvoří velký Zimní trojúhelník.',
+    named: ['prokyon'],
+  },
 ];
 
 export const POLARKA_TEXT = 'Dvě zadní hvězdy Velkého vozu ukazují k Polárce. Vzdálenost mezi nimi prodluž asi pětkrát. Polárka ukazuje k severu – podle ní se dá v noci najít směr.';
 
-export function constellation(id: Constellation['id']) {
+export function constellation(id: string) {
   return CONSTELLATIONS.find((c) => c.id === id)!;
 }
 
 /** Hvězdy, které jsou v jednom „výřezu oblohy“. Velký vůz se ukazuje i s Polárkou. */
-export type SceneId = Constellation['id'] | 'all';
+export type SceneId = string; // id souhvězdí nebo 'all'
 
 export function sceneStars(id: SceneId, withPolarka = id === 'vuz'): SkyStar[] {
   if (id === 'all') {
