@@ -164,9 +164,11 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
     ctx.lineTo(w, h); ctx.fill();
 
     const fs = Math.round(Math.max(14, Math.min(w, h) / 32));
-    const line = (a: Placed, b: Placed, alpha = 0.9) => {
-      ctx.strokeStyle = `rgba(255,217,138,${alpha})`; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    const line = (a: Placed, b: Placed, alpha = 0.9, glow = false) => {
+      ctx.strokeStyle = `rgba(255,217,138,${alpha})`; ctx.lineWidth = glow ? 3.5 : 3; ctx.lineCap = 'round';
+      if (glow) { ctx.shadowColor = 'rgba(255,200,90,.9)'; ctx.shadowBlur = 12; }
       ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      ctx.shadowBlur = 0;
     };
     const polarkaGuide = (full: boolean) => {
       const merak = st.byId.merak, dubhe = st.byId.dubhe, pol = st.byId.polarka;
@@ -218,9 +220,9 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
         pl = turned.map((p) => ({ ...p, x: w / 2 + (p.x - z.x) * z.z, y: h / 2 + (p.y - z.y) * z.z }));
         by = Object.fromEntries(pl.map((p) => [p.id, p]));
       }
-      for (const cons of list) { const l = lvl(cons); for (const [a, b] of cons.edges) line(by[a], by[b], l === 2 ? (all ? 0.75 : 0.9) : l === 1 ? 0.4 : 0.1); }
+      for (const cons of list) { const l = lvl(cons); for (const [a, b] of cons.edges) { const pick = all && st.season !== 'vse' && l === 2; line(by[a], by[b], pick ? 1 : l === 2 ? (all ? 0.75 : 0.9) : l === 1 ? 0.28 : 0.07, pick); } }
       if (st.view === 'vuz') polarkaGuide(true);
-      for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.7 : 0.28; drawStar(ctx, p, p.id === 'polarka' ? 1.5 : 1); }
+      for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.55 : 0.2; drawStar(ctx, p, p.id === 'polarka' ? 1.5 : 1); }
       ctx.globalAlpha = 1;
       const names: Array<{ x: number; y: number; half: number }> = [];
       for (const cons of list) {
@@ -228,7 +230,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
         if (l === 0) continue;
         const ts = cons.stars.map((s) => by[s.id]);
         const top = Math.min(...ts.map((p) => p.y)), cx = ts.reduce((a, p) => a + p.x, 0) / ts.length;
-        label(ctx, cons.name, cx, Math.max(fs + 6, top - (all ? 14 : 26)), l === 2 ? GOLD : 'rgba(255,217,138,.6)', all ? fs - (st.season === 'vse' ? 3 : l === 2 ? 0 : 3) : fs + 4);
+        label(ctx, cons.name, cx, Math.max(fs + 6, top - (all ? 14 : 26)), l === 2 ? GOLD : 'rgba(255,217,138,.45)', all ? (st.season === 'vse' ? fs - 3 : l === 2 ? fs + 3 : fs - 4) : fs + 4);
         // Jména jasných hvězd: u jednoho souhvězdí vždy, na celé obloze jen u vybraného období.
         if (!all || (st.season !== 'vse' && l === 2)) for (const id of cons.named ?? []) {
           if (id === 'polarka') continue;
