@@ -881,12 +881,12 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                       type="button"
                       onClick={() => { setJump(false); setCompare(false); setTemp(false); setSeasons(true); }}
                       className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                      style={{ background: 'linear-gradient(90deg, #2f8a4a 0%, #e8a72f 40%, #c2602a 70%, #4f7fd1 100%)' }}
+                      style={{ background: 'linear-gradient(90deg, #2f7d3a 0%, #4f9a3f 55%, #8cc45a 100%)' }}
                     >
                       <span className="absolute right-4 top-3 text-3xl" aria-hidden="true">🌱☀️🍂❄️</span>
                       <span className="absolute left-3 bottom-2.5">
-                        <span className="block text-xl font-bold leading-tight" style={{ textShadow: '0 1px 6px rgba(0,0,0,.35)' }}>Proč máme roční období?</span>
-                        <span className="block text-xs opacity-90">Země obíhá se skloněnou osou →</span>
+                        <span className="block text-xl font-bold leading-tight">Proč máme roční období?</span>
+                        <span className="block text-xs opacity-90">Jak vysoko je Slunce a jak dlouhý je den →</span>
                       </span>
                     </button>
                 </>
