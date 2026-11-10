@@ -48,6 +48,9 @@ export function formatMeters(m: number) {
   const r = Math.round(m * 10) / 10;
   return `${String(r).replace('.', ',')} m`;
 }
+export function formatSeconds(sec: number) {
+  return `${String(Math.round(sec * 10) / 10).replace('.', ',')} s`;
+}
 export function formatKg(kg: number) {
   const r = kg < 10 ? Math.round(kg * 10) / 10 : Math.round(kg);
   return `${String(r).replace('.', ',')} kg`;
@@ -74,6 +77,9 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
   const ref = useRef<HTMLDivElement | null>(null);
   const [box, setBox] = useState({ w: 800, h: 500 });
   const [now, setNow] = useState(0);
+  // Co ukazuje tabulka nahoře: po „Pusť míček“ jak rychle míček spadne, po „Skoč!“ váhu a výšku skoku.
+  const [shown, setShown] = useState<'skok' | 'micek'>('skok');
+  useEffect(() => { if (action) setShown(action.kind); }, [action]);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -129,6 +135,14 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
             <div className="absolute left-0 right-0 top-3 flex flex-col items-center gap-1 text-white">
                             <span className="text-lg md:text-2xl font-bold">{names[b]}</span>
               {/* Tabulka přímo v zobrazení: váha a výška skoku na tomhle tělese. */}
+              {shown === 'micek' ? (
+                <div className="mt-1 flex items-end gap-5 md:gap-8">
+                  <span className="flex flex-col items-center">
+                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">míček ze 2 m dopadne za</span>
+                    <span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1 text-[#f0a12c]">{formatSeconds(Math.sqrt((2 * DROP_M) / (EARTH_G * PULL[b])))}</span>
+                  </span>
+                </div>
+              ) : (
               <div className="mt-1 flex items-end gap-5 md:gap-8">
                 <span className="flex flex-col items-center">
                   <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">váha ukáže</span>
@@ -139,6 +153,7 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
                   <span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1 text-[#7fd3ff]">{formatMeters(jumpHeight(b))}</span>
                 </span>
               </div>
+              )}
             </div>
             {/* značka nejvyššího bodu skoku: o tolik nad hlavou dítěte (v nejvyšším bodě se jí dotkne hlavou) */}
             {action?.kind !== 'micek' ? (
