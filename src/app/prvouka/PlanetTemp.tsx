@@ -70,7 +70,7 @@ export function TempStage({ body, names, thumbs }: { body: TempBody; names: Reco
                 </div>
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-10 h-10 rounded-full" style={{ background: tColor(t.noc), border: '2px solid rgba(255,255,255,.35)' }} />
               </div>
-              <span className="mt-4 text-sm md:text-base font-bold" aria-hidden="true">{hot && cold ? '🥵 ve dne · 🥶 v noci' : hot ? '🥵 horko' : cold ? '🥶 zima' : '🙂 tak akorát'}</span>
+              <span className="mt-4 text-lg md:text-2xl font-bold">{hot && cold ? '🥵 ve dne · 🥶 v noci' : hot ? '🥵 horko' : cold ? '🥶 zima' : '🙂 tak akorát'}</span>
             </div>
           );
         })}
