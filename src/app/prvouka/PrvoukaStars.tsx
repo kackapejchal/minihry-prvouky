@@ -112,7 +112,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const allSeasons = modelSeasons.length === ALL4.length;
   // Pokročilé nastavení: čím začít (dnešní období podle měsíce: jaro 3–5, léto 6–8, podzim 9–11, zima 12–2).
   const today = (): Season => { const m = new Date().getMonth() + 1; return m >= 3 && m <= 5 ? 'jaro' : m >= 6 && m <= 8 ? 'leto' : m >= 9 && m <= 11 ? 'podzim' : 'zima'; };
-  const startSetting = settings?.start === 'dnes' ? today() : ALL4.includes(settings?.start) ? (settings!.start as Season) : null;
+  const startSetting = (settings?.start ?? 'dnes') === 'dnes' ? today() : ALL4.includes(settings?.start) ? (settings!.start as Season) : null;
   const startSeason: SeasonFilter = startSetting && modelSeasons.includes(startSetting) ? startSetting : allSeasons ? 'vse' : modelSeasons[0];
   const namesAlways = settings?.names === 'vzdy';
   const pickFor = (f: SeasonFilter) => (f === 'vse' ? DEFAULT_PICK : CONSTELLATIONS.filter((x) => x.season === f).map((x) => x.id));
@@ -141,6 +141,8 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const rot = useRef(0);
   const zoom = useRef({ z: 1, x: 0, y: 0 });
   const lastT = useRef(0);
+  // Při otevření (a změně velikosti) se mapa rovnou postaví na místo, plynule se otáčí jen při přepnutí období.
+  const snapMap = useRef(true);
   // Celá obloha: souhvězdí pod myší (rozsvítí se a ukáže jméno) a poslední polohy hvězd na obrazovce.
   const hover = useRef<string | null>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -170,7 +172,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setBox({ w: el.clientWidth, h: el.clientHeight }));
+    const ro = new ResizeObserver(() => { snapMap.current = true; setBox({ w: el.clientWidth, h: el.clientHeight }); });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -263,7 +265,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         // Otočná mapa: plynule natočit k vybranému ročnímu období a přiblížit jeho část oblohy.
         // Plynulé dojetí podle skutečného času (stejně rychle i při trhaném vykreslování).
         const k = 1 - Math.exp(-Math.min(0.5, Math.max(0, t - prevT)) * 5);
-        const ease = (cur: number, target: number) => (still || Math.abs(target - cur) < 1e-3 ? target : cur + (target - cur) * k);
+        const ease = (cur: number, target: number) => (still || snapMap.current || Math.abs(target - cur) < 1e-3 ? target : cur + (target - cur) * k);
         let d = seasonRotation(st.season) - rot.current;
         d = Math.atan2(Math.sin(d), Math.cos(d));
         rot.current = ease(rot.current, rot.current + d);
@@ -280,6 +282,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         const z = zoom.current;
         if (z.x === 0 && z.y === 0) { z.x = w / 2; z.y = h / 2; }
         z.z = ease(z.z, tz); z.x = ease(z.x, tcx); z.y = ease(z.y, tcy);
+        snapMap.current = false;
         pl = turned.map((p) => ({ ...p, x: w / 2 + (p.x - z.x) * z.z, y: h / 2 + (p.y - z.y) * z.z }));
         by = Object.fromEntries(pl.map((p) => [p.id, p]));
         skyPos.current = by;
@@ -404,12 +407,25 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
       const ord = stepsOf(rr.c);
       const nums: Record<string, number[]> = {};
       ord.forEach((id, i) => { (nums[id] ??= []).push(i); });
-      const br = Math.max(11, fs * 0.62);
+      const br = Math.max(Math.min(w, h) < 420 ? 9 : 11, fs * 0.62);
+      // Čísla si hledají volné místo kolem hvězdy (vpravo nahoře, vlevo nahoře, vpravo dole…), ať se nepřekrývají.
+      const taken: Array<{ x: number; y: number }> = [];
+      const starPts = Object.keys(nums).map((id) => st.byId[id]);
+      const dirs = [[1, -1], [-1, -1], [1, 1], [-1, 1], [1.35, 0], [-1.35, 0], [0, -1.35], [0, 1.35]];
       for (const [id, list] of Object.entries(nums)) {
         const p = st.byId[id];
         // Číslo hvězdy, která už je spojená, zmizí – zůstanou jen ta, na která se ještě klepe.
-        list.filter((i) => i >= st.step).forEach((i, k) => {
-          const bx = p.x + p.r + br + 4 + k * (br * 2 + 4), by = p.y - p.r - br - 2;
+        list.filter((i) => i >= st.step).forEach((i) => {
+          let bx = p.x + p.r + br + 2, by = p.y - p.r - br - 2, bestScore = Infinity;
+          for (const ring of [1, 1.8]) for (const [dx, dy] of dirs) {
+            const x = p.x + dx * (p.r + br + 2) * ring, y = p.y + dy * (p.r + br + 2) * ring;
+            const hits = taken.filter((q) => Math.hypot(q.x - x, q.y - y) < br * 2 + 1).length * 10
+              + starPts.filter((q) => q !== p && Math.hypot(q.x - x, q.y - y) < br + q.r + 2).length * 3
+              + (x < br || y < br || x > w - br || y > h - br ? 20 : 0) + (ring > 1 ? 1 : 0);
+            if (hits < bestScore) { bestScore = hits; bx = x; by = y; }
+            if (hits === 0) break;
+          }
+          taken.push({ x: bx, y: by });
           const isNext = i === st.step;
           ctx.fillStyle = isNext ? '#f0a12c' : 'rgba(255,255,255,.92)';
           ctx.beginPath(); ctx.arc(bx, by, br, 0, 6.283); ctx.fill();

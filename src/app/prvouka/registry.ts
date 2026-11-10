@@ -309,10 +309,10 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
       start: {
         name: 'Obloha na začátku',
         type: 'select' as const,
-        defaultValue: 'vse',
+        defaultValue: 'dnes',
         options: [
-          { value: 'vse', label: 'Celá obloha' },
           { value: 'dnes', label: 'Dnešní roční období' },
+          { value: 'vse', label: 'Celá obloha' },
           { value: 'jaro', label: 'Jaro' },
           { value: 'leto', label: 'Léto' },
           { value: 'podzim', label: 'Podzim' },
