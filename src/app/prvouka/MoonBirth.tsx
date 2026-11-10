@@ -1,4 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { SPACE_PLANETS, SYNODIC, drawMoonPhase, drawPlanet } from './space-engine';
+
+// Stejné Země, Měsíc a planeta jako v ostatních modelech (textury ze space-engine).
+const ZEME = SPACE_PLANETS.find((p) => p.id === 'zeme')!;
+const MARS = SPACE_PLANETS.find((p) => p.id === 'mars')!;
+const LIGHT = Math.PI * 1.08; // Slunce vlevo jako v pohledu shora
 
 /**
  * Jak vznikl Měsíc (Model fází Měsíce → Vyzkoušej si).
@@ -27,6 +33,8 @@ const BITS = (() => { const r = rng(7); return Array.from({ length: 170 }, () =>
 const FAINT = (() => { const r = rng(3); return Array.from({ length: 140 }, () => ({ x: r(), y: r(), s: 0.5 + r(), a: 0.2 + r() * 0.5 })); })();
 
 export function MoonBirth({ onClose }: { onClose: () => void }) {
+  // Po dohrání se chvíli ukáže hotový Měsíc a pak se vrátí pohled s fázemi Měsíce.
+  const closeRef = useRef(onClose); closeRef.current = onClose;
   const ref = useRef<HTMLCanvasElement | null>(null);
   const [t0, setT0] = useState(() => performance.now());
   const [step, setStep] = useState(0);
@@ -34,7 +42,9 @@ export function MoonBirth({ onClose }: { onClose: () => void }) {
     let raf = 0;
     const frame = (now: number) => {
       const cv = ref.current;
-      const t = Math.min(END, (now - t0) / 1000);
+      const raw = (now - t0) / 1000;
+      if (raw > END + 2.5) { closeRef.current(); return; }
+      const t = Math.min(END, raw);
       if (cv) draw(cv, t);
       const s = BIRTH_STEPS.reduce((acc, st, i) => (t >= st.at ? i : acc), 0);
       setStep((p) => (p === s ? p : s));
@@ -100,9 +110,7 @@ function draw(cv: HTMLCanvasElement, t: number) {
     const sx = lerp(w + tr * 2, cx + Math.cos(hitAngle) * (R + tr * 0.6), k);
     const sy = lerp(cy - R * 1.6, cy + Math.sin(hitAngle) * (R + tr * 0.6), k);
     ctx.globalAlpha = t < hitT ? 1 : 1 - (t - hitT) / 0.5;
-    const g = ctx.createRadialGradient(sx - tr * 0.3, sy - tr * 0.3, tr * 0.1, sx, sy, tr);
-    g.addColorStop(0, '#b9a58c'); g.addColorStop(1, '#5e4f43');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, tr, 0, 6.283); ctx.fill();
+    drawPlanet(ctx, MARS, sx, sy, tr, LIGHT);
     ctx.globalAlpha = 1;
   }
 
@@ -111,16 +119,14 @@ function draw(cv: HTMLCanvasElement, t: number) {
   const glow = ctx.createRadialGradient(cx, cy, R * 0.8, cx, cy, R * 1.6);
   glow.addColorStop(0, `rgba(255,140,60,${0.35 * (1 - cool)})`); glow.addColorStop(1, 'rgba(255,140,60,0)');
   ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, R * 1.6, 0, 6.283); ctx.fill();
-  const eg = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.35, R * 0.15, cx, cy, R);
-  eg.addColorStop(0, mix([255, 196, 120], [150, 200, 255], cool));
-  eg.addColorStop(0.6, mix([214, 98, 40], [52, 110, 210], cool));
-  eg.addColorStop(1, mix([120, 40, 20], [20, 48, 120], cool));
-  ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.fill();
-  if (cool > 0.3) {
-    // kousky pevniny, když Země vychladne
-    ctx.globalAlpha = (cool - 0.3) / 0.7 * 0.8; ctx.fillStyle = '#4f8a3c';
-    for (const [dx, dy, r] of [[-0.3, -0.2, 0.28], [0.25, 0.25, 0.22], [0.35, -0.35, 0.14]]) { ctx.beginPath(); ctx.arc(cx + dx * R, cy + dy * R, r * R, 0, 6.283); ctx.fill(); }
-    ctx.globalAlpha = 1;
+  drawPlanet(ctx, ZEME, cx, cy, R, LIGHT);
+  // Mladá Země je horká: přes skutečnou Zemi oranžová žhavá vrstva, která pomalu zmizí.
+  if (cool < 1) {
+    const hg = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R);
+    hg.addColorStop(0, `rgba(255,190,110,${0.95 * (1 - cool)})`);
+    hg.addColorStop(0.6, `rgba(214,92,36,${0.95 * (1 - cool)})`);
+    hg.addColorStop(1, `rgba(110,34,16,${0.95 * (1 - cool)})`);
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.fill();
   }
 
   // Jemné bliknutí při dotyku (žádný výbuch).
@@ -154,11 +160,7 @@ function draw(cv: HTMLCanvasElement, t: number) {
     }
     ctx.globalAlpha = 1;
   }
-  if (moonR > 0.5) {
-    const mg = ctx.createRadialGradient(mx - moonR * 0.35, my - moonR * 0.35, moonR * 0.1, mx, my, moonR);
-    mg.addColorStop(0, '#f2efe6'); mg.addColorStop(1, '#8c8a84');
-    ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(mx, my, moonR, 0, 6.283); ctx.fill();
-  }
+  if (moonR > 0.5) drawMoonPhase(ctx, mx, my, moonR, SYNODIC / 2);
   // Popisky
   ctx.font = `700 ${Math.max(13, R * 0.2)}px VisbyRound, system-ui, sans-serif`;
   ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(231,236,255,.85)';

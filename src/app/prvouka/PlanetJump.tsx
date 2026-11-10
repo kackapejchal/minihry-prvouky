@@ -137,17 +137,9 @@ function duration(kind: 'skok' | 'micek', b: JumpBody) {
   return kind === 'skok' ? (2 * Math.sqrt(2 * EARTH_G * EARTH_JUMP_M)) / g : Math.sqrt((2 * DROP_M) / g);
 }
 
-/** Jednoduchá postavička (dítě) – nohy na čáře y. */
+/** Dítě z ilustrací Vividbooks (kluk z matematiky 1. ročníku) – nohy na čáře y. */
+const KID_SRC = `${import.meta.env.BASE_URL}prvouka/ill/skok-kluk.png`;
 function Kid({ x, y, size }: { x: number; y: number; size: number }) {
-  return (
-    <svg viewBox="0 0 40 60" className="absolute" style={{ left: x - size / 2, top: y - size * 1.5, width: size, height: size * 1.5, overflow: 'visible' }} aria-hidden="true">
-      <circle cx="20" cy="11" r="9" fill="#ffd6b0" />
-      <path d="M11 9 Q20 -1 29 9 L29 7 Q20 -3 11 7 Z" fill="#7a4a2a" />
-      <rect x="10" y="20" width="20" height="20" rx="7" fill="#f0a12c" />
-      <rect x="6" y="22" width="6" height="14" rx="3" fill="#f0a12c" transform="rotate(-20 9 22)" />
-      <rect x="28" y="22" width="6" height="14" rx="3" fill="#f0a12c" transform="rotate(20 31 22)" />
-      <rect x="12" y="38" width="7" height="20" rx="3" fill="#2e4aa8" />
-      <rect x="21" y="38" width="7" height="20" rx="3" fill="#2e4aa8" />
-    </svg>
-  );
+  const hgt = size * 2, wid = hgt * (197 / 400);
+  return <img src={KID_SRC} alt="" className="absolute select-none pointer-events-none" draggable={false} style={{ left: x - wid / 2, top: y - hgt, width: wid, height: hgt }} />;
 }
