@@ -18,7 +18,7 @@ const ART = `${import.meta.env.BASE_URL}prvouka/ill/obleceni`;
 
 type Slot = 'hlava' | 'krk' | 'vrsek' | 'bunda' | 'dolu' | 'boty' | 'ruce' | 'destnik';
 interface Piece { src: string; box: [number, number, number, number]; z: number }
-interface Item { id: string; name: string; slot: Slot; pieces: Piece[]; thumb: string; /** vlastní poloha pro druhou postavu (když přepočet nestačí – třeba klobouk na Samovy kudrny) */ boxFor?: Partial<Record<'sam' | 'hanka', [number, number, number, number]>>; srcFor?: Partial<Record<'sam' | 'hanka', string>> }
+interface Item { id: string; name: string; slot: Slot; pieces: Piece[]; thumb: string; /** vlastní poloha pro druhou postavu (když přepočet nestačí – třeba klobouk na Samovy kudrny) */ boxFor?: Partial<Record<'sam' | 'hanka', [number, number, number, number]>>; srcFor?: Partial<Record<'sam' | 'hanka', string>>; /** jen pro vlastní postavu – na druhé nevypadá dobře (kapuce pláštěnky na Samovy kudrny) */ ownOnly?: boolean }
 
 // Pozice v rámečku 204 × 392 px (výřez z obrázku s oblečenými postavami). „nas-…“ jsou věci vystřižené
 // přímo z oblečeného Sama, takže sedí přesně; ostatní (tričko, šála, holínky, deštník) jsou ploché kusy.
@@ -47,12 +47,12 @@ const H_ITEMS: Item[] = [
   { id: 'klobouk', name: 'Klobouk', slot: 'hlava', thumb: 'hanka/f-klobouk', pieces: [{ src: 'hanka/klobouk-hlava', box: [0, 22, 240, 238], z: 9 }], boxFor: { sam: [-4, -6, 208, 92] }, srcFor: { sam: 'hanka/f-klobouk' } },
   { id: 'cervene-triko', name: 'Červené tričko', slot: 'vrsek', thumb: 'hanka/f-triko', pieces: [] },
   { id: 'saty', name: 'Šaty', slot: 'vrsek', thumb: 'hanka/f-saty', pieces: [{ src: 'hanka/f-saty', box: [50, 196, 190, 398], z: 4 }], boxFor: { sam: [30, 148, 180, 350] } },
-  { id: 'plastenka', name: 'Pláštěnka', slot: 'vrsek', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }] },
+  { id: 'plastenka', name: 'Pláštěnka', slot: 'vrsek', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }], ownOnly: true },
   { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'vrsek', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/f-zimni-bunda', box: [20, 166, 218, 360], z: 6 }] },
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'hanka/f-kratasy', pieces: [] },
   { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [56, 318, 184, 428], z: 2 }], boxFor: { sam: [40, 246, 168, 368] } },
   { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'hanka/f-tenisky', pieces: [] },
-  { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'hanka/f-sandaly', pieces: [{ src: 'hanka/sandaly', box: [47, 424, 191, 478], z: 3 }] },
+  { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'hanka/f-sandaly', pieces: [{ src: 'hanka/sandaly', box: [30, 398, 212, 490], z: 3 }] },
   { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'hanka/boty', pieces: [{ src: 'hanka/boty', box: [45, 409, 196, 495], z: 3 }] },
   { id: 'holinky', name: 'Holínky', slot: 'boty', thumb: 'hanka/f-holinky', pieces: [{ src: 'hanka/f-holinky', box: [52, 390, 192, 492], z: 3 }] },
   { id: 'zimni-boty', name: 'Zimní boty', slot: 'boty', thumb: 'hanka/f-zimni-boty', pieces: [{ src: 'hanka/zimni-boty', box: [48, 394, 188, 486], z: 3 }] },
@@ -162,7 +162,7 @@ function wardrobe(who: Who): Worn[] {
   const mine = CHARS[who].items.map((i) => ({ ...i, owner: who }));
   const otherWho: Who = who === 'sam' ? 'hanka' : 'sam';
   const ids = new Set(mine.map((i) => i.id));
-  const theirs = CHARS[otherWho].items.filter((i) => !ids.has(i.id) && i.pieces.length > 0).map((i) => ({ ...i, owner: otherWho }));
+  const theirs = CHARS[otherWho].items.filter((i) => !ids.has(i.id) && i.pieces.length > 0 && !i.ownOnly).map((i) => ({ ...i, owner: otherWho }));
   const order = ['hlava', 'krk', 'vrsek', 'bunda', 'dolu', 'boty', 'ruce', 'destnik'];
   return [...mine, ...theirs].sort((a, b) => order.indexOf(a.slot) - order.indexOf(b.slot));
 }
