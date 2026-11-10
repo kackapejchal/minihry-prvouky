@@ -11,7 +11,7 @@ export type TempBody = 'mesic' | 'merkur' | 'venuse' | 'zeme' | 'mars' | 'jupite
 
 /** Přibližné teploty ve °C: den (nejvíc) a noc (nejmíň). U plynných planet jedna teplota v mracích. */
 export const TEMPS: Record<TempBody, { den: number; noc: number; text: string; avg?: boolean }> = {
-  zeme: { den: 15, noc: 15, avg: true, text: 'Průměrná teplota na celé Zemi za celý rok je asi 15 °C. Pro život je to tak akorát.' },
+  zeme: { den: 20, noc: 10, avg: true, text: 'Když se spočítá celá Země za celý rok, bývá ve dne průměrně asi 20 °C a v noci asi 10 °C (celkový průměr je kolem 15 °C). Pro život je to tak akorát.' },
   mesic: { den: 120, noc: -170, text: 'Měsíc nemá vzduch, který by držel teplo. Ve dne je tam teplo jako ve vroucí vodě a v noci strašlivá zima.' },
   merkur: { den: 430, noc: -180, text: 'Merkur je blízko Slunce: ve dne by tě upeklo. Nemá ale vzduch, a tak v noci mrzne víc než kdekoli na Zemi.' },
   venuse: { den: 465, noc: 465, text: 'Nejteplejší planeta. Hustá oblaka drží teplo jako peřina, takže je tam horko ve dne i v noci – víc než v troubě.' },
@@ -49,8 +49,8 @@ export function TempStage({ body, names, thumbs }: { body: TempBody; names: Reco
                   <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">{t.avg ? 'průměrně' : 've dne i v noci'}</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.den) }}>{fmt(t.den)}</span></span>
                 ) : (
                   <>
-                    <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">ve dne až</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.den) }}>{fmt(t.den)}</span></span>
-                    <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">v noci až</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.noc) }}>{fmt(t.noc)}</span></span>
+                    <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">{t.avg ? 've dne průměrně' : 've dne až'}</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.den) }}>{fmt(t.den)}</span></span>
+                    <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">{t.avg ? 'v noci průměrně' : 'v noci až'}</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.noc) }}>{fmt(t.noc)}</span></span>
                   </>
                 )}
               </div>

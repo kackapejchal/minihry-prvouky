@@ -811,8 +811,10 @@ function ConsTile({ c, on, hot = false, check = false, onClick, onHover }: { c: 
  * Obrázek je zrcadlově otočený (Hevelius kreslil jako na globu zvenku) a převedený na světlou linku.
  * Dvě kotvy: pixel hvězdy v obrázku → stejná hvězda v modelu; podle nich se obrázek posune, otočí a zvětší.
  */
-const FIGURES: Record<string, { src: string; a: [string, number, number]; b: [string, number, number] }> = {
-  labut: { src: 'labut.png', a: ['albireo', 542, 485], b: ['deneb', 63, 332] },
+// Postavy ze starého atlasu (Hevelius 1690), zrcadlově otočené, jak je vidíme na obloze.
+// Obrázek se umístí podle několika hvězd najednou (nejlepší shoda), ať sedí trup i křídla.
+const FIGURES: Record<string, { src: string; anchors: Array<[string, number, number]> }> = {
+  labut: { src: 'labut.png', anchors: [['albireo', 511, 496], ['sadr', 214, 327], ['deneb', 38, 345], ['gienah', 251, 490], ['cyg-delta', 335, 172]] },
 };
 const figImg: Record<string, HTMLImageElement> = {};
 function drawFigure(ctx: CanvasRenderingContext2D, id: string, by: Record<string, { x: number; y: number }>) {
@@ -821,14 +823,20 @@ function drawFigure(ctx: CanvasRenderingContext2D, id: string, by: Record<string
   let img = figImg[id];
   if (!img) { img = new Image(); img.src = `${import.meta.env.BASE_URL}prvouka/souhvezdi/${f.src}`; figImg[id] = img; }
   if (!img.complete || !img.naturalWidth) return;
-  const qa = by[f.a[0]], qb = by[f.b[0]];
-  if (!qa || !qb) return;
-  const pa = { x: f.a[1], y: f.a[2] }, pb = { x: f.b[1], y: f.b[2] };
-  const s = Math.hypot(qb.x - qa.x, qb.y - qa.y) / Math.hypot(pb.x - pa.x, pb.y - pa.y);
-  const rot = Math.atan2(qb.y - qa.y, qb.x - qa.x) - Math.atan2(pb.y - pa.y, pb.x - pa.x);
+  const pts = f.anchors.filter((an) => by[an[0]]).map((an) => ({ p: { x: an[1], y: an[2] }, q: by[an[0]] }));
+  if (pts.length < 2) return;
+  const n = pts.length;
+  const cp = { x: pts.reduce((s, o) => s + o.p.x, 0) / n, y: pts.reduce((s, o) => s + o.p.y, 0) / n };
+  const cq = { x: pts.reduce((s, o) => s + o.q.x, 0) / n, y: pts.reduce((s, o) => s + o.q.y, 0) / n };
+  let sa = 0, sb = 0, sp = 0;
+  for (const o of pts) {
+    const px = o.p.x - cp.x, py = o.p.y - cp.y, qx = o.q.x - cq.x, qy = o.q.y - cq.y;
+    sa += px * qx + py * qy; sb += px * qy - py * qx; sp += px * px + py * py;
+  }
+  const a = sa / sp, b = sb / sp;
   ctx.save();
-  ctx.globalAlpha = 0.55;
-  ctx.translate(qa.x, qa.y); ctx.rotate(rot); ctx.scale(s, s);
-  ctx.drawImage(img, -pa.x, -pa.y);
+  ctx.globalAlpha = 0.42;
+  ctx.transform(a, b, -b, a, cq.x - (a * cp.x - b * cp.y), cq.y - (b * cp.x + a * cp.y));
+  ctx.drawImage(img, 0, 0);
   ctx.restore();
 }
