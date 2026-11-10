@@ -278,6 +278,9 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [jumpBodies, setJumpBodies] = useState<JumpBody[]>(['mesic', 'jupiter']);
   const [weight, setWeight] = useState(30);
   const [jumpAction, setJumpAction] = useState<{ kind: 'skok' | 'micek'; t0: number } | null>(null);
+  // Po otevření skákání se panel posune k výběru váhy, ať je hned vidět.
+  const jumpPanelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => { if (jump) window.setTimeout(() => jumpPanelRef.current?.scrollIntoView({ block: 'start' }), 80); }, [jump]);
   // Porovnej se Zemí: velký pohled planeta vedle Země ve skutečném poměru.
   const [compare, setCompare] = useState(false);
   // Porovnání ukazuje planety velké – malé obrázky z panelu by byly rozpixlované, tak se vykreslí ostřejší.
@@ -432,6 +435,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               names={Object.fromEntries((['zeme', ...JUMP_CHOICES] as SolarBodyId[]).map((id) => [id, bodyName(id)]))}
               thumbs={thumbs}
               action={jumpAction}
+              weight={weight}
               onDone={() => setJumpAction(null)}
             />
             <div className="absolute left-4 top-3 z-10">
@@ -707,38 +711,31 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
           {jump ? (() => {
             const there = jumpBodies[0];
             // Dvě dlaždice vedle sebe (Země / tahle planeta) ve stylu dlaždic Typ / Oběh / Velikost.
-            const tile = (id: JumpBody) => (
-              <div key={id} className="rounded-2xl bg-[#f4f6fb] p-3 flex flex-col items-center text-center gap-1">
-                <img src={thumbs[id as SolarBodyId] ?? planetIcon(id as PlanetKey)} alt="" className="w-10 h-10 object-contain" />
-                <span className="text-sm font-bold" style={{ color: BODY_COLOR[id as SolarBodyId] }}>{bodyName(id as SolarBodyId)}</span>
-                <span className="mt-1 text-[11px] font-bold uppercase tracking-wider text-[#9aa6d1]">váha ukáže</span>
-                <span className="text-2xl font-bold tabular-nums text-[#0f1d4d] leading-none">{formatKg(weight * PULL[id])}</span>
-                <span className="mt-2 text-[11px] font-bold uppercase tracking-wider text-[#9aa6d1]">vyskočíš</span>
-                <span className="text-2xl font-bold tabular-nums text-[#0f1d4d] leading-none">{formatMeters(jumpHeight(id))}</span>
-              </div>
-            );
             return (
               <>
-                <p className="text-base leading-relaxed text-[#4e5871]">{PULL[there] < 1 ? `${bodyName(there as SolarBodyId)} tě přitahuje méně než Země. Vyskočíš výš, míček padá pomaleji a váha by ukázala méně.` : PULL[there] > 1.12 ? `${bodyName(there as SolarBodyId)} tě přitahuje víc než Země. Vyskočíš níž, míček padá rychleji a váha by ukázala víc.` : `${bodyName(there as SolarBodyId)} tě přitahuje skoro stejně jako Země.`}</p>
-                <div className="grid grid-cols-2 gap-2">{tile('zeme')}{tile(there)}</div>
-                <div>
-                  <p className="text-sm font-bold text-[#56628a] mb-2">Kolik vážíš na Zemi?</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[20, 25, 30, 35, 40, 50].map((kg) => (
-                      <button
-                        key={kg}
-                        type="button"
-                        onClick={() => setWeight(kg)}
-                        aria-pressed={weight === kg}
-                        className="h-9 px-3 rounded-full text-sm font-bold transition-colors"
-                        style={weight === kg ? { background: '#f0a12c', color: '#2a1700' } : { background: '#f4f6fb', color: '#0f1d4d' }}
-                      >
-                        {kg} kg
-                      </button>
-                    ))}
+                <div ref={jumpPanelRef} className="scroll-mt-4 rounded-2xl bg-[#f4f6fb] p-4 flex flex-col gap-3">
+                  <label htmlFor="moje-vaha" className="text-base font-bold text-[#0f1d4d]">Kolik vážíš na Zemi?</label>
+                  {/* Vlastní váha: napsat číslo, nebo upravit tlačítky − / +. */}
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setWeight((v) => Math.max(5, v - 1))} aria-label="O kilo méně" className="w-11 h-11 rounded-full bg-white text-2xl font-bold text-[#0f1d4d] shadow-[0_2px_0_#d5dbea] active:translate-y-[1px]">−</button>
+                    <div className="flex-1 flex items-baseline justify-center gap-1.5 h-14 rounded-2xl bg-white border-2 border-[#e2e7f3] focus-within:border-[#f0a12c]">
+                      <input
+                        id="moje-vaha"
+                        type="number"
+                        inputMode="numeric"
+                        min={5}
+                        max={150}
+                        value={weight}
+                        onChange={(e) => { const n = Math.round(Number(e.target.value)); if (Number.isFinite(n)) setWeight(Math.max(0, Math.min(150, n))); }}
+                        onBlur={() => setWeight((v) => Math.max(5, v))}
+                        className="w-20 bg-transparent text-center text-3xl font-bold tabular-nums text-[#0f1d4d] outline-none self-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      />
+                      <span className="text-lg font-bold text-[#56628a] self-center">kg</span>
+                    </div>
+                    <button type="button" onClick={() => setWeight((v) => Math.min(150, v + 1))} aria-label="O kilo víc" className="w-11 h-11 rounded-full bg-white text-2xl font-bold text-[#0f1d4d] shadow-[0_2px_0_#d5dbea] active:translate-y-[1px]">+</button>
                   </div>
+                  <p className="text-sm leading-snug text-[#4e5871]">{PULL[there] < 0.95 ? `${bodyName(there as SolarBodyId)} tě přitahuje méně než Země: vyskočíš výš a váha by ukázala méně.` : PULL[there] > 1.05 ? `${bodyName(there as SolarBodyId)} tě přitahuje víc než Země: vyskočíš níž a váha by ukázala víc.` : `${bodyName(there as SolarBodyId)} tě přitahuje skoro stejně jako Země.`} Ty se přitom nezměníš.{GAS.includes(there) ? ' Pevný povrch ale nemá – jako bychom stáli na mracích.' : ''}</p>
                 </div>
-                <p className="text-sm leading-snug text-[#56628a]">Ty se nezměníš – jen tě {bodyName(there as SolarBodyId)} přitahuje jinak než Země.{GAS.includes(there) ? ` Pevný povrch ale nemá, jako bychom stáli na jeho mracích.` : ''}</p>
               </>
             );
           })() : null}

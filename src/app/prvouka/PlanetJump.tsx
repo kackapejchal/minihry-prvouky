@@ -57,7 +57,8 @@ export const TIMES = (b: JumpBody) => {
 type Action = { kind: 'skok' | 'micek'; t0: number } | null;
 
 /** Plocha s 2–3 sloupci vedle sebe: postavička, která skáče, a míček, který padá. */
-export function JumpStage({ bodies, names, thumbs, action, onDone }: {
+export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30 }: {
+  weight?: number;
   bodies: JumpBody[];
   names: Record<string, string>;
   thumbs: Partial<Record<SolarBodyId, string>>;
@@ -94,7 +95,7 @@ export function JumpStage({ bodies, names, thumbs, action, onDone }: {
   const groundY = box.h * 0.78;
   // Měřítko: nejvyšší skok (Měsíc ~3 m) se vejde do sloupce, pád z 2 m taky.
   const maxM = Math.max(DROP_M, ...bodies.map(jumpHeight));
-  const pxPerM = (groundY - box.h * 0.3) / maxM; // nahoře místo pro název tělesa
+  const pxPerM = (groundY - box.h * 0.36) / maxM; // nahoře místo pro název tělesa
   const kid = Math.max(36, Math.min(64, colW * 0.22));
 
   return (
@@ -116,7 +117,18 @@ export function JumpStage({ bodies, names, thumbs, action, onDone }: {
             {i > 0 ? <div className="absolute top-[8%] bottom-[8%] left-0 w-px" style={{ background: 'rgba(255,255,255,.12)' }} /> : null}
             {/* hlavička sloupce */}
             <div className="absolute left-0 right-0 top-3 flex flex-col items-center gap-1 text-white">
-                            <span className="text-base md:text-lg font-bold">{names[b]}</span>
+                            <span className="text-lg md:text-2xl font-bold">{names[b]}</span>
+              {/* Tabulka přímo v zobrazení: váha a výška skoku na tomhle tělese. */}
+              <div className="mt-1 flex items-end gap-5 md:gap-8">
+                <span className="flex flex-col items-center">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">váha ukáže</span>
+                  <span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1">{formatKg(weight * PULL[b])}</span>
+                </span>
+                <span className="flex flex-col items-center">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">vyskočíš</span>
+                  <span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1 text-[#7fd3ff]">{formatMeters(jumpHeight(b))}</span>
+                </span>
+              </div>
             </div>
             {/* značka nejvyššího bodu skoku */}
             {action?.kind !== 'micek' ? (
