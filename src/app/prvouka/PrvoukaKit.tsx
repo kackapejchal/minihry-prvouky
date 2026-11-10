@@ -97,10 +97,17 @@ export function PrvoukaProgress({ current, total, lives, maxLives = 3 }: { curre
 export function PrvoukaFeedbackOverlay({ isCorrect, hint, info, onComplete }: { isCorrect: boolean; hint?: string; info?: string; onComplete: () => void }) {
   const isMobile = useIsMobile();
   const s = isMobile ? 1 : useDesktopScaleValue();
+  // S informací (Souhvězdí) okno samo nezmizí – děti si text přečtou a pokračují klepnutím nebo klávesou.
+  const waits = isCorrect && Boolean(info);
   useEffect(() => {
-    const timer = setTimeout(onComplete, isCorrect ? (info ? 3000 + info.length * 35 : 1300) : hint ? 2600 : 1500);
+    if (waits) {
+      const onKey = () => onComplete();
+      window.addEventListener('keydown', onKey);
+      return () => window.removeEventListener('keydown', onKey);
+    }
+    const timer = setTimeout(onComplete, isCorrect ? 1300 : hint ? 2600 : 1500);
     return () => clearTimeout(timer);
-  }, [onComplete, isCorrect, hint, info]);
+  }, [onComplete, isCorrect, hint, waits]);
   return (
     <motion.div
       className="fixed inset-0 flex items-center justify-center z-50 p-4"
@@ -120,7 +127,12 @@ export function PrvoukaFeedbackOverlay({ isCorrect, hint, info, onComplete }: { 
         <div className="text-white" style={{ fontSize: 80 * s, lineHeight: 1, marginBottom: 12 * s }}>{isCorrect ? '✓' : '✗'}</div>
         <div className="text-white" style={{ fontSize: 44 * s, fontWeight: 'bold' }}>{isCorrect ? 'SPRÁVNĚ!' : 'ZKUS ZNOVU!'}</div>
         {isCorrect && info ? (
-          <div className="text-white mt-3" style={{ fontSize: 22 * s, fontWeight: 600, lineHeight: 1.35, maxWidth: 640 * s }}>{info}</div>
+          <>
+            <div className="text-white mt-3" style={{ fontSize: 22 * s, fontWeight: 600, lineHeight: 1.35, maxWidth: 640 * s }}>{info}</div>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 font-bold" style={{ color: '#2e7d32', fontSize: 18 * s }}>
+              Pokračuj – klepni nebo stiskni klávesu →
+            </div>
+          </>
         ) : null}
         {!isCorrect && hint ? (
           <div className="text-white mt-3" style={{ fontSize: 22 * s, fontWeight: 600, lineHeight: 1.35, maxWidth: 640 * s }}>{hint}</div>

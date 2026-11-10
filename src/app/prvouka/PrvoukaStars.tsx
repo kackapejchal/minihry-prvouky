@@ -538,7 +538,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                 <>
                   <p className="text-lg font-bold text-[#1f8a4c]">Výborně! {r.type === 'polarka' ? 'Polárku máš.' : `Souhvězdí ${c!.name} je spojené.`}</p>
                   {isGame ? null : <p className="text-base leading-relaxed text-[#4e5871]">{doneText}</p>}
-                  <p className="text-sm font-bold text-[#9aa6d1]">{round + 1 < rounds.length ? 'Za chvíli pokračuje další kolo…' : 'Za chvíli uvidíš výsledek…'}</p>
+                  {isGame ? null : <p className="text-sm font-bold text-[#9aa6d1]">{round + 1 < rounds.length ? 'Za chvíli pokračuje další kolo…' : 'Za chvíli uvidíš výsledek…'}</p>}
                   {isGame ? null : <button
                     type="button"
                     onClick={() => showOnSky(r.type === 'polarka' ? 'vuz' : c!.id)}
