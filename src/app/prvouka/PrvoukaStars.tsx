@@ -110,7 +110,11 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const ALL4: Season[] = ['jaro', 'leto', 'podzim', 'zima'];
   const modelSeasons: Season[] = Array.isArray(settings?.seasons) && settings!.seasons.length ? ALL4.filter((x) => settings!.seasons.includes(x)) : ALL4;
   const allSeasons = modelSeasons.length === ALL4.length;
-  const startSeason: SeasonFilter = allSeasons ? 'vse' : modelSeasons[0];
+  // Pokročilé nastavení: čím začít (dnešní období podle měsíce: jaro 3–5, léto 6–8, podzim 9–11, zima 12–2).
+  const today = (): Season => { const m = new Date().getMonth() + 1; return m >= 3 && m <= 5 ? 'jaro' : m >= 6 && m <= 8 ? 'leto' : m >= 9 && m <= 11 ? 'podzim' : 'zima'; };
+  const startSetting = settings?.start === 'dnes' ? today() : ALL4.includes(settings?.start) ? (settings!.start as Season) : null;
+  const startSeason: SeasonFilter = startSetting && modelSeasons.includes(startSetting) ? startSetting : allSeasons ? 'vse' : modelSeasons[0];
+  const namesAlways = settings?.names === 'vzdy';
   const pickFor = (f: SeasonFilter) => (f === 'vse' ? DEFAULT_PICK : CONSTELLATIONS.filter((x) => x.season === f).map((x) => x.id));
   const still = useMemo(prefersReducedMotion, []);
   // Hra bere souhvězdí z nastavení hry (zaškrtávací seznam) a začíná rovnou spojovačkou.
@@ -340,7 +344,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
       for (const cons of list) {
         const l = lvl(cons);
         if (l === 0) continue;
-        if (vse && hover.current !== cons.id) continue; // na celé mapě jméno jen u souhvězdí pod myší
+        if (vse && !namesAlways && hover.current !== cons.id) continue; // na celé mapě jméno jen u souhvězdí pod myší
         const ts = cons.stars.map((s) => by[s.id]);
         const x0 = Math.min(...ts.map((p) => p.x)), x1 = Math.max(...ts.map((p) => p.x));
         const top = Math.min(...ts.map((p) => p.y)), bottom = Math.max(...ts.map((p) => p.y));
@@ -355,7 +359,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
           : all
             ? [[cx, top - 8], [cx, bottom + size + 6], [x1 + half + 8, cy + size / 3], [x0 - half - 8, cy + size / 3], [cx, cy + size / 3]]
             : [[cx, Math.max(fs + 6, top - 26)]];
-        place(cons.name, size, spots, vse ? '#7fd3ff' : l === 2 ? GOLD : 'rgba(255,217,138,.45)');
+        place(cons.name, size, spots, vse ? (hover.current === cons.id ? '#7fd3ff' : 'rgba(255,224,160,.85)') : l === 2 ? GOLD : 'rgba(255,217,138,.45)');
         // Jména jasných hvězd: u jednoho souhvězdí vždy, na celé obloze jen u vybraného období.
         if (!all || (!vse && l === 2)) for (const id of cons.named ?? []) {
           if (id === 'polarka') continue;

@@ -303,7 +303,35 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
     };
   }
   // Model hvězdné oblohy nic nenastavuje – roční období se přepínají přímo v modelu.
-  if (game.model === 'hvezdy') return {};
+  if (game.model === 'hvezdy') {
+    // Jen pokročilá nastavení (nejsou v základních klíčích konfigurátoru), období se přepínají přímo v modelu.
+    return {
+      start: {
+        name: 'Obloha na začátku',
+        type: 'select' as const,
+        defaultValue: 'vse',
+        options: [
+          { value: 'vse', label: 'Celá obloha' },
+          { value: 'dnes', label: 'Dnešní roční období' },
+          { value: 'jaro', label: 'Jaro' },
+          { value: 'leto', label: 'Léto' },
+          { value: 'podzim', label: 'Podzim' },
+          { value: 'zima', label: 'Zima' },
+        ],
+        description: 'Období jde přepnout i během promítání',
+      },
+      names: {
+        name: 'Jména souhvězdí na celé obloze',
+        type: 'select' as const,
+        defaultValue: 'hover',
+        options: [
+          { value: 'hover', label: 'Po najetí / klepnutí' },
+          { value: 'vzdy', label: 'Vždy' },
+        ],
+        description: 'U ročních období jsou jména vidět vždy',
+      },
+    };
+  }
   if (game.model === 'mesic') {
     return {
       hintDC: { name: 'Nápověda D / C', type: 'boolean' as const, defaultValue: true, description: 'U srpků a čtvrtí ukáže písmeno D (dorůstá) nebo C (couvá)' },
