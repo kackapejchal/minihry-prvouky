@@ -32,18 +32,20 @@ function mix(c1: number[], c2: number[], t: number) { return `rgb(${c1.map((v, i
 const BITS = (() => { const r = rng(7); return Array.from({ length: 170 }, () => ({ ring: 1.7 + r() * 1.1, spread: (r() - 0.5) * 2.2, speed: 0.55 + r() * 0.5, size: 1 + r() * 2.2, join: 10 + r() * 3.6, warm: r() })); })();
 const FAINT = (() => { const r = rng(3); return Array.from({ length: 140 }, () => ({ x: r(), y: r(), s: 0.5 + r(), a: 0.2 + r() * 0.5 })); })();
 
-export function MoonBirth({ onClose }: { onClose: () => void }) {
+export function MoonBirth({ onClose, next }: { onClose: () => void; next?: { question: string; label: string; onClick: () => void } }) {
   // Po dohrání se chvíli ukáže hotový Měsíc a pak se vrátí pohled s fázemi Měsíce.
   const closeRef = useRef(onClose); closeRef.current = onClose;
   const ref = useRef<HTMLCanvasElement | null>(null);
   const [t0] = useState(() => performance.now());
   const [step, setStep] = useState(0);
+  // Po dohrání nabídne navazující animaci (Země → Měsíc, Měsíc → Země) nebo návrat na fáze.
+  const [done, setDone] = useState(false);
   useEffect(() => {
     let raf = 0;
     const frame = (now: number) => {
       const cv = ref.current;
       const raw = (now - t0) / 1000;
-      if (raw > END + 2.5) { closeRef.current(); return; }
+      if (raw > END + 1.5) setDone(true);
       const t = Math.min(END, raw);
       if (cv) draw(cv, t);
       const s = BIRTH_STEPS.reduce((acc, st, i) => (t >= st.at ? i : acc), 0);
@@ -73,6 +75,20 @@ export function MoonBirth({ onClose }: { onClose: () => void }) {
           {BIRTH_STEPS.map((_, i) => <span key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === step ? 22 : 8, background: i <= step ? '#f0a12c' : 'rgba(255,255,255,.3)' }} />)}
         </div>
       </div>
+      {done ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-6" style={{ background: 'rgba(4,6,15,.55)' }}>
+          <div className="rounded-3xl bg-white text-[#0f1d4d] p-6 max-w-sm w-full flex flex-col items-center gap-4 text-center shadow-2xl">
+            <p className="text-xl font-bold leading-snug">{next ? next.question : 'Hotovo!'}</p>
+            {next ? (
+              <button type="button" onClick={next.onClick} className="w-full h-12 rounded-full font-bold inline-flex items-center justify-center gap-2" style={{ background: '#f0a12c', color: '#2a1700', boxShadow: '0 3px 0 #b8741a' }}>
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z" /></svg>
+                {next.label}
+              </button>
+            ) : null}
+            <button type="button" onClick={onClose} className="w-full h-11 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] font-bold text-[#4e5871]">Zpět na fáze Měsíce</button>
+          </div>
+        </div>
+      ) : null}
       <style>{'@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'}</style>
     </div>
   );

@@ -1224,8 +1224,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           onPointerLeave={() => !dragging.current && setGrab('none')}
           aria-label="Pohled shora: Slunce, Země a Měsíc na oběžné dráze. Měsícem jde táhnout po dráze."
         />
-        {birth ? <MoonBirth onClose={() => setBirth(false)} /> : null}
-        {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} /> : null}
+        {birth ? <MoonBirth onClose={() => setBirth(false)} next={{ question: 'Chceš vidět, jak vznikla Země?', label: 'Jak vznikla Země', onClick: () => { setBirth(false); setEarthBirth(true); } }} /> : null}
+        {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} next={{ question: 'Chceš vidět, jak vznikl Měsíc?', label: 'Jak vznikl Měsíc', onClick: () => { setEarthBirth(false); setBirth(true); } }} /> : null}
         {why ? <EclipseWhy onClose={() => setWhy(false)} /> : null}
         <div className="group absolute top-3 right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
           <div className="flex items-center gap-2">
@@ -1358,7 +1358,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
                 type="button"
                 aria-pressed={birth}
                 onClick={() => { setEclipse(null); setEarthBirth(false); setPlaying(false); setBirth((v) => !v); }}
-                className="relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                className="col-span-2 relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(135deg, #b8461a 0%, #2a1840 70%, #0b0f24 100%)', outline: birth ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
               >
                 {/* Horká Země a malý Měsíc vedle ní. */}
@@ -1373,7 +1373,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
                 type="button"
                 aria-pressed={earthBirth}
                 onClick={() => { setEclipse(null); setBirth(false); setPlaying(false); setEarthBirth((v) => !v); }}
-                className="relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                className="col-span-2 relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(135deg, #2f6fd1 0%, #1b2350 100%)', outline: earthBirth ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
               >
                 <span className="absolute right-3 top-3 w-10 h-10 rounded-full" style={{ background: 'radial-gradient(circle at 35% 35%, #9fd0ff, #2f6fd1 60%, #123a7a)', boxShadow: '0 0 0 3px rgba(79,138,60,.0)' }} />

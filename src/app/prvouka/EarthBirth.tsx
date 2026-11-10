@@ -23,16 +23,18 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * Math.max(0, Math
 const DUST = (() => { const r = rng(21); return Array.from({ length: 260 }, () => ({ ring: 0.55 + r() * 0.5, a0: r() * Math.PI * 2, size: 0.8 + r() * 2.2, join: 6 + r() * 5, warm: r() })); })();
 const FAINT = (() => { const r = rng(4); return Array.from({ length: 140 }, () => ({ x: r(), y: r(), s: 0.5 + r(), a: 0.2 + r() * 0.5 })); })();
 
-export function EarthBirth({ onClose }: { onClose: () => void }) {
+export function EarthBirth({ onClose, next }: { onClose: () => void; next?: { question: string; label: string; onClick: () => void } }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
   const [t0] = useState(() => performance.now());
   const [step, setStep] = useState(0);
+  // Po dohrání nabídne navazující animaci (Země → Měsíc, Měsíc → Země) nebo návrat na fáze.
+  const [done, setDone] = useState(false);
   const closeRef = useRef(onClose); closeRef.current = onClose;
   useEffect(() => {
     let raf = 0;
     const frame = (now: number) => {
       const raw = (now - t0) / 1000;
-      if (raw > END + 2.5) { closeRef.current(); return; }
+      if (raw > END + 1.5) setDone(true);
       const t = Math.min(END, raw);
       const cv = ref.current;
       if (cv) draw(cv, t);
@@ -63,6 +65,20 @@ export function EarthBirth({ onClose }: { onClose: () => void }) {
           {STEPS.map((_, i) => <span key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === step ? 22 : 8, background: i <= step ? '#f0a12c' : 'rgba(255,255,255,.3)' }} />)}
         </div>
       </div>
+      {done ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-6" style={{ background: 'rgba(4,6,15,.55)' }}>
+          <div className="rounded-3xl bg-white text-[#0f1d4d] p-6 max-w-sm w-full flex flex-col items-center gap-4 text-center shadow-2xl">
+            <p className="text-xl font-bold leading-snug">{next ? next.question : 'Hotovo!'}</p>
+            {next ? (
+              <button type="button" onClick={next.onClick} className="w-full h-12 rounded-full font-bold inline-flex items-center justify-center gap-2" style={{ background: '#f0a12c', color: '#2a1700', boxShadow: '0 3px 0 #b8741a' }}>
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z" /></svg>
+                {next.label}
+              </button>
+            ) : null}
+            <button type="button" onClick={onClose} className="w-full h-11 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] font-bold text-[#4e5871]">Zpět na fáze Měsíce</button>
+          </div>
+        </div>
+      ) : null}
       <style>{'@keyframes fadeInE{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'}</style>
     </div>
   );
