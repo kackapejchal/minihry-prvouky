@@ -705,23 +705,6 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               </div>
             );
           })() : null}
-          {planet && planet.id === 'zeme' ? (
-            <div className="pt-1">
-              <p className="text-sm font-bold text-[#56628a] mb-2">Vyzkoušej si</p>
-              <button
-                type="button"
-                onClick={() => { setJump(false); setCompare(false); setTemp(false); setSeasons(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #2f8a4a 0%, #e8a72f 40%, #c2602a 70%, #4f7fd1 100%)' }}
-              >
-                <span className="absolute right-4 top-3 text-3xl" aria-hidden="true">🌱☀️🍂❄️</span>
-                <span className="absolute left-3 bottom-2.5">
-                  <span className="block text-xl font-bold leading-tight" style={{ textShadow: '0 1px 6px rgba(0,0,0,.35)' }}>Proč máme roční období?</span>
-                  <span className="block text-xs opacity-90">Země obíhá se skloněnou osou →</span>
-                </span>
-              </button>
-            </div>
-          ) : null}
           {planet && planet.id !== 'zeme' ? (
             <div className="pt-1">
               <p className="text-sm font-bold text-[#56628a] mb-2">Vyzkoušej si</p>
@@ -893,6 +876,19 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                       <span className="block text-xs opacity-90">Podívej se, jak se Země otáčí →</span>
                     </span>
                   </button>
+                  <div className="h-2" />
+                    <button
+                      type="button"
+                      onClick={() => { setJump(false); setCompare(false); setTemp(false); setSeasons(true); }}
+                      className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                      style={{ background: 'linear-gradient(90deg, #2f8a4a 0%, #e8a72f 40%, #c2602a 70%, #4f7fd1 100%)' }}
+                    >
+                      <span className="absolute right-4 top-3 text-3xl" aria-hidden="true">🌱☀️🍂❄️</span>
+                      <span className="absolute left-3 bottom-2.5">
+                        <span className="block text-xl font-bold leading-tight" style={{ textShadow: '0 1px 6px rgba(0,0,0,.35)' }}>Proč máme roční období?</span>
+                        <span className="block text-xs opacity-90">Země obíhá se skloněnou osou →</span>
+                      </span>
+                    </button>
                 </>
               )}
             </div>
