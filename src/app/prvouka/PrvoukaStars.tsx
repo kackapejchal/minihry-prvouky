@@ -106,13 +106,17 @@ const FAINT = (() => { const r = rng(5); return Array.from({ length: 260 }, () =
 /** model = Model hvězdné oblohy (prohlížení + zkratka do hry), hra = samostatná hra Souhvězdí (výběr a spojovačka). */
 export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Record<string, any>; variant?: 'model' | 'hra' }) {
   const isGame = variant === 'hra';
-  const startSeason: SeasonFilter = ['cely-rok', 'jaro', 'leto', 'podzim', 'zima'].includes(settings?.season) ? settings!.season : 'vse';
+  // Model: v nastavení jde zaškrtnout víc ročních období – model pak nabídne jen ta (a souhvězdí kolem Polárky).
+  const ALL4: Season[] = ['jaro', 'leto', 'podzim', 'zima'];
+  const modelSeasons: Season[] = Array.isArray(settings?.seasons) && settings!.seasons.length ? ALL4.filter((x) => settings!.seasons.includes(x)) : ALL4;
+  const allSeasons = modelSeasons.length === ALL4.length;
+  const startSeason: SeasonFilter = allSeasons ? 'vse' : modelSeasons[0];
   const pickFor = (f: SeasonFilter) => (f === 'vse' ? DEFAULT_PICK : CONSTELLATIONS.filter((x) => x.season === f).map((x) => x.id));
   const still = useMemo(prefersReducedMotion, []);
   // Hra bere souhvězdí z nastavení hry (zaškrtávací seznam) a začíná rovnou spojovačkou.
   // Z vybraných ročních období se souhvězdí losují náhodně (při každé nové hře znovu).
   const gameSeasons: string[] = Array.isArray(settings?.seasons) && settings!.seasons.length ? settings!.seasons : ['cely-rok'];
-  const gameCount = Number(settings?.rounds) || 4;
+  const gameCount = Number(settings?.rounds) || 5;
   const drawPick = () => {
     const pool = CONSTELLATIONS.filter((x) => gameSeasons.includes(x.season)).map((x) => x.id);
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
@@ -595,7 +599,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
               <div>
                 <p className="text-xs font-bold text-[#56628a] mb-2">Roční období</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {(['vse', 'jaro', 'leto', 'podzim', 'zima'] as SeasonFilter[]).map((f) => (
+                  {((allSeasons ? ['vse', ...ALL4] : modelSeasons) as SeasonFilter[]).map((f) => (
                     <button
                       key={f}
                       type="button"
@@ -627,7 +631,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                     <span className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-xl" style={{ background: '#0b1236' }} aria-hidden="true">✨</span>
                     {season === 'vse' ? 'Celá obloha – všechna najednou' : `Obloha ${seasonOf(season).on} – na mapě`}
                   </button>
-                  {(season === 'vse' ? (['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as Season[]) : [season, 'cely-rok' as Season]).map((sid) => [
+                  {(season === 'vse' ? (['cely-rok', ...ALL4] as Season[]) : allSeasons ? [season, 'cely-rok' as Season] : [...modelSeasons, 'cely-rok' as Season]).map((sid) => [
                     <p key={`h-${sid}`} className="col-span-4 text-xs font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
                     ...CONSTELLATIONS.filter((cons) => cons.season === sid).map((cons) => (
                     <ConsTile key={cons.id} c={cons} on={view === cons.id} onClick={() => setView(cons.id)} />

@@ -279,33 +279,30 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
         description: 'Hra z vybraných období vybere souhvězdí náhodně. Po Velkém voze děti hledají Polárku.',
       },
       rounds: {
-        name: 'Počet souhvězdí',
+        name: 'Počet úloh',
         type: 'select' as const,
-        defaultValue: 4,
+        defaultValue: 5,
         options: [
-          { value: 3, label: '3 souhvězdí' },
-          { value: 4, label: '4 souhvězdí' },
-          { value: 6, label: '6 souhvězdí' },
-          { value: 8, label: '8 souhvězdí' },
+          { value: 3, label: '3 úlohy' },
+          { value: 5, label: '5 úloh' },
+          { value: 8, label: '8 úloh' },
+          { value: 10, label: '10 úloh' },
         ],
-        description: 'Když je ve vybraných obdobích méně souhvězdí, hrají se všechna',
+        description: 'Každá úloha je jedno souhvězdí; když je ve vybraných obdobích souhvězdí méně, hrají se všechna',
       },
     };
   }
   if (game.model === 'hvezdy') {
     return {
-      season: {
-        name: 'Obloha na začátku',
-        type: 'select' as const,
-        defaultValue: 'vse',
-        options: [
-          { value: 'vse', label: 'Celá obloha' },
-          { value: 'jaro', label: 'Jaro' },
-          { value: 'leto', label: 'Léto' },
-          { value: 'podzim', label: 'Podzim' },
-          { value: 'zima', label: 'Zima' },
-        ],
-        description: 'Období jde přepnout i během promítání',
+      seasons: {
+        name: 'Která roční období ukazujeme',
+        type: 'multiselect' as const,
+        defaultValue: ['jaro', 'leto', 'podzim', 'zima'],
+        options: (['jaro', 'leto', 'podzim', 'zima'] as const).map((sid) => {
+          const se = SEASONS.find((x) => x.id === sid)!;
+          return { value: sid, label: `${se.icon} ${se.name} (str. ${CONSTELLATIONS.filter((c) => c.season === sid).map((c) => c.name).join(', ')})` };
+        }),
+        description: 'Model nabídne jen zaškrtnutá období; souhvězdí kolem Polárky jsou vidět vždy. Když jsou zaškrtnutá všechna, začíná se na celé obloze.',
       },
     };
   }
