@@ -20,6 +20,7 @@ import {
 import { SolarScene3D, yearsPerSecond, type DayPart, type SolarBodyId, type SolarStyle } from './solar-3d';
 import { MoonBirth } from './MoonBirth';
 import { TempStage, TEMPS, type TempBody } from './PlanetTemp';
+import { Seasons } from './Seasons';
 import { EarthBirth } from './EarthBirth';
 import { EclipseWhy } from './EclipseWhy';
 import { Kid, JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
@@ -280,6 +281,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [jump, setJump] = useState(false);
   // Jaká je tu teplota: teploměr Země vedle vybraného tělesa.
   const [temp, setTemp] = useState(false);
+  // Proč máme roční období (jen u Země).
+  const [seasons, setSeasons] = useState(false);
   const [jumpBodies, setJumpBodies] = useState<JumpBody[]>(['mesic', 'jupiter']);
   const [weight, setWeight] = useState(30);
   const [jumpAction, setJumpAction] = useState<{ kind: 'skok' | 'micek'; t0: number } | null>(null);
@@ -411,6 +414,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const overview = () => {
     setJump(false);
     setTemp(false);
+    setSeasons(false);
     setDayNight(false);
     setCompare(false);
     setFocused(false);
@@ -473,6 +477,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             onClose={() => setCompare(false)}
           />
         ) : null}
+        {seasons && selected === 'zeme' ? <Seasons onClose={() => setSeasons(false)} /> : null}
         {temp && (selected as string) in TEMPS ? (
           <div className="absolute inset-0 z-30 text-white" style={{ background: 'radial-gradient(circle at 50% 30%, #16205a 0%, #060a1c 80%)' }}>
             {COMPARE_STARS.map((st, i) => <span key={i} className="absolute rounded-full bg-white pointer-events-none" style={{ left: `${st.x}%`, top: `${st.y}%`, width: st.s, height: st.s, opacity: st.o }} />)}
@@ -700,6 +705,23 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               </div>
             );
           })() : null}
+          {planet && planet.id === 'zeme' ? (
+            <div className="pt-1">
+              <p className="text-sm font-bold text-[#56628a] mb-2">Vyzkoušej si</p>
+              <button
+                type="button"
+                onClick={() => { setJump(false); setCompare(false); setTemp(false); setSeasons(true); }}
+                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                style={{ background: 'linear-gradient(90deg, #2f8a4a 0%, #e8a72f 40%, #c2602a 70%, #4f7fd1 100%)' }}
+              >
+                <span className="absolute right-4 top-3 text-3xl" aria-hidden="true">🌱☀️🍂❄️</span>
+                <span className="absolute left-3 bottom-2.5">
+                  <span className="block text-xl font-bold leading-tight" style={{ textShadow: '0 1px 6px rgba(0,0,0,.35)' }}>Proč máme roční období?</span>
+                  <span className="block text-xs opacity-90">Země obíhá se skloněnou osou →</span>
+                </span>
+              </button>
+            </div>
+          ) : null}
           {planet && planet.id !== 'zeme' ? (
             <div className="pt-1">
               <p className="text-sm font-bold text-[#56628a] mb-2">Vyzkoušej si</p>
