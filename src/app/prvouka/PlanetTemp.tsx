@@ -59,8 +59,18 @@ export function TempStage({ body, names, thumbs }: { body: TempBody; names: Reco
                 {/* trubička a značky mají stejnou výšku, ať značky sedí na stupnici */}
                 <div className="absolute inset-x-0 top-0 bottom-6">
                   <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-6 rounded-full" style={{ background: 'rgba(255,255,255,.12)', border: '2px solid rgba(255,255,255,.35)' }}>
-                    <div className="absolute left-1 right-1 rounded-full" style={{ bottom: `${pct(t.noc)}%`, top: `${100 - pct(t.den)}%`, minHeight: 10, background: `linear-gradient(0deg, ${tColor(t.noc)}, ${tColor(t.den)})` }} />
+                    {/* sloupec od baňky nahoru až k (denní) teplotě – jako opravdový teploměr */}
+                    <div className="absolute left-1 right-1 bottom-0 rounded-full" style={{ height: `${pct(t.den)}%`, minHeight: 10, background: tColor(t.den) }} />
+                    {!same ? (
+                      // noční teplota: značka na stupnici
+                      <div className="absolute -left-2 -right-2 h-0.5 rounded" style={{ bottom: `${pct(t.noc)}%`, background: tColor(t.noc), boxShadow: '0 0 0 1px rgba(6,10,28,.6)' }} />
+                    ) : null}
                   </div>
+                  {!same ? (
+                    <div className="absolute flex items-center" style={{ bottom: `${pct(t.noc)}%`, right: 'calc(50% + 22px)', transform: 'translateY(50%)' }}>
+                      <span className="text-[10px] md:text-xs font-bold whitespace-nowrap" style={{ color: tColor(t.noc) }}>v noci {fmt(t.noc)}</span>
+                    </div>
+                  ) : null}
                   {marks.map((m) => (
                     <div key={m.c} className="absolute left-0 right-0 flex items-center" style={{ bottom: `${pct(m.c)}%` }}>
                       <span className="flex-1 border-t border-dashed" style={{ borderColor: 'rgba(255,255,255,.3)' }} />
@@ -68,7 +78,7 @@ export function TempStage({ body, names, thumbs }: { body: TempBody; names: Reco
                     </div>
                   ))}
                 </div>
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-10 h-10 rounded-full" style={{ background: tColor(t.noc), border: '2px solid rgba(255,255,255,.35)' }} />
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-10 h-10 rounded-full" style={{ background: tColor(t.den), border: '2px solid rgba(255,255,255,.35)' }} />
               </div>
               <span className="mt-4 text-lg md:text-2xl font-bold">{hot && cold ? '🥵 ve dne · 🥶 v noci' : hot ? '🥵 horko' : cold ? '🥶 zima' : '🙂 tak akorát'}</span>
             </div>
