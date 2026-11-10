@@ -302,20 +302,8 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
       },
     };
   }
-  if (game.model === 'hvezdy') {
-    return {
-      seasons: {
-        name: 'Která roční období ukazujeme',
-        type: 'multiselect' as const,
-        defaultValue: ['jaro', 'leto', 'podzim', 'zima'],
-        options: (['jaro', 'leto', 'podzim', 'zima'] as const).map((sid) => {
-          const se = SEASONS.find((x) => x.id === sid)!;
-          return { value: sid, label: `${se.icon} ${se.name} (str. ${CONSTELLATIONS.filter((c) => c.season === sid).map((c) => c.name).join(', ')})` };
-        }),
-        description: 'Model nabídne jen zaškrtnutá období; souhvězdí kolem Polárky jsou vidět vždy. Když jsou zaškrtnutá všechna, začíná se na celé obloze.',
-      },
-    };
-  }
+  // Model hvězdné oblohy nic nenastavuje – roční období se přepínají přímo v modelu.
+  if (game.model === 'hvezdy') return {};
   if (game.model === 'mesic') {
     return {
       hintDC: { name: 'Nápověda D / C', type: 'boolean' as const, defaultValue: true, description: 'U srpků a čtvrtí ukáže písmeno D (dorůstá) nebo C (couvá)' },

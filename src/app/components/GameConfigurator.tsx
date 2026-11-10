@@ -556,7 +556,8 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
         ) : null}
 
         <div className="space-y-6 pb-8">
-          {/* 1. Nastavení hry */}
+          {/* 1. Nastavení hry – bez karty, když hra nic nenastavuje (Model hvězdné oblohy) */}
+          {Object.keys(basicSettings).length > 0 ? (<>
           <Card className="rounded-3xl border-[#e2e8f0]/70 shadow-[0_1px_3px_rgba(78,88,113,0.06)]">
             <CardHeader>
               <CardTitle className="text-2xl font-bold flex items-center justify-between text-[#4e5871]">
@@ -612,6 +613,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
                 : null}
             </CardContent>
           </Card>
+          </>) : null}
 
           {/* 2. Pokročilá nastavení – tlačítko i obsah v jedné kartě */}
           {sortedBasicSettings.length > 0 && Object.keys(advancedSettings).length > 0 && (
