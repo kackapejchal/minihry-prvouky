@@ -296,7 +296,11 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         const l = lvl(cons);
         for (const [a, b] of cons.edges) {
           const pick = all && !vse && l === 2;
-          if (vse) { const hv = hover.current === cons.id; ctx.strokeStyle = hv ? 'rgba(255,217,138,1)' : 'rgba(255,217,138,.62)'; ctx.lineWidth = hv ? 2.4 : 1.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); }
+          if (vse) {
+            // Souhvězdí pod myší: modře (jako vybraný Měsíc v modelu fází Měsíce), ostatní se ztlumí.
+            const hv = hover.current === cons.id, dim = hover.current && !hv;
+            if (hv) { ctx.shadowColor = 'rgba(127,211,255,.9)'; ctx.shadowBlur = 10; }
+            ctx.strokeStyle = hv ? '#7fd3ff' : dim ? 'rgba(255,217,138,.35)' : 'rgba(255,217,138,.62)'; ctx.lineWidth = hv ? 3 : 1.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); ctx.shadowBlur = 0; }
           else if (all) { if (l === 0) continue; ctx.strokeStyle = l === 2 ? 'rgba(255,217,138,.95)' : 'rgba(255,217,138,.22)'; ctx.lineWidth = l === 2 ? 2.4 : 1.4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); }
           else line(by[a], by[b], 0.9);
         }
@@ -304,11 +308,6 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
       if (st.view === 'vuz') polarkaGuide(true);
       for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.4 : all && !vse ? 0 : 0.2; drawStar(ctx, vse ? { ...p, r: p.r * 0.8 } : p, p.id === 'polarka' ? 1.5 : vse ? 0.6 : 1); }
       ctx.globalAlpha = 1;
-      // Souhvězdí pod myší: modré kroužky kolem hvězd jako vybraný Měsíc v modelu fází Měsíce.
-      if (vse && hover.current) {
-        ctx.strokeStyle = '#7fd3ff'; ctx.lineWidth = 2.5;
-        for (const st2 of constellation(hover.current).stars) { const p = by[st2.id]; ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 6, 0, 6.283); ctx.stroke(); }
-      }
       // Popisky bez překrývání: každý dostane místo, kde nezakryje jiný popisek.
       type Box = { x0: number; x1: number; y0: number; y1: number };
       const boxes: Box[] = [], labs: Box[] = [];
@@ -356,7 +355,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
           : all
             ? [[cx, top - 8], [cx, bottom + size + 6], [x1 + half + 8, cy + size / 3], [x0 - half - 8, cy + size / 3], [cx, cy + size / 3]]
             : [[cx, Math.max(fs + 6, top - 26)]];
-        place(cons.name, size, spots, vse ? 'rgba(255,224,160,.85)' : l === 2 ? GOLD : 'rgba(255,217,138,.45)');
+        place(cons.name, size, spots, vse ? '#7fd3ff' : l === 2 ? GOLD : 'rgba(255,217,138,.45)');
         // Jména jasných hvězd: u jednoho souhvězdí vždy, na celé obloze jen u vybraného období.
         if (!all || (!vse && l === 2)) for (const id of cons.named ?? []) {
           if (id === 'polarka') continue;
