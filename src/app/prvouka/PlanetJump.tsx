@@ -168,8 +168,8 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
             {/* značka nejvyššího bodu skoku: o tolik nad hlavou dítěte (v nejvyšším bodě se jí dotkne hlavou) */}
             {shown !== 'micek' ? (
               <>
-                <div className="absolute border-t-2 border-dashed" style={{ left: colW * 0.18, width: colW * 0.48, top: peakY - kid * 1.7, borderColor: 'rgba(127,211,255,.55)' }} />
-                <span className="absolute text-xs md:text-sm font-bold text-[#7fd3ff]" style={{ left: colW * 0.68, top: peakY - kid * 1.7 - 10 }}>{formatMeters(jumpHeight(b))}</span>
+                <div className="absolute border-t-2 border-dashed" style={{ left: colW * 0.18, width: colW * 0.48, top: peakY - kid * 1.58, borderColor: 'rgba(127,211,255,.55)' }} />
+                <span className="absolute text-xs md:text-sm font-bold text-[#7fd3ff]" style={{ left: colW * 0.68, top: peakY - kid * 1.58 - 10 }}>{formatMeters(jumpHeight(b))}</span>
               </>
             ) : null}
             {/* míček */}
@@ -187,23 +187,17 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
             {i > 0 ? <div className="absolute top-[8%] bottom-[8%] left-0 w-px z-10" style={{ background: 'rgba(255,255,255,.12)' }} /> : null}
             {/* postavička */}
             <Kid x={cx - colW * i} y={groundY - up * pxPerM} size={kid} />
-            {/* povrch: zakřivený okraj planety (robot stojí na „kopečku“ malé planety) */}
-            {(() => {
-              const D = colW * 2.4; // průměr planety – vidíme jen horní oblouk
-              return (
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    left: colW / 2 - D / 2, top: groundY - 2, width: D, height: D,
-                    backgroundColor: GROUND[b],
-                    // Ostrá textura planety (stejná jako ve 3D modelu), jen okraj koule lehce ztmavne.
-                    backgroundImage: `radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 60%, rgba(0,0,0,.35) 71%), url(${import.meta.env.BASE_URL}prvouka/tretak/textury/${b}.jpg)`,
-                    backgroundSize: `100% 100%, ${D * 1.4}px ${D * 0.7}px`, backgroundPosition: `center, center ${-D * 0.2}px`, backgroundRepeat: 'no-repeat, repeat-x',
-                    boxShadow: `0 -6px 24px ${GAS.includes(b) ? 'rgba(200,220,255,.18)' : 'rgba(127,211,255,.12)'}`,
-                  }}
-                />
-              );
-            })()}
+            {/* povrch: rovná plocha s texturou planety (stejná jako ve 3D modelu) */}
+            <div
+              className="absolute left-0 right-0 bottom-0"
+              style={{
+                top: groundY - 2,
+                backgroundColor: GROUND[b],
+                backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,.12), rgba(0,0,0,0) 6px, rgba(0,0,0,0) 70%, rgba(0,0,0,.25)), url(${import.meta.env.BASE_URL}prvouka/tretak/textury/${b}.jpg)`,
+                backgroundSize: `100% 100%, ${colW * 2.4}px ${colW * 1.2}px`, backgroundPosition: `center, center ${-colW * 0.3}px`, backgroundRepeat: 'no-repeat, repeat-x',
+                boxShadow: `0 -6px 24px ${GAS.includes(b) ? 'rgba(200,220,255,.18)' : 'rgba(127,211,255,.12)'}`,
+              }}
+            />
             {GAS.includes(b) ? (
               <span className="absolute left-0 right-0 text-center text-xs md:text-sm font-bold text-white/85" style={{ top: groundY + 14 }}>nemá pevný povrch – stojíme na mracích</span>
             ) : null}
@@ -223,5 +217,5 @@ function duration(kind: 'skok' | 'micek', b: JumpBody) {
 const ROBOT_SRC = `${import.meta.env.BASE_URL}prvouka/ill/robot.svg`;
 export function Kid({ x, y, size, inline = false }: { x: number; y: number; size: number; inline?: boolean }) {
   const hgt = size * 1.7, wid = hgt * (23 / 29);
-  return <img src={ROBOT_SRC} alt="" draggable={false} className={`select-none pointer-events-none ${inline ? '' : 'absolute'}`} style={inline ? { width: wid, height: hgt } : { left: x - wid / 2, top: y - hgt, width: wid, height: hgt }} />;
+  return <img src={ROBOT_SRC} alt="" draggable={false} className={`select-none pointer-events-none ${inline ? '' : 'absolute'}`} style={inline ? { width: wid, height: hgt } : { left: x - wid / 2, top: y - hgt * 0.93, width: wid, height: hgt }} />;
 }
