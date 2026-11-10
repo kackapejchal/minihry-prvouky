@@ -184,6 +184,7 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
               // Míček: jednoduchý jednobarevný kruh (barva tlačítek), bez záře.
               <span className="absolute rounded-full" style={{ left: colW * 0.62, top: ballY - 26, width: 26, height: 26, background: '#f0a12c', border: '3px solid #b8741a' }} />
             ) : null}
+            {i > 0 ? <div className="absolute top-[8%] bottom-[8%] left-0 w-px z-10" style={{ background: 'rgba(255,255,255,.12)' }} /> : null}
             {/* postavička */}
             <Kid x={cx - colW * i} y={groundY - up * pxPerM} size={kid} />
             {/* povrch: zakřivený okraj planety (robot stojí na „kopečku“ malé planety) */}
