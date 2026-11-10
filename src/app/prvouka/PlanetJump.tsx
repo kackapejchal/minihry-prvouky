@@ -37,6 +37,7 @@ const GROUND: Record<JumpBody, string> = {
 const EARTH_JUMP_M = 0.5; // výskok na Zemi
 const EARTH_G = 9.81;
 const DROP_M = 2; // míček padá z výšky 2 m
+const HOLD = 0.7; // chvíli visí ve stejné výšce, než se pustí – ať je vidět, že startují stejně
 
 export const jumpHeight = (b: JumpBody) => EARTH_JUMP_M / PULL[b];
 export function formatMeters(m: number) {
@@ -109,7 +110,7 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
         const v0 = Math.sqrt(2 * EARTH_G * EARTH_JUMP_M);
         const jumpT = action?.kind === 'skok' ? Math.min(t, 2 * v0 / g) : 0;
         const up = Math.max(0, v0 * jumpT - (g * jumpT * jumpT) / 2);
-        const dropT = action?.kind === 'micek' ? Math.min(t, Math.sqrt((2 * DROP_M) / g)) : 0;
+        const dropT = action?.kind === 'micek' ? Math.min(Math.max(0, t - HOLD), Math.sqrt((2 * DROP_M) / g)) : 0;
         const fallen = action?.kind === 'micek' ? Math.min(DROP_M, (g * dropT * dropT) / 2) : 0;
         const ballY = groundY - (DROP_M - fallen) * pxPerM;
         const cx = colW * i + colW * 0.42;
@@ -140,7 +141,14 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
               </>
             ) : null}
             {/* míček */}
+            {/* odkud míček padá: stejná výška (2 m) ve všech sloupcích */}
             {action?.kind === 'micek' ? (
+              <>
+                <div className="absolute border-t-2 border-dashed" style={{ left: colW * 0.18, width: colW * 0.6, top: groundY - DROP_M * pxPerM, borderColor: 'rgba(240,161,44,.7)' }} />
+                <span className="absolute text-xs md:text-sm font-bold text-[#f0a12c]" style={{ left: colW * 0.8, top: groundY - DROP_M * pxPerM - 10 }}>{formatMeters(DROP_M)}</span>
+              </>
+            ) : null}
+            {action?.kind !== 'skok' ? (
               // Míček: jednoduchý jednobarevný kruh (barva tlačítek), bez záře.
               <span className="absolute rounded-full" style={{ left: colW * 0.62, top: ballY - 26, width: 26, height: 26, background: '#f0a12c', border: '3px solid #b8741a' }} />
             ) : null}
@@ -160,12 +168,47 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
 
 function duration(kind: 'skok' | 'micek', b: JumpBody) {
   const g = EARTH_G * PULL[b];
-  return kind === 'skok' ? (2 * Math.sqrt(2 * EARTH_G * EARTH_JUMP_M)) / g : Math.sqrt((2 * DROP_M) / g);
+  return kind === 'skok' ? (2 * Math.sqrt(2 * EARTH_G * EARTH_JUMP_M)) / g : HOLD + Math.sqrt((2 * DROP_M) / g);
 }
 
-/** Dítě z ilustrací Vividbooks (holčička z matematiky 1. ročníku) – nohy na čáře y. */
-const KID_SRC = `${import.meta.env.BASE_URL}prvouka/ill/skok-holka.png`;
-function Kid({ x, y, size }: { x: number; y: number; size: number }) {
-  const hgt = size * 2, wid = hgt * (259 / 400);
-  return <img src={KID_SRC} alt="" className="absolute select-none pointer-events-none" draggable={false} style={{ left: x - wid / 2, top: y - hgt, width: wid, height: hgt }} />;
+/**
+ * Dítě ve výskoku – kreslené v linkovém stylu ilustrací Vividbooks (Vlastivěda): tmavá linka, plné barvy,
+ * celá postava se všemi končetinami. Nohy na čáře y.
+ */
+export function Kid({ x, y, size, inline = false }: { x: number; y: number; size: number; inline?: boolean }) {
+  const hgt = size * 2, wid = hgt * 0.62;
+  const L = { stroke: '#2b2f3a', strokeWidth: 1.6, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
+  return (
+    <svg viewBox="0 0 62 100" className={inline ? '' : 'absolute'} style={inline ? { width: wid, height: hgt, overflow: 'visible' } : { left: x - wid / 2, top: y - hgt, width: wid, height: hgt, overflow: 'visible' }} aria-hidden="true">
+      {/* ruce nahoře do V */}
+      <path d="M22 40 L11 24 L8 15" fill="none" {...L} strokeWidth={6.5} stroke="#2b2f3a" />
+      <path d="M22 40 L11 24 L8 15" fill="none" stroke="#ffd9c0" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M40 40 L51 24 L54 15" fill="none" {...L} strokeWidth={6.5} stroke="#2b2f3a" />
+      <path d="M40 40 L51 24 L54 15" fill="none" stroke="#ffd9c0" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+      {/* rukávy */}
+      <path d="M20 37 L15 31 L19 28 L25 35 Z" fill="#e8574a" {...L} />
+      <path d="M42 37 L47 31 L43 28 L37 35 Z" fill="#e8574a" {...L} />
+      {/* nohy (kalhoty) a boty */}
+      <path d="M25 62 L22 76 L18 86" fill="none" {...L} strokeWidth={8.5} stroke="#2b2f3a" />
+      <path d="M25 62 L22 76 L18 86" fill="none" stroke="#4a6fb3" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M37 62 L40 76 L44 86" fill="none" {...L} strokeWidth={8.5} stroke="#2b2f3a" />
+      <path d="M37 62 L40 76 L44 86" fill="none" stroke="#4a6fb3" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 86 Q12 82 17 83 L22 85 Q23 89 20 90 L13 90 Q11 89 12 86 Z" fill="#ffffff" {...L} />
+      <path d="M50 86 Q50 82 45 83 L40 85 Q39 89 42 90 L49 90 Q51 89 50 86 Z" fill="#ffffff" {...L} />
+      {/* tričko */}
+      <path d="M20 36 Q31 31 42 36 L41 62 Q31 65 21 62 Z" fill="#e8574a" {...L} />
+      {/* krk a hlava */}
+      <rect x="28" y="30" width="6" height="5" fill="#ffd9c0" />
+      <circle cx="31" cy="20" r="11" fill="#ffd9c0" {...L} />
+      {/* vlasy s culíkem */}
+      <path d="M20 19 Q21 8 31 8 Q41 8 42 18 Q36 13 30 14 Q24 15 20 19 Z" fill="#8a5a36" {...L} />
+      <path d="M41 13 Q49 12 50 20 Q47 26 43 22" fill="#8a5a36" {...L} />
+      {/* obličej */}
+      <circle cx="27" cy="21" r="1.3" fill="#2b2f3a" />
+      <circle cx="35" cy="21" r="1.3" fill="#2b2f3a" />
+      <path d="M27 26 Q31 29.5 35 26" fill="none" {...L} strokeWidth={1.4} />
+      <circle cx="24.5" cy="24.5" r="1.8" fill="#f4a3a0" opacity="0.7" />
+      <circle cx="37.5" cy="24.5" r="1.8" fill="#f4a3a0" opacity="0.7" />
+    </svg>
+  );
 }

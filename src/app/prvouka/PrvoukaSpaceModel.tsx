@@ -20,7 +20,7 @@ import {
 import { SolarScene3D, yearsPerSecond, type DayPart, type SolarBodyId, type SolarStyle } from './solar-3d';
 import { MoonBirth } from './MoonBirth';
 import { EclipseWhy } from './EclipseWhy';
-import { JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
+import { Kid, JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
 
 /**
  * Interaktivní modely 3. ročníku (Putování vesmírem, Schovaná v Mléčné dráze, Jediná obyvatelná):
@@ -698,7 +698,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(90deg, #f0a12c 0%, #b8461a 100%)' }}
               >
-                <img src={`${import.meta.env.BASE_URL}prvouka/ill/skok-holka.png`} alt="" className="absolute right-4 -top-1 h-24 object-contain" style={{ transform: 'translateY(-6px)' }} />
+                <span className="absolute right-5 top-1"><Kid x={0} y={0} size={40} inline /></span>
                 <span className="absolute left-3 bottom-2.5">
                   <span className="block text-xl font-bold leading-tight">Skoč si tady</span>
                   <span className="block text-xs opacity-90">Jak vysoko a kolik vážíš? →</span>
@@ -732,7 +732,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(90deg, #f0a12c 0%, #b8461a 100%)' }}
               >
-                <img src={`${import.meta.env.BASE_URL}prvouka/ill/skok-holka.png`} alt="" className="absolute right-4 -top-1 h-24 object-contain" style={{ transform: 'translateY(-6px)' }} />
+                <span className="absolute right-5 top-1"><Kid x={0} y={0} size={40} inline /></span>
                 <span className="absolute left-3 bottom-2.5">
                   <span className="block text-xl font-bold leading-tight">Skoč si tady</span>
                   <span className="block text-xs opacity-90">Jak vysoko a kolik vážíš? →</span>
