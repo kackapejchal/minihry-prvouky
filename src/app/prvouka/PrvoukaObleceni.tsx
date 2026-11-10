@@ -45,12 +45,11 @@ const ITEMS: Item[] = [
 // Hanka: rámeček 240 × 495 px, obrázky v hanka/ („f-…“ jsou ploché kusy jen na náhled v šatníku).
 const H_ITEMS: Item[] = [
   { id: 'cepice', name: 'Čepice', slot: 'hlava', thumb: 'hanka/cepice', pieces: [{ src: 'hanka/cepice', box: [45, 5, 213, 126], z: 9 }] },
-  { id: 'klobouk', name: 'Klobouk', slot: 'hlava', thumb: 'hanka/f-klobouk', pieces: [{ src: 'hanka/klobouk', box: [0, 31, 240, 151], z: 9 }] },
-  { id: 'sala', name: 'Šála', slot: 'krk', thumb: 'hanka/f-sala', pieces: [{ src: 'hanka/sala', box: [39, 159, 201, 266], z: 8 }] },
+  { id: 'klobouk', name: 'Klobouk', slot: 'hlava', thumb: 'hanka/f-klobouk', pieces: [{ src: 'hanka/f-klobouk', box: [6, 28, 234, 133], z: 9 }] },
   { id: 'cervene-triko', name: 'Červené tričko', slot: 'vrsek', thumb: 'hanka/f-triko', pieces: [] },
-  { id: 'saty', name: 'Šaty', slot: 'vrsek', thumb: 'hanka/f-saty', pieces: [{ src: 'hanka/saty', box: [23, 184, 216, 396], z: 4 }] },
+  { id: 'saty', name: 'Šaty', slot: 'vrsek', thumb: 'hanka/f-saty', pieces: [{ src: 'hanka/f-saty', box: [50, 196, 190, 398], z: 4 }] },
   { id: 'plastenka', name: 'Pláštěnka', slot: 'bunda', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }] },
-  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/zimni-bunda', box: [17, 149, 220, 361], z: 6 }] },
+  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/f-zimni-bunda', box: [20, 166, 218, 360], z: 6 }] },
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'hanka/f-kratasy', pieces: [] },
   { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [53, 364, 181, 426], z: 2 }] },
   { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'hanka/dziny', pieces: [{ src: 'hanka/dziny', box: [39, 344, 201, 421], z: 2 }] },
