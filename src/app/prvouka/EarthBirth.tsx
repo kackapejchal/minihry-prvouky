@@ -12,10 +12,9 @@ const STEPS: Array<{ at: number; text: string }> = [
   { at: 0, text: 'Před dávnými a dávnými lety kolem mladého Slunce kroužil prach a kamínky.' },
   { at: 5, text: 'Kousky do sebe narážely a slepovaly se do větších a větších kamenů.' },
   { at: 10, text: 'Z jednoho takového shluku vznikla horká mladá Země.' },
-  { at: 15, text: 'Země pomalu chladla. Vznikla pevná zem a z vodní páry oceány.' },
-  { at: 20, text: 'A tak vznikla naše Země. Pak do ní narazila menší planeta a vznikl Měsíc.' },
+  { at: 15, text: 'Byla ještě celá horká, když do ní narazila menší planeta – tak vznikl Měsíc. Vychladla až potom.' },
 ];
-const END = 24;
+const END = 20;
 
 function rng(seed: number) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 const ease = (t: number) => { const x = Math.max(0, Math.min(1, t)); return x * x * (3 - 2 * x); };
@@ -117,7 +116,7 @@ function draw(cv: HTMLCanvasElement, t: number) {
   // Rodící se Země: nejdřív hrudka kamení, pak žhavá koule, nakonec vychladne do dnešní Země.
   const r = R * Math.max(0.05, growK) * lerp(0.35, 1, zoom);
   if (growK > 0.02) {
-    const cool = ease((t - 15) / 5);
+    const cool = 0; // Země tu zůstává horká – vychladne až po vzniku Měsíce (viz Jak vznikl Měsíc)
     if (cool > 0) drawPlanet(ctx, ZEME, ex, ey, r, Math.PI * 1.08);
     const hot = 1 - cool;
     if (hot > 0) {
