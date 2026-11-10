@@ -32,6 +32,7 @@ const ITEMS: Item[] = [
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'kratasy', pieces: [] },
   { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'dziny', pieces: [{ src: 'nas-dziny', box: [36, 258, 173, 375], z: 2 }] },
   { id: 'kalhoty', name: 'Kalhoty', slot: 'dolu', thumb: 'kalhoty', pieces: [{ src: 'nas-kalhoty', box: [23, 258, 189, 368], z: 2 }] },
+  { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'leginy', pieces: [{ src: 'nas-leginy', box: [23, 258, 189, 368], z: 2 }] },
   { id: 'zimni-kalhoty', name: 'Zimní kalhoty', slot: 'dolu', thumb: 'nas-zimni-kalhoty', pieces: [{ src: 'nas-zimni-kalhoty', box: [44, 258, 170, 363], z: 2 }] },
   { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'sandaly', pieces: [] },
   { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'tenisky', pieces: [{ src: 'nas-tenisky', box: [36, 357, 173, 389], z: 3 }] },
@@ -50,7 +51,6 @@ const H_ITEMS: Item[] = [
   { id: 'plastenka', name: 'Pláštěnka', slot: 'vrsek', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }], ownOnly: true },
   { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'vrsek', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/f-zimni-bunda', box: [20, 166, 218, 360], z: 6 }] },
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'hanka/f-kratasy', pieces: [] },
-  { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [56, 318, 184, 428], z: 2 }], boxFor: { sam: [40, 246, 168, 368] } },
   { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'hanka/f-tenisky', pieces: [] },
   { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'hanka/f-sandaly', pieces: [{ src: 'hanka/sandaly', box: [30, 398, 212, 490], z: 3 }] },
   { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'hanka/boty', pieces: [{ src: 'hanka/boty', box: [45, 409, 196, 495], z: 3 }] },
@@ -202,8 +202,8 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const items = useMemo(() => wardrobe(who), [who]);
   const byId = Object.fromEntries(items.map((i) => [i.id, i]));
   const worn = (Object.values(outfit).filter(Boolean) as string[]).map((id) => byId[id]).filter(Boolean);
-  // Hanka má na základním obrázku tenisky – když si obuje jiné boty, tenisky pod nimi zmizí.
-  const noShoes = who === 'hanka' && Boolean(outfit.boty) && outfit.boty !== 'tenisky';
+  // Základní boty (Sam sandály, Hanka tenisky) pod jinými botami zmizí.
+  const noShoes = Boolean(outfit.boty) && outfit.boty !== (who === 'hanka' ? 'tenisky' : 'sandaly');
   const longPants = Boolean(outfit.dolu) && outfit.dolu !== 'kratasy';
   const baseSrc = (longPants ? (C.longPants.includes(outfit.dolu!) ? `${C.base}-${outfit.dolu}` : `${C.base}-dlouhe`) : C.base) + (noShoes ? '-bezbot' : '');
   const [bx0, by0, bx1, by1] = C.baseBox;
