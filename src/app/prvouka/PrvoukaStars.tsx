@@ -96,7 +96,7 @@ function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number
   (ctx as any).letterSpacing = '0px';
 }
 
-const ALL_TEXT = 'Všechna souhvězdí na jedné mapě. Uprostřed je Polárka – kolem ní se celá obloha během noci pomalu otáčí. Najednou je ale nikdy neuvidíme: některá souhvězdí jsou vidět v létě, jiná v zimě. Vyber roční období a mapa se otočí jako otočná mapa hvězdné oblohy.';
+const ALL_TEXT = 'Všechna souhvězdí na jedné mapě. Uprostřed je Polárka – kolem ní se celá obloha během noci pomalu otáčí. Najednou je ale nikdy neuvidíme: některá souhvězdí jsou vidět v létě, jiná v zimě. Klepni na souhvězdí a uvidíš, jak se jmenuje. Vyber roční období a mapa se otočí jako otočná mapa hvězdné oblohy.';
 const seasonOf = (id: Season) => SEASONS.find((s) => s.id === id)!;
 /** Natočení mapy: večerní obloha daného období dole (k jižnímu obzoru). */
 const seasonRotation = (f: SeasonFilter) => (f === 'vse' || f === 'cely-rok' ? 0 : Math.PI / 2 - (seasonOf(f).ra / 12) * Math.PI);
@@ -127,6 +127,9 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const rot = useRef(0);
   const zoom = useRef({ z: 1, x: 0, y: 0 });
   const lastT = useRef(0);
+  // Celá obloha: souhvězdí pod myší (rozsvítí se a ukáže jméno) a poslední polohy hvězd na obrazovce.
+  const hover = useRef<string | null>(null);
+  const skyPos = useRef<Record<string, Placed>>({});
   // Hra
   const [round, setRound] = useState(0);
   // Spojovačka podle čísel: kolik hvězd z pořadí už dítě spojilo.
@@ -262,6 +265,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         z.z = ease(z.z, tz); z.x = ease(z.x, tcx); z.y = ease(z.y, tcy);
         pl = turned.map((p) => ({ ...p, x: w / 2 + (p.x - z.x) * z.z, y: h / 2 + (p.y - z.y) * z.z }));
         by = Object.fromEntries(pl.map((p) => [p.id, p]));
+        skyPos.current = by;
       }
       const vse = all && st.season === 'vse';
       if (vse) {
@@ -279,7 +283,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         const l = lvl(cons);
         for (const [a, b] of cons.edges) {
           const pick = all && !vse && l === 2;
-          if (vse) { ctx.strokeStyle = 'rgba(255,217,138,.62)'; ctx.lineWidth = 1.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); }
+          if (vse) { const hv = hover.current === cons.id; ctx.strokeStyle = hv ? 'rgba(255,217,138,1)' : 'rgba(255,217,138,.62)'; ctx.lineWidth = hv ? 3 : 1.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); }
           else if (all) { if (l === 0) continue; ctx.strokeStyle = l === 2 ? 'rgba(255,217,138,.95)' : 'rgba(255,217,138,.22)'; ctx.lineWidth = l === 2 ? 2.4 : 1.4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); }
           else line(by[a], by[b], 0.9);
         }
@@ -319,6 +323,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
       for (const cons of list) {
         const l = lvl(cons);
         if (l === 0) continue;
+        if (vse && hover.current !== cons.id) continue; // na celé mapě jméno jen u souhvězdí pod myší
         const ts = cons.stars.map((s) => by[s.id]);
         const x0 = Math.min(...ts.map((p) => p.x)), x1 = Math.max(...ts.map((p) => p.x));
         const top = Math.min(...ts.map((p) => p.y)), bottom = Math.max(...ts.map((p) => p.y));
@@ -402,7 +407,31 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
     }
   }
 
+  /** Na celé obloze: které souhvězdí je pod prstem / myší (nejbližší hvězda do 26 px). */
+  const skyHit = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    let id: string | null = null, best = 26;
+    for (const cons of CONSTELLATIONS) for (const st2 of cons.stars) {
+      const p = skyPos.current[st2.id]; if (!p) continue;
+      const d = Math.hypot(p.x - x, p.y - y); if (d < best) { best = d; id = cons.id; }
+    }
+    return id;
+  };
+  const skyActive = mode !== 'hra' && view === 'all' && season === 'vse';
+  const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!skyActive) { hover.current = null; return; }
+    hover.current = skyHit(e);
+    e.currentTarget.style.cursor = hover.current ? 'pointer' : 'default';
+  };
   const onTap = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (skyActive) {
+      const id = skyHit(e);
+      if (!id) return;
+      // Myš: jméno už je vidět, klepnutí souhvězdí otevře. Dotyk: první klepnutí ukáže jméno, druhé otevře.
+      if (e.pointerType === 'mouse' || hover.current === id) { hover.current = null; setView(id); } else hover.current = id;
+      return;
+    }
     if (mode !== 'hra' || roundDone || feedback) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left, y = e.clientY - rect.top;
@@ -446,7 +475,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   return (
     <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
       <div className={`relative rounded-3xl overflow-hidden bg-[#05081a] min-h-[60svh] lg:min-h-0 ${settings ? NAV_LEFT : ''}`}>
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none', cursor: mode === 'hra' && !roundDone ? 'pointer' : 'default' }} onPointerDown={onTap} aria-label="Noční obloha se souhvězdím" />
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none', cursor: mode === 'hra' && !roundDone ? 'pointer' : 'default' }} onPointerDown={onTap} onPointerMove={onMove} onPointerLeave={() => { hover.current = null; }} aria-label="Noční obloha se souhvězdím" />
       </div>
 
       <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto">
