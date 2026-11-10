@@ -19,6 +19,7 @@ import {
 } from './space-engine';
 import { SolarScene3D, yearsPerSecond, type DayPart, type SolarBodyId, type SolarStyle } from './solar-3d';
 import { MoonBirth } from './MoonBirth';
+import { EclipseWhy } from './EclipseWhy';
 import { JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
 
 /**
@@ -280,6 +281,12 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [jumpAction, setJumpAction] = useState<{ kind: 'skok' | 'micek'; t0: number } | null>(null);
   // Po otevření skákání se panel posune k výběru váhy, ať je hned vidět.
   const jumpPanelRef = useRef<HTMLDivElement | null>(null);
+  // Při přepnutí na jinou planetu se skákání přepne na ni (u Slunce a komety skákat nejde – zavře se).
+  useEffect(() => {
+    if (!jump) return;
+    if ((JUMP_CHOICES as string[]).includes(selected)) { setJumpBodies([selected as JumpBody]); setJumpAction(null); }
+    else setJump(false);
+  }, [selected]); // eslint-disable-line react-hooks/exhaustive-deps
   // Povrch pod nohama „vyfocený“ z 3D modelu ve zvoleném vzhledu: výřez ze středu koule.
   const [jumpSurfaces, setJumpSurfaces] = useState<Partial<Record<JumpBody, string>>>({});
   useEffect(() => {
@@ -1117,6 +1124,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   const [eclipse, setEclipse] = useState<Eclipse>(null);
   // Jak vznikl Měsíc: animace přes celý pohled shora.
   const [birth, setBirth] = useState(false);
+  // Proč není zatmění každý měsíc: animace z boku.
+  const [why, setWhy] = useState(false);
   const eclipseRef = useRef<Eclipse>(null);
   eclipseRef.current = eclipse;
   const dayRef = useRef(day);
@@ -1148,7 +1157,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
 
   const idx = phaseIndex(day);
   const phase = MOON_PHASE_INFO[idx];
-  const jump = (d: number) => { setPlaying(false); setToday(null); setEclipse(null); setBirth(false); setDay(d); };
+  const jump = (d: number) => { setPlaying(false); setToday(null); setEclipse(null); setBirth(false); setWhy(false); setDay(d); };
   const showEclipse = (e: Exclude<Eclipse, null>) => {
     setBirth(false);
     const d = e === 'slunce' ? 0 : SYNODIC / 2;
@@ -1199,6 +1208,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           aria-label="Pohled shora: Slunce, Země a Měsíc na oběžné dráze. Měsícem jde táhnout po dráze."
         />
         {birth ? <MoonBirth onClose={() => setBirth(false)} /> : null}
+        {why ? <EclipseWhy onClose={() => setWhy(false)} /> : null}
         <div className="group absolute top-3 right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
           <div className="flex items-center gap-2">
             <span className="text-sm md:text-base font-bold text-[#e7ecff]">Chyť Měsíc a táhni ho</span>
@@ -1285,9 +1295,21 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
               : phase.note.split(/(?<=\.) (?=\p{Lu})/u).map((part, i) => <React.Fragment key={i}>{i > 0 ? <br /> : null}{part}</React.Fragment>)}
           </p>
           {eclipseInfo ? (
-            <div className="rounded-2xl bg-[#eef1f8] p-3 flex flex-col gap-1.5">
-              <p className="text-sm font-bold text-[#0f1d4d]">Proč to není každý měsíc?</p>
-              <p className="text-sm leading-snug text-[#4e5871]">{ECLIPSE_WHY}</p>
+            <div className="flex flex-col gap-2">
+              {/* Vysvětlení jako animace (stejně jako Jak vznikl Měsíc), ne text v panelu. */}
+              <button
+                type="button"
+                onClick={() => { setBirth(false); setWhy(true); }}
+                className="relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                style={{ background: 'linear-gradient(135deg, #2f6fd1 0%, #1b2350 100%)', outline: why ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
+              >
+                <span className="absolute right-4 top-4 w-9 h-9 rounded-full border-2 border-dashed border-white/60" />
+                <span className="absolute right-[1.6rem] top-[1.6rem] w-3.5 h-3.5 rounded-full bg-[#e7e3da]" style={{ transform: 'translateY(-12px)' }} />
+                <span className="absolute left-3 bottom-2.5">
+                  <span className="block text-base font-bold leading-tight">Proč to není každý měsíc?</span>
+                  <span className="block text-xs opacity-90">krátká animace →</span>
+                </span>
+              </button>
               {eclipse === 'slunce' ? <p className="text-sm font-bold leading-snug text-[#c2410c]">Do Slunce se nikdy nedívej bez speciálních brýlí na zatmění.</p> : null}
             </div>
           ) : (

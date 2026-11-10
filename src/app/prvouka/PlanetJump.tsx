@@ -141,15 +141,14 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
             ) : null}
             {/* míček */}
             {action?.kind === 'micek' ? (
-              // Barevný nafukovací míč (bez záře), ať je jasné, že je to míč.
+              // Míček v barvách Vividbooks (jako míček v živých nástrojích): červená, žlutá, mátová, tmavý obrys.
               <svg viewBox="0 0 40 40" className="absolute" style={{ left: colW * 0.62, top: ballY - 30, width: 30, height: 30 }} aria-hidden="true">
-                <circle cx="20" cy="20" r="18" fill="#ffffff" />
-                <path d="M20 2 A18 18 0 0 1 38 20 L20 20 Z" fill="#e8463b" />
-                <path d="M38 20 A18 18 0 0 1 20 38 L20 20 Z" fill="#f6c22c" />
-                <path d="M20 38 A18 18 0 0 1 2 20 L20 20 Z" fill="#2f7fd6" />
-                <circle cx="20" cy="20" r="4" fill="#ffffff" />
-                <circle cx="20" cy="20" r="18" fill="none" stroke="#1b2350" strokeWidth="2" />
-                <ellipse cx="13" cy="11" rx="4" ry="2.5" fill="rgba(255,255,255,.55)" transform="rotate(-30 13 11)" />
+                <circle cx="20" cy="20" r="17.5" fill="#ffffff" />
+                <path d="M20 2.5 A17.5 17.5 0 0 1 37.5 20 L20 20 Z" fill="#f03b4f" />
+                <path d="M37.5 20 A17.5 17.5 0 0 1 20 37.5 L20 20 Z" fill="#ffde00" />
+                <path d="M20 37.5 A17.5 17.5 0 0 1 2.5 20 L20 20 Z" fill="#00f7a6" />
+                <circle cx="20" cy="20" r="17.5" fill="none" stroke="#455c61" strokeWidth="2.5" />
+                <path d="M20 2.5 V37.5 M2.5 20 H37.5" stroke="#455c61" strokeWidth="2" />
               </svg>
             ) : null}
             {/* postavička */}
@@ -174,6 +173,6 @@ function duration(kind: 'skok' | 'micek', b: JumpBody) {
 /** Dítě z ilustrací Vividbooks (kluk z matematiky 1. ročníku) – nohy na čáře y. */
 const KID_SRC = `${import.meta.env.BASE_URL}prvouka/ill/skok-kluk.png`;
 function Kid({ x, y, size }: { x: number; y: number; size: number }) {
-  const hgt = size * 2, wid = hgt * (234 / 400);
+  const hgt = size * 2, wid = hgt * (239 / 400);
   return <img src={KID_SRC} alt="" className="absolute select-none pointer-events-none" draggable={false} style={{ left: x - wid / 2, top: y - hgt, width: wid, height: hgt }} />;
 }
