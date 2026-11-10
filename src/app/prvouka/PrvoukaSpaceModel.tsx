@@ -1296,19 +1296,16 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           </p>
           {eclipseInfo ? (
             <div className="flex flex-col gap-2">
-              {/* Vysvětlení jako animace (stejně jako Jak vznikl Měsíc), ne text v panelu. */}
+              {/* Vysvětlení jako animace – malé tlačítko s ▶, ne další velká karta. */}
               <button
                 type="button"
                 onClick={() => { setBirth(false); setWhy(true); }}
-                className="relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(135deg, #2f6fd1 0%, #1b2350 100%)', outline: why ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
+                className="self-start inline-flex items-center gap-3 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] pl-1.5 pr-4 py-1.5 text-left transition-colors"
               >
-                <span className="absolute right-4 top-4 w-9 h-9 rounded-full border-2 border-dashed border-white/60" />
-                <span className="absolute right-[1.6rem] top-[1.6rem] w-3.5 h-3.5 rounded-full bg-[#e7e3da]" style={{ transform: 'translateY(-12px)' }} />
-                <span className="absolute left-3 bottom-2.5">
-                  <span className="block text-base font-bold leading-tight">Proč to není každý měsíc?</span>
-                  <span className="block text-xs opacity-90">krátká animace →</span>
+                <span className="w-9 h-9 flex-shrink-0 rounded-full flex items-center justify-center" style={{ background: '#f0a12c', color: '#2a1700' }} aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 ml-0.5" fill="currentColor"><path d="M7 5v14l12-7z" /></svg>
                 </span>
+                <span className="text-sm font-bold text-[#0f1d4d] leading-tight">Proč to není každý měsíc?</span>
               </button>
               {eclipse === 'slunce' ? <p className="text-sm font-bold leading-snug text-[#c2410c]">Do Slunce se nikdy nedívej bez speciálních brýlí na zatmění.</p> : null}
             </div>
