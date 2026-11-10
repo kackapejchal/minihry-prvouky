@@ -63,6 +63,31 @@ const H_ITEMS: Item[] = [
   { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'hanka/f-destnik', pieces: [{ src: 'hanka/f-destnik', box: [176, 150, 296, 296], z: 10 }] },
 ];
 type Who = 'sam' | 'hanka';
+/**
+ * Přepočet pozic ze Samova rámečku do Hančina (a zpátky). Každá část těla zvlášť – hlava podle očí,
+ * trup podle trička, kalhoty od pasu ke kotníkům, boty od chodidel – ať věci sedí, i když má Hanka
+ * jinak velkou hlavu a delší nohy. Čísla jsou změřená na základních obrázcích obou dětí.
+ */
+type Lin = { sx: number; cx: number; hx: number; sy: number; cy: number; hy: number };
+const GROUP: Record<Slot, Lin> = {
+  hlava: { sx: 1.05, cx: 102, hx: 120, sy: 1.05, cy: 128, hy: 145 },
+  krk: { sx: 1.05, cx: 102, hx: 120, sy: 1.05, cy: 128, hy: 145 },
+  vrsek: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
+  bunda: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
+  ruce: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
+  destnik: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
+  dolu: { sx: 1.06, cx: 104, hx: 120, sy: 0.94, cy: 269, hy: 321 },
+  boty: { sx: 1.06, cx: 104, hx: 120, sy: 1.06, cy: 392, hy: 481 },
+};
+function mapBox(box: [number, number, number, number], slot: Slot, from: Who, to: Who): [number, number, number, number] {
+  if (from === to) return box;
+  const m = GROUP[slot];
+  const f = from === 'sam'
+    ? (x: number, y: number) => [m.hx + (x - m.cx) * m.sx, m.hy + (y - m.cy) * m.sy]
+    : (x: number, y: number) => [m.cx + (x - m.hx) / m.sx, m.cy + (y - m.hy) / m.sy];
+  const [x0, y0] = f(box[0], box[1]); const [x1, y1] = f(box[2], box[3]);
+  return [x0, y0, x1, y1];
+}
 /** Postavy: rámeček, základní obrázek (a jeho varianty bez kraťasů pod dlouhými kalhotami), šatník a co má na sobě vždycky. */
 const CHARS: Record<Who, { kdo: string; komu: string; koho: string; w: number; h: number; base: string; baseBox: [number, number, number, number]; longPants: string[]; items: Item[]; baseIds: Partial<Record<Slot, string>> }> = {
   sam: { kdo: 'Sam', komu: 'Samovi', koho: 'Sama', w: 204, h: 392, base: 'sam', baseBox: [15, 10, 189, 392], longPants: ['dziny', 'kalhoty', 'zimni-kalhoty'], items: ITEMS, baseIds: { vrsek: 'zlute-triko', dolu: 'kratasy', boty: 'sandaly' } },
@@ -128,6 +153,15 @@ const WEATHER: Record<WeatherId, Weather> = {
       : null,
   },
 };
+interface Worn extends Item { owner: Who }
+function wardrobe(who: Who): Worn[] {
+  const mine = CHARS[who].items.map((i) => ({ ...i, owner: who }));
+  const otherWho: Who = who === 'sam' ? 'hanka' : 'sam';
+  const ids = new Set(mine.map((i) => i.id));
+  const theirs = CHARS[otherWho].items.filter((i) => !ids.has(i.id) && i.pieces.length > 0).map((i) => ({ ...i, owner: otherWho }));
+  const order = ['hlava', 'krk', 'vrsek', 'bunda', 'dolu', 'boty', 'ruce', 'destnik'];
+  return [...mine, ...theirs].sort((a, b) => order.indexOf(a.slot) - order.indexOf(b.slot));
+}
 const ALL: WeatherId[] = ['prsi', 'snezi', 'horko', 'fouka'];
 
 export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, any> }) {
@@ -160,11 +194,13 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   };
   const restart = () => { setFinished(false); setClean(0); setRi(0); setOutfit({}); setMistakes(0); };
 
-  const byId = Object.fromEntries(C.items.map((i) => [i.id, i]));
+  const items = useMemo(() => wardrobe(who), [who]);
+  const byId = Object.fromEntries(items.map((i) => [i.id, i]));
   const worn = (Object.values(outfit).filter(Boolean) as string[]).map((id) => byId[id]).filter(Boolean);
   // Hanka má na základním obrázku tenisky – když si obuje jiné boty, tenisky pod nimi zmizí.
   const noShoes = who === 'hanka' && Boolean(outfit.boty) && outfit.boty !== 'tenisky';
-  const baseSrc = (outfit.dolu && C.longPants.includes(outfit.dolu) ? `${C.base}-${outfit.dolu}` : C.base) + (noShoes ? '-bezbot' : '');
+  const longPants = Boolean(outfit.dolu) && outfit.dolu !== 'kratasy';
+  const baseSrc = (longPants ? (C.longPants.includes(outfit.dolu!) ? `${C.base}-${outfit.dolu}` : `${C.base}-dlouhe`) : C.base) + (noShoes ? '-bezbot' : '');
   const [bx0, by0, bx1, by1] = C.baseBox;
 
   return (
@@ -182,7 +218,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
           <div className="relative mt-16 mb-4" style={{ width: who === 'hanka' ? 'min(48%, 194px)' : 'min(52%, 210px)', aspectRatio: `${C.w} / ${C.h}` }}>
             <img src={`${ART}/${baseSrc}.png`} alt={C.kdo} className="absolute" style={{ left: `${(bx0 / C.w) * 100}%`, top: `${(by0 / C.h) * 100}%`, width: `${((bx1 - bx0) / C.w) * 100}%`, height: `${((by1 - by0) / C.h) * 100}%` }} draggable={false} />
             {worn.flatMap((it) => it.pieces.map((p, i) => {
-              const [x0, y0, x1, y1] = p.box;
+              const [x0, y0, x1, y1] = mapBox(p.box, it.slot, it.owner, who);
               return (
                 <img key={it.id + i} src={`${ART}/${p.src}.png`} alt="" draggable={false} className="absolute"
                   style={{ left: `${(x0 / C.w) * 100}%`, top: `${(y0 / C.h) * 100}%`, width: `${((x1 - x0) / C.w) * 100}%`, height: `${((y1 - y0) / C.h) * 100}%`, zIndex: p.z, animation: 'oblIn .3s ease' }} />
@@ -212,7 +248,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
             <div key={sh.title} className="rounded-2xl bg-white/70 p-2.5" style={{ border: `2px solid ${INK}1a` }}>
               <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: '#56628a' }}>{sh.title}</p>
               <div className="flex flex-wrap gap-2">
-                {C.items.filter((it) => sh.slots.includes(it.slot)).map((it) => {
+                {items.filter((it) => sh.slots.includes(it.slot)).map((it) => {
                   const on = outfit[it.slot] === it.id;
                   return (
                     <button key={it.id} type="button" onClick={() => toggle(it)} aria-pressed={on}
