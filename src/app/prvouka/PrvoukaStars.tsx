@@ -399,6 +399,13 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   };
 
   const next = () => { if (round + 1 < rounds.length) resetRound(round + 1); else setFinished(true); };
+  // Po správně spojeném souhvězdí (a okně SPRÁVNĚ!) se samo přejde na další kolo – chvíli zůstane vidět hotový tvar a text.
+  useEffect(() => {
+    if (mode !== 'hra' || !roundDone || feedback || finished) return;
+    const t = setTimeout(next, 3500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, roundDone, feedback, finished, round]);
 
   const task = r.type === 'polarka'
     ? 'Najdi Polárku. Dvě modře označené hvězdy vozu ukazují k ní – jejich vzdálenost prodluž asi pětkrát a klepni na hvězdu, kterou tam najdeš.'
@@ -468,13 +475,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                 <>
                   <p className="text-lg font-bold text-[#1f8a4c]">Výborně! {r.type === 'polarka' ? 'Polárku máš.' : `Souhvězdí ${c!.name} je spojené.`}</p>
                   <p className="text-base leading-relaxed text-[#4e5871]">{doneText}</p>
-                  <button
-                    type="button"
-                    onClick={next}
-                    className="self-start mt-1 h-11 px-5 rounded-full bg-white border-2 border-[#4e5871] shadow-[0_3px_0_#4e5871] font-bold text-[#0f1d4d] active:translate-y-[2px] active:shadow-[0_1px_0_#4e5871] transition"
-                  >
-                    {round + 1 < rounds.length ? 'Další kolo →' : 'Hotovo'}
-                  </button>
+                  <p className="text-sm font-bold text-[#9aa6d1]">{round + 1 < rounds.length ? 'Za chvíli pokračuje další kolo…' : 'Za chvíli uvidíš výsledek…'}</p>
                   {isGame ? null : <button
                     type="button"
                     onClick={() => showOnSky(r.type === 'polarka' ? 'vuz' : c!.id)}
