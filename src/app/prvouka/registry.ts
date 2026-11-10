@@ -160,11 +160,11 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     dataId: 'obleceni',
     name: 'Oblékni se podle počasí',
     description: 'prší, sněží, je horko nebo fouká – co si Sam vezme?',
-    longDescription: 'Venku prší, sněží, je horko nebo fouká a děti vybírají, co si Sam oblékne. U správné věci se ukáže, proč se hodí, u nevhodné (kraťasy v mrazu, deštník ve větru) krátké vysvětlení. Bonusové kolo pro 3. ročník: výlet na Měsíc ve skafandru.',
+    longDescription: 'Venku prší, sněží, je horko nebo fouká a děti vybírají, co si Sam oblékne. U správné věci se ukáže, proč se hodí, u nevhodné (kraťasy v mrazu, deštník ve větru) krátké vysvětlení. Dítě obléká Sama jako v oblékačce – věci ze šatníku se vyměňují – a tlačítkem Jdeme ven! si to zkontroluje. Jde hrát i volně bez počasí.',
     icon: '🧥',
     bg: '#E3EEFC',
     playBg: '#e3eefc',
-    image: `${import.meta.env.BASE_URL}prvouka/ill/astronaut/dily/kid.png`,
+    image: `${import.meta.env.BASE_URL}prvouka/ill/obleceni/sam.png`,
     imagePosition: 'center 20%',
     grades: [1, 2, 3],
     model: 'obleceni',
@@ -328,9 +328,18 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
           { value: 'snezi', label: '❄️ Sněží a mrzne' },
           { value: 'horko', label: '☀️ Horko' },
           { value: 'fouka', label: '🌬️ Fouká' },
-          { value: 'mesic', label: '🚀 Bonus: výlet na Měsíc (3. ročník)' },
         ],
         description: 'Každé počasí je jedna úloha',
+      },
+      mode: {
+        name: 'Jak hrajeme',
+        type: 'select' as const,
+        defaultValue: 'pocasi',
+        options: [
+          { value: 'pocasi', label: 'Podle počasí (kontrola tlačítkem Jdeme ven!)' },
+          { value: 'volne', label: 'Volně – obleč, jak se ti líbí' },
+        ],
+        description: 'Volná hra je jen oblékačka bez kontroly',
       },
     };
   }
