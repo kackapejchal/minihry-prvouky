@@ -130,7 +130,6 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
         const peakY = groundY - jumpHeight(b) * pxPerM;
         return (
           <div key={b} className="absolute top-0 bottom-0 overflow-hidden" style={{ left: colW * i, width: colW }}>
-            {i > 0 ? <div className="absolute top-[8%] bottom-[8%] left-0 w-px" style={{ background: 'rgba(255,255,255,.12)' }} /> : null}
             {/* hlavička sloupce */}
             <div className="absolute left-0 right-0 top-3 flex flex-col items-center gap-1 text-white">
                             <span className="text-lg md:text-2xl font-bold">{names[b]}</span>
@@ -196,8 +195,9 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
                   style={{
                     left: colW / 2 - D / 2, top: groundY - 2, width: D, height: D,
                     backgroundColor: GROUND[b],
-                    backgroundImage: `radial-gradient(circle at 50% 0%, rgba(255,255,255,.18), rgba(0,0,0,0) 35%), radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.45) 72%), url(${surfaces[b] ?? surface(b)})`,
-                    backgroundSize: '100% 100%, 100% 100%, cover', backgroundPosition: 'center',
+                    // Ostrá textura planety (stejná jako ve 3D modelu), jen okraj koule lehce ztmavne.
+                    backgroundImage: `radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 60%, rgba(0,0,0,.35) 71%), url(${import.meta.env.BASE_URL}prvouka/tretak/textury/${b}.jpg)`,
+                    backgroundSize: `100% 100%, ${D * 1.4}px ${D * 0.7}px`, backgroundPosition: `center, center ${-D * 0.2}px`, backgroundRepeat: 'no-repeat, repeat-x',
                     boxShadow: `0 -6px 24px ${GAS.includes(b) ? 'rgba(200,220,255,.18)' : 'rgba(127,211,255,.12)'}`,
                   }}
                 />
