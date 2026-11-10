@@ -132,11 +132,11 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
                 </span>
               </div>
             </div>
-            {/* značka nejvyššího bodu skoku */}
+            {/* značka nejvyššího bodu skoku: kam až se dostanou chodidla (o kolik se dítě odlepí od země) */}
             {action?.kind !== 'micek' ? (
               <>
-                <div className="absolute border-t-2 border-dashed" style={{ left: colW * 0.18, width: colW * 0.48, top: peakY - kid, borderColor: 'rgba(127,211,255,.55)' }} />
-                <span className="absolute text-xs md:text-sm font-bold text-[#7fd3ff]" style={{ left: colW * 0.68, top: peakY - kid - 10 }}>{formatMeters(jumpHeight(b))}</span>
+                <div className="absolute border-t-2 border-dashed" style={{ left: colW * 0.18, width: colW * 0.48, top: peakY, borderColor: 'rgba(127,211,255,.55)' }} />
+                <span className="absolute text-xs md:text-sm font-bold text-[#7fd3ff]" style={{ left: colW * 0.68, top: peakY - 10 }}>{formatMeters(jumpHeight(b))}</span>
               </>
             ) : null}
             {/* míček */}
