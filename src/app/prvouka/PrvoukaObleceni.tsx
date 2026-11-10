@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { GameResultScreen } from '../components/GameResultScreen';
 import { PrvoukaFeedbackOverlay, PrvoukaProgress } from './PrvoukaKit';
 
@@ -45,7 +45,6 @@ const ITEMS: Item[] = [
 // Hanka: rámeček 240 × 495 px, obrázky v hanka/ („f-…“ jsou ploché kusy jen na náhled v šatníku).
 const H_ITEMS: Item[] = [
   { id: 'cepice', name: 'Čepice', slot: 'hlava', thumb: 'hanka/cepice', pieces: [{ src: 'hanka/cepice', box: [45, 5, 191, 126], z: 9 }] },
-  { id: 'klobouk', name: 'Klobouk', slot: 'hlava', thumb: 'hanka/f-klobouk', pieces: [{ src: 'hanka/klobouk-hlava', box: [0, 22, 240, 238], z: 9 }], boxFor: { sam: [-4, -6, 208, 92] }, srcFor: { sam: 'hanka/f-klobouk' } },
   { id: 'cervene-triko', name: 'Červené tričko', slot: 'vrsek', thumb: 'hanka/f-triko', pieces: [] },
   { id: 'saty', name: 'Šaty', slot: 'vrsek', thumb: 'hanka/f-saty', pieces: [{ src: 'hanka/f-saty', box: [50, 196, 190, 398], z: 4 }], boxFor: { sam: [30, 148, 180, 350] } },
   { id: 'plastenka', name: 'Pláštěnka', slot: 'vrsek', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }], ownOnly: true },
@@ -90,12 +89,13 @@ const CHARS: Record<Who, { kdo: string; komu: string; koho: string; w: number; h
   sam: { kdo: 'Sam', komu: 'Samovi', koho: 'Sama', w: 204, h: 392, base: 'sam', baseBox: [15, 10, 189, 392], longPants: [], items: ITEMS, baseIds: { vrsek: 'zlute-triko', dolu: 'kratasy', boty: 'sandaly' } },
   hanka: { kdo: 'Hanka', komu: 'Hance', koho: 'Hanku', w: 240, h: 495, base: 'hanka/hanka', baseBox: [3, 35, 236, 481], longPants: [], items: H_ITEMS, baseIds: { vrsek: 'cervene-triko', dolu: 'kratasy' } },
 };
-const SHELVES: Array<{ title: string; slots: Slot[] }> = [
+// Šatník ve dvou sloupcích, ať se celá hra vejde na obrazovku: „Nahoru“ přes celou šířku.
+const SHELVES: Array<{ title: string; slots: Slot[]; wide?: boolean }> = [
   { title: 'Na hlavu a krk', slots: ['hlava', 'krk'] },
-  { title: 'Nahoru', slots: ['vrsek', 'bunda'] },
+  { title: 'Na ruce a do ruky', slots: ['ruce', 'destnik'] },
+  { title: 'Nahoru', slots: ['vrsek', 'bunda'], wide: true },
   { title: 'Dolů', slots: ['dolu'] },
   { title: 'Na nohy', slots: ['boty'] },
-  { title: 'Na ruce a do ruky', slots: ['ruce', 'destnik'] },
 ];
 
 type Outfit = Partial<Record<Slot, string>>;
@@ -140,7 +140,7 @@ const WEATHER: Record<WeatherId, Weather> = {
       o.bunda ? `V bundě by ${n.komu} bylo v horku strašné horko.`
       : o.vrsek === 'mikina' ? `Mikina je na léto moc teplá. Stačí tričko.`
       : o.dolu ? `V dlouhých kalhotách je v horku vedro. Kraťasy jsou lepší.`
-      : o.hlava === 'cepice' ? `Zimní čepice v létě nepatří. Na slunce je lepší klobouk.`
+      : o.hlava === 'cepice' ? `Zimní čepice v létě nepatří.`
       : o.krk ? `Šála v horku nepatří, zahřívá.`
       : o.ruce ? `Palčáky v létě nepotřebuješ.`
       : o.boty === 'zimni-boty' || o.boty === 'holinky' ? `V takových botách by se nohy v horku zapotily. Sandály jsou lepší.`
@@ -173,6 +173,16 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const chosen: WeatherId[] = (Array.isArray(settings.weather) && settings.weather.length ? settings.weather : ALL).filter((x: string) => (ALL as string[]).includes(x));
   const rounds = useMemo(() => (chosen.length ? chosen : ALL), [chosen.join()]);
   const [who, setWho] = useState<Who>('sam');
+  // Všechny obrázky načíst hned na začátku, ať se oblečení neobjevuje po kouskách.
+  useEffect(() => {
+    const srcs = new Set<string>();
+    (['sam', 'hanka'] as Who[]).forEach((w) => {
+      const c = CHARS[w];
+      ['', '-dlouhe', '-bezbot', '-dlouhe-bezbot'].forEach((v) => srcs.add(`${c.base}${v}`));
+      c.items.forEach((it) => { srcs.add(it.thumb); it.pieces.forEach((p) => srcs.add(p.src)); if (it.srcFor?.sam) srcs.add(it.srcFor.sam); });
+    });
+    srcs.forEach((src) => { const im = new Image(); im.src = `${ART}/${src}.png`; });
+  }, []);
   const C = CHARS[who];
   const [ri, setRi] = useState(0);
   const [outfit, setOutfit] = useState<Outfit>({});
@@ -209,18 +219,19 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const [bx0, by0, bx1, by1] = C.baseBox;
 
   return (
-    <div className="w-full min-h-full flex flex-col items-center gap-3 p-3 md:p-5" style={{ background: '#e3eefc' }}>
-      <h2 className="text-xl md:text-3xl font-bold text-center" style={{ color: INK }}>{free ? `Obleč ${C.koho}, jak se ti líbí!` : W.ask(C)}</h2>
-      <div className="w-full max-w-6xl flex-1 grid gap-4 md:grid-cols-[minmax(260px,1fr)_minmax(320px,1.4fr)] items-start">
+    <div className="w-full min-h-full md:h-[calc(100dvh-104px)] md:min-h-0 md:overflow-hidden flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4" style={{ background: '#e3eefc' }}>
+      <h2 className="text-xl md:text-2xl font-bold text-center flex-shrink-0" style={{ color: INK }}>{free ? `Obleč ${C.koho}, jak se ti líbí!` : W.ask(C)}</h2>
+      <div className="w-full max-w-6xl flex-1 min-h-0 grid gap-3 md:grid-cols-[minmax(240px,0.8fr)_minmax(420px,1.5fr)] items-stretch">
         {/* Postava a počasí */}
-        <div className="relative rounded-3xl overflow-hidden flex flex-col items-center" style={{ background: free ? '#eef3fb' : W.bg, border: `2px solid ${INK}22` }}>
+        <div className="relative rounded-3xl overflow-hidden flex flex-col items-center min-h-[420px] md:min-h-0" style={{ background: free ? '#eef3fb' : W.bg, border: `2px solid ${INK}22` }}>
           {!free ? (
             <div className="absolute left-4 top-3 flex items-center gap-2 rounded-2xl bg-white/85 px-3 py-1.5" style={{ color: INK }}>
               <span className="text-3xl leading-none">{W.sky}</span>
               <span className="text-base md:text-lg font-bold">{W.temp}</span>
             </div>
           ) : null}
-          <div className="relative mt-16 mb-4" style={{ width: who === 'hanka' ? 'min(48%, 194px)' : 'min(52%, 210px)', aspectRatio: `${C.w} / ${C.h}` }}>
+          <div className="flex-1 min-h-0 w-full flex items-center justify-center pt-14 pb-2">
+          <div className="relative h-full max-h-[440px]" style={{ aspectRatio: `${C.w} / ${C.h}` }}>
             <img src={`${ART}/${baseSrc}.png`} alt={C.kdo} className="absolute" style={{ left: `${(bx0 / C.w) * 100}%`, top: `${(by0 / C.h) * 100}%`, width: `${((bx1 - bx0) / C.w) * 100}%`, height: `${((by1 - by0) / C.h) * 100}%` }} draggable={false} />
             {worn.flatMap((it) => it.pieces.map((p, i) => {
               const [x0, y0, x1, y1] = (it.owner !== who && it.boxFor?.[who] && it.pieces.length === 1) ? it.boxFor[who]! : mapBox(p.box, it.slot, it.owner, who);
@@ -230,15 +241,16 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
               );
             }))}
           </div>
-          <div className="flex gap-2 pb-4">
+          </div>
+          <div className="flex gap-2 pb-3 flex-shrink-0">
             {!free ? (
               <button type="button" onClick={goOut} className="h-11 px-6 rounded-full text-base font-bold text-white shadow" style={{ background: '#4f46e5' }}>Jdeme ven! →</button>
             ) : null}
           </div>
         </div>
         {/* Šatník */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col gap-2 min-h-0">
+          <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
             <span className="text-sm font-bold" style={{ color: '#56628a' }}>Koho oblékáš?</span>
             {(['sam', 'hanka'] as Who[]).map((k) => (
               <button key={k} type="button" aria-pressed={who === k} onClick={() => { if (k !== who) { setWho(k); setOutfit({}); } }}
@@ -249,24 +261,26 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
               </button>
             ))}
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 content-start">
           {SHELVES.map((sh) => (
-            <div key={sh.title} className="rounded-2xl bg-white/70 p-2.5" style={{ border: `2px solid ${INK}1a` }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: '#56628a' }}>{sh.title}</p>
-              <div className="flex flex-wrap gap-2">
+            <div key={sh.title} className={`rounded-2xl bg-white/70 p-2 ${sh.wide ? 'sm:col-span-2' : ''}`} style={{ border: `2px solid ${INK}1a` }}>
+              <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: '#56628a' }}>{sh.title}</p>
+              <div className="flex flex-wrap gap-1.5">
                 {items.filter((it) => sh.slots.includes(it.slot)).map((it) => {
                   const on = outfit[it.slot] === it.id;
                   return (
                     <button key={it.id} type="button" onClick={() => toggle(it)} aria-pressed={on}
-                      className="flex flex-col items-center justify-end gap-0.5 rounded-xl bg-white w-[84px] h-[92px] p-1.5 transition-transform hover:-translate-y-0.5"
+                      className="flex flex-col items-center justify-end gap-0.5 rounded-xl bg-white w-[70px] h-[76px] p-1 transition-transform hover:-translate-y-0.5"
                       style={{ border: `2px solid ${on ? '#4f46e5' : '#d6def0'}`, boxShadow: on ? '0 0 0 3px #c7c4ff' : 'none' }}>
-                      <img src={`${ART}/${it.thumb}.png`} alt="" className="max-h-[56px] max-w-[70px] object-contain" draggable={false} />
-                      <span className="text-[11px] font-bold leading-tight text-center" style={{ color: INK }}>{it.name}</span>
+                      <img src={`${ART}/${it.thumb}.png`} alt="" className="max-h-[44px] max-w-[60px] object-contain" draggable={false} />
+                      <span className="text-[10px] font-bold leading-tight text-center" style={{ color: INK }}>{it.name}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
           ))}
+          </div>
         </div>
       </div>
       {!free ? <PrvoukaProgress current={ri} total={rounds.length} lives={0} maxLives={0} /> : null}
