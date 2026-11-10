@@ -147,7 +147,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     dataId: 'souhvezdi',
     name: 'Souhvězdí',
     description: 'spoj hvězdy podle čísel a najdi Polárku.',
-    longDescription: 'Děti spojují hvězdy souhvězdí podle čísel. V nastavení vyberete, která souhvězdí – ze všech ročních období. Po Velkém voze podle jeho zadních hvězd najdou Polárku, která ukazuje sever.',
+    longDescription: 'Děti spojují hvězdy souhvězdí podle čísel. V nastavení vyberete roční období a hra z nich losuje souhvězdí, pokaždé jiná. Po Velkém voze podle jeho zadních hvězd najdou Polárku, která ukazuje sever.',
     icon: '✨',
     bg: '#D0DBFF',
     playBg: '#05081a',
@@ -266,18 +266,29 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
     // Stejně jako u ostatních her prvouky: ročník a zaškrtávací seznam, co se procvičuje.
     return {
       grade: { name: 'Ročník', type: 'select' as const, defaultValue: 3, options: [{ value: 3, label: '3. ročník' }], description: 'Vesmír – 3. ročník, 1. díl' },
-      constellations: {
+      seasons: {
         name: 'Která souhvězdí spojujeme',
         type: 'multiselect' as const,
-        defaultValue: ['vuz', 'kasiopeja', 'orion'],
+        defaultValue: ['cely-rok'],
         // Text v závorce se ukáže šedě pod názvem (jako strany sešitu u ostatních her).
-        options: (['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as const).flatMap((sid) =>
-          CONSTELLATIONS.filter((c) => c.season === sid).map((c) => ({
-            value: c.id,
-            label: `${c.name} (str. ${SEASONS.find((x) => x.id === sid)!.icon} ${sid === 'cely-rok' ? 'po celý rok' : SEASONS.find((x) => x.id === sid)!.name.toLowerCase()}${c.id === 'vuz' ? ' · i s hledáním Polárky' : ''})`,
-          })),
-        ),
-        description: 'Každé souhvězdí je jedno kolo spojovačky. Po Velkém voze děti hledají Polárku.',
+        options: (['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as const).map((sid) => {
+          const se = SEASONS.find((x) => x.id === sid)!;
+          const names = CONSTELLATIONS.filter((c) => c.season === sid).map((c) => c.name).join(', ');
+          return { value: sid, label: `${se.icon} ${sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : se.name} (str. ${names})` };
+        }),
+        description: 'Hra z vybraných období vybere souhvězdí náhodně. Po Velkém voze děti hledají Polárku.',
+      },
+      rounds: {
+        name: 'Počet souhvězdí',
+        type: 'select' as const,
+        defaultValue: 4,
+        options: [
+          { value: 3, label: '3 souhvězdí' },
+          { value: 4, label: '4 souhvězdí' },
+          { value: 6, label: '6 souhvězdí' },
+          { value: 8, label: '8 souhvězdí' },
+        ],
+        description: 'Když je ve vybraných obdobích méně souhvězdí, hrají se všechna',
       },
     };
   }

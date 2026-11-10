@@ -20,9 +20,10 @@ type Mode = 'prohlizet' | 'vyber' | 'hra';
 type Round = { type: 'connect'; c: string } | { type: 'polarka' };
 const DEFAULT_PICK = ['vuz', 'kasiopeja', 'orion'];
 /** Kola hry z vybraných souhvězdí (v pořadí seznamu); po Velkém voze ještě „Najdi Polárku“. */
-function buildRounds(ids: string[]): Round[] {
+function buildRounds(ids: string[], keepOrder = false): Round[] {
   const out: Round[] = [];
-  for (const c of CONSTELLATIONS) if (ids.includes(c.id)) { out.push({ type: 'connect', c: c.id }); if (c.id === 'vuz') out.push({ type: 'polarka' }); }
+  const order = keepOrder ? ids : CONSTELLATIONS.map((c) => c.id).filter((id) => ids.includes(id));
+  for (const id of order) { out.push({ type: 'connect', c: id }); if (id === 'vuz') out.push({ type: 'polarka' }); }
   return out;
 }
 /** Hvězdy v pořadí spojování (bez zvednutí tužky) a čísla kroků, kterými začíná nová čára. */
@@ -106,10 +107,18 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const pickFor = (f: SeasonFilter) => (f === 'vse' ? DEFAULT_PICK : CONSTELLATIONS.filter((x) => x.season === f).map((x) => x.id));
   const still = useMemo(prefersReducedMotion, []);
   // Hra bere souhvězdí z nastavení hry (zaškrtávací seznam) a začíná rovnou spojovačkou.
-  const gamePick: string[] = Array.isArray(settings?.constellations) && settings!.constellations.length ? settings!.constellations : DEFAULT_PICK;
+  // Z vybraných ročních období se souhvězdí losují náhodně (při každé nové hře znovu).
+  const gameSeasons: string[] = Array.isArray(settings?.seasons) && settings!.seasons.length ? settings!.seasons : ['cely-rok'];
+  const gameCount = Number(settings?.rounds) || 4;
+  const drawPick = () => {
+    const pool = CONSTELLATIONS.filter((x) => gameSeasons.includes(x.season)).map((x) => x.id);
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    return pool.slice(0, gameCount);
+  };
+  const gamePick: string[] = useMemo(drawPick, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [mode, setMode] = useState<Mode>(isGame ? 'hra' : 'prohlizet');
   const [picked, setPicked] = useState<string[]>(() => pickFor(startSeason));
-  const [rounds, setRounds] = useState<Round[]>(() => buildRounds(isGame ? gamePick : DEFAULT_PICK));
+  const [rounds, setRounds] = useState<Round[]>(() => buildRounds(isGame ? gamePick : DEFAULT_PICK, isGame));
   const [view, setView] = useState<SceneId>('all');
   const [season, setSeason] = useState<SeasonFilter>(isGame ? 'vse' : startSeason);
   const rot = useRef(0);
@@ -147,7 +156,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const resetRound = (i: number) => {
     setRound(i); setStep(0); setMistakes(0); setRoundDone(false);
   };
-  const restart = () => { setCleanRounds(0); setFinished(false); resetRound(0); };
+  const restart = () => { if (isGame) setRounds(buildRounds(drawPick(), true)); setCleanRounds(0); setFinished(false); resetRound(0); };
   const openPicker = () => {
     setPicked(pickFor(season));
     setMode('vyber');
