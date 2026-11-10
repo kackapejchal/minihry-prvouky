@@ -59,7 +59,7 @@ export function MoonBirth({ onClose, next }: { onClose: () => void; next?: { que
   return (
     <div className="absolute inset-0 z-30 text-white" style={{ background: '#04060f' }}>
       <canvas ref={ref} className="absolute inset-0 w-full h-full" aria-label="Animace: jak vznikl Měsíc" />
-      <div className="absolute left-4 top-3 z-10">
+      <div className="absolute left-4 top-3 z-10 flex items-center gap-2">
         <button
           type="button"
           onClick={onClose}
@@ -68,26 +68,26 @@ export function MoonBirth({ onClose, next }: { onClose: () => void; next?: { que
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
           Zpět na fáze
         </button>
+        {/* Po dohrání nenápadně nabídne navazující animaci (Země ↔ Měsíc). */}
+        {done && next ? (
+          <button
+            type="button"
+            onClick={next.onClick}
+            className="inline-flex items-center gap-2 h-9 pl-1.5 pr-4 text-sm rounded-full bg-white text-[#0f1d4d] font-bold shadow-lg hover:bg-[#eef1f8] transition-colors"
+            style={{ animation: 'fadeIn' + '' + ' .6s ease' }}
+          >
+            <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#f0a12c', color: '#2a1700' }} aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 ml-0.5" fill="currentColor"><path d="M7 5v14l12-7z" /></svg>
+            </span>
+            {next.label}
+          </button>
+        ) : null}
       </div>
       <div className="absolute left-0 right-0 bottom-6 z-10 flex flex-col items-center gap-3 px-6 text-center">
         <p key={step} className="text-lg md:text-2xl font-bold leading-snug max-w-2xl" style={{ textShadow: '0 2px 10px rgba(0,0,0,.8)', animation: 'fadeIn .6s ease' }}>{BIRTH_STEPS[step].text}</p>
         <div className="flex items-center gap-1.5" aria-hidden="true">
           {BIRTH_STEPS.map((_, i) => <span key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === step ? 22 : 8, background: i <= step ? '#f0a12c' : 'rgba(255,255,255,.3)' }} />)}
         </div>
-        {/* Po dohrání nenápadně nabídne navazující animaci (Země ↔ Měsíc). */}
-        {done && next ? (
-          <button
-            type="button"
-            onClick={next.onClick}
-            className="mt-1 inline-flex items-center gap-2 h-11 pl-2 pr-5 rounded-full bg-white text-[#0f1d4d] font-bold shadow-lg hover:bg-[#eef1f8] transition-colors"
-            style={{ animation: 'fadeIn' + '' + ' .6s ease' }}
-          >
-            <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#f0a12c', color: '#2a1700' }} aria-hidden="true">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 ml-0.5" fill="currentColor"><path d="M7 5v14l12-7z" /></svg>
-            </span>
-            {next.label}
-          </button>
-        ) : null}
       </div>
       <style>{'@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'}</style>
     </div>
