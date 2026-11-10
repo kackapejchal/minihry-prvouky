@@ -158,9 +158,9 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
   {
     id: 'prvoukaObleceni',
     dataId: 'obleceni',
-    name: 'Oblékni se podle počasí',
-    description: 'prší, sněží, je horko nebo fouká – co si vezmu na sebe?',
-    longDescription: 'Venku prší, sněží, je horko nebo fouká a děti vybírají, co si Sam nebo Hanka obléknou. U správné věci se ukáže, proč se hodí, u nevhodné (kraťasy v mrazu, deštník ve větru) krátké vysvětlení. Dítě obléká Sama jako v oblékačce – věci ze šatníku se vyměňují – a tlačítkem Jdeme ven! si to zkontroluje.',
+    name: 'Jaké je venku počasí?',
+    description: 'podle oblečení Sama a Hanky poznej, jaké je venku počasí.',
+    longDescription: 'Sam nebo Hanka jsou oblečení ven a děti podle oblečení poznávají, jaké je venku počasí: prší, sněží, je horko, nebo fouká. U špatné odpovědi hra vysvětlí, proč oblečení k tomu počasí nesedí (třeba v zimní bundě by v horku bylo horko).',
     icon: '🧥',
     bg: '#E3EEFC',
     playBg: '#e3eefc',
@@ -328,18 +328,7 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
           { value: 'horko', label: '☀️ Horko' },
           { value: 'fouka', label: '🌬️ Fouká' },
         ],
-        description: 'Každé počasí je jedna úloha',
-      },
-      task: {
-        name: 'Jaké úlohy',
-        type: 'select' as const,
-        defaultValue: 'oboji',
-        options: [
-          { value: 'oboji', label: 'Střídavě: oblékni a hádej počasí' },
-          { value: 'oblekni', label: 'Oblékni podle počasí' },
-          { value: 'hadej', label: 'Hádej počasí podle oblečení' },
-        ],
-        description: 'U hádání je postava už oblečená a děti vybírají, jaké je venku počasí',
+        description: 'Každé počasí je jedna úloha (postava je oblečená a děti hádají)',
       },
     };
   }

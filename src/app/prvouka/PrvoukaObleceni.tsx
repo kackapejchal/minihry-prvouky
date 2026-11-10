@@ -182,7 +182,8 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const free = false; // jen podle počasí (volná hra se v nastavení nenabízí)
   const chosen: WeatherId[] = (Array.isArray(settings.weather) && settings.weather.length ? settings.weather : ALL).filter((x: string) => (ALL as string[]).includes(x));
   const rounds = useMemo(() => (chosen.length ? chosen : ALL), [chosen.join()]);
-  const taskSetting: 'oblekni' | 'hadej' | 'oboji' = settings.task === 'oblekni' || settings.task === 'hadej' ? settings.task : 'oboji';
+  // Hra je jen hádání počasí podle oblečení (oblékání zůstává v kódu, kdyby se hodilo).
+  const taskSetting: 'oblekni' | 'hadej' | 'oboji' = 'hadej';
   const kinds: Task[] = rounds.map((_, i) => (taskSetting === 'oboji' ? (i % 2 ? 'hadej' : 'oblekni') : taskSetting));
   const [who, setWho] = useState<Who>('sam');
   /** poměr výška/šířka každého obrázku – kvůli schování nohavic do vysokých bot */
@@ -210,7 +211,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   // Hádací kolo: postava (střídavě Sam a Hanka) je rovnou oblečená podle počasí.
   useEffect(() => {
     if (kinds[ri] !== 'hadej') return;
-    const w: Who = ri % 4 === 1 ? 'hanka' : 'sam';
+    const w: Who = ri % 2 === 1 ? 'hanka' : 'sam';
     setWho(w); setOutfit(PRESET[rounds[ri]][w]);
   }, [ri]);
   const pickWeather = (id: WeatherId) => {
