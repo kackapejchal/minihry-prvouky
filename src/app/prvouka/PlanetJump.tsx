@@ -1,5 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { SolarBodyId } from './solar-3d';
+import { moonTexture, planetTexture } from './space-engine';
+
+/** Povrch pod nohama ze stejné textury jako planeta v modelu (výřez ze středu, ať není vidět okraj koule). */
+const surfCache = new Map<string, string>();
+function surface(b: JumpBody): string {
+  const hit = surfCache.get(b); if (hit) return hit;
+  const src = b === 'mesic' ? moonTexture() : planetTexture(b as any, 512);
+  const c = document.createElement('canvas'); c.width = 512; c.height = 192;
+  const ctx = c.getContext('2d')!;
+  ctx.drawImage(src, src.width * 0.18, src.height * 0.36, src.width * 0.64, src.height * 0.28, 0, 0, 512, 192);
+  const url = c.toDataURL(); surfCache.set(b, url); return url;
+}
 
 /**
  * Skákání na planetách (Model Sluneční soustavy → Vyzkoušej si).
@@ -104,8 +116,7 @@ export function JumpStage({ bodies, names, thumbs, action, onDone }: {
             {i > 0 ? <div className="absolute top-[8%] bottom-[8%] left-0 w-px" style={{ background: 'rgba(255,255,255,.12)' }} /> : null}
             {/* hlavička sloupce */}
             <div className="absolute left-0 right-0 top-3 flex flex-col items-center gap-1 text-white">
-              {thumbs[b as SolarBodyId] ? <img src={thumbs[b as SolarBodyId]} alt="" className="w-10 h-10 object-contain" /> : null}
-              <span className="text-base md:text-lg font-bold">{names[b]}</span>
+                            <span className="text-base md:text-lg font-bold">{names[b]}</span>
             </div>
             {/* značka nejvyššího bodu skoku */}
             {action?.kind !== 'micek' ? (
@@ -121,7 +132,7 @@ export function JumpStage({ bodies, names, thumbs, action, onDone }: {
             {/* postavička */}
             <Kid x={cx - colW * i} y={groundY - up * pxPerM} size={kid} />
             {/* povrch */}
-            <div className="absolute left-0 right-0 bottom-0" style={{ top: groundY, background: GAS.includes(b) ? `linear-gradient(180deg, ${GROUND[b]}cc, ${GROUND[b]}33)` : GROUND[b], borderTop: `3px solid ${GROUND[b]}` }} />
+            <div className="absolute left-0 right-0 bottom-0" style={{ top: groundY, backgroundColor: GROUND[b], backgroundImage: `${GAS.includes(b) ? 'linear-gradient(180deg, rgba(255,255,255,.15), rgba(6,10,28,.55)), ' : 'linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.25)), '}url(${surface(b)})`, backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: 'inset 0 6px 10px rgba(0,0,0,.25)' }} />
             <span className="absolute left-0 right-0 text-center text-xs md:text-sm font-bold text-white/85" style={{ top: groundY + 10 }}>
               {GAS.includes(b) ? 'nemá pevný povrch – stojíme na mracích' : ''}
             </span>
@@ -140,6 +151,6 @@ function duration(kind: 'skok' | 'micek', b: JumpBody) {
 /** Dítě z ilustrací Vividbooks (kluk z matematiky 1. ročníku) – nohy na čáře y. */
 const KID_SRC = `${import.meta.env.BASE_URL}prvouka/ill/skok-kluk.png`;
 function Kid({ x, y, size }: { x: number; y: number; size: number }) {
-  const hgt = size * 2, wid = hgt * (197 / 400);
+  const hgt = size * 2, wid = hgt * (234 / 400);
   return <img src={KID_SRC} alt="" className="absolute select-none pointer-events-none" draggable={false} style={{ left: x - wid / 2, top: y - hgt, width: wid, height: hgt }} />;
 }

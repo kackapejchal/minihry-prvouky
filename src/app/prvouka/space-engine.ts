@@ -107,7 +107,7 @@ function bands(ctx: CanvasRenderingContext2D, S: number, rnd: () => number, colo
 
 const texCache = new Map<string, HTMLCanvasElement>();
 
-function planetTexture(id: PlanetKey, S: number): HTMLCanvasElement {
+export function planetTexture(id: PlanetKey, S: number): HTMLCanvasElement {
   const key = id + S;
   const cached = texCache.get(key);
   if (cached) return cached;
@@ -293,7 +293,7 @@ export function todayMoonDay(now = Date.now()) {
 }
 
 let moonTex: HTMLCanvasElement | null = null;
-function moonTexture(): HTMLCanvasElement {
+export function moonTexture(): HTMLCanvasElement {
   if (moonTex) return moonTex;
   const S = 256;
   const c = document.createElement('canvas');
