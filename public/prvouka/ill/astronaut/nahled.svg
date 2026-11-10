@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 420" width="560" height="420">
+  <!-- Styl jako v sešitu: světle modré pozadí, bílá výplň, tenké tmavě modré čáry „od ruky“ (lehce zvlněné), drobné detaily. -->
+  <defs>
+    <filter id="ruka" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.6"/>
+    </filter>
+  </defs>
+  <rect width="560" height="420" fill="#e3eefc"/>
+  <g filter="url(#ruka)" fill="#ffffff" stroke="#2a3a8c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <!-- zem: kopečky s trávou -->
+    <path d="M-10 420 L-10 372 Q120 330 280 352 Q420 330 570 368 L570 420 Z"/>
+    <path d="M60 352 l-3 -9 M66 351 l1 -11 M72 352 l4 -8 M238 350 l-2 -8 M244 349 l2 -10 M470 348 l-3 -8 M476 347 l1 -10 M482 348 l4 -7 M372 342 l0 -8 M378 343 l3 -7" fill="none" stroke-width="1.6"/>
+    <!-- Slunce s paprsky z čárek -->
+    <g transform="translate(-205 -8)">
+      <circle cx="470" cy="70" r="22"/>
+      <circle cx="470" cy="70" r="16" fill="none" stroke-width="1.4"/>
+      <path d="M470 36 l0 -9 M470 104 l0 9 M436 70 l-9 0 M504 70 l9 0 M446 46 l-6 -6 M494 94 l6 6 M446 94 l-6 6 M494 46 l6 -6" fill="none" stroke-width="1.6"/>
+    </g>
+    <!-- 1) dítě bez výbavy -->
+    <g transform="translate(40 8)">
+      <ellipse cx="100" cy="360" rx="52" ry="6" fill="#c9daf7" stroke="none"/>
+      <path d="M68 262 Q64 316 66 346 Q66 356 78 356 L96 356 Q98 350 94 344 L96 264"/>
+      <path d="M132 262 Q136 316 134 346 Q134 356 122 356 L104 356 Q102 350 106 344 L104 264"/>
+      <path d="M58 214 L142 214 L148 278 L106 282 L100 262 L94 282 L52 278 Z" fill="#2f45a8"/>
+      <path d="M52 152 Q58 126 100 122 Q142 126 148 152 L160 192 L138 200 L138 222 L62 222 L62 200 L40 192 Z" fill="#2f45a8"/>
+      <path d="M84 126 Q100 136 116 126" fill="none" stroke="#ffffff" stroke-width="1.6"/>
+      <path d="M72 170 Q80 176 76 190 M126 168 Q118 178 124 190" fill="none" stroke="#ffffff" stroke-width="1.4" opacity=".7"/>
+      <path d="M42 192 Q36 222 40 248 Q42 262 54 260 Q64 258 62 246 L62 200"/>
+      <path d="M158 192 Q164 222 160 248 Q158 262 146 260 Q136 258 138 246 L138 200"/>
+      <path d="M48 254 l3 -4 M152 254 l-3 -4" fill="none" stroke-width="1.4"/>
+      <path d="M88 106 L88 126 Q100 132 112 126 L112 106"/>
+      <path d="M62 66 Q52 42 70 30 Q70 12 92 14 Q102 2 118 12 Q138 10 138 32 Q152 44 138 66 Q142 98 118 110 Q100 118 82 110 Q58 98 62 66 Z"/>
+      <path d="M74 40 Q84 32 94 40 M108 28 Q120 26 126 36 M86 22 Q92 18 98 22 M130 48 Q134 52 132 58" fill="none" stroke-width="1.6"/>
+      <!-- pohybové čárky jako v sešitu -->
+      <path d="M26 170 l-8 -4 M24 182 l-9 0 M174 170 l8 -4 M176 182 l9 0" fill="none" stroke-width="1.6"/>
+    </g>
+
+    <!-- 2) astronaut -->
+    <g transform="translate(290 8)">
+      <ellipse cx="110" cy="360" rx="62" ry="6" fill="#c9daf7" stroke="none"/>
+      <rect x="52" y="140" width="116" height="110" rx="18"/>
+      <path d="M62 150 L62 238 M158 150 L158 238" fill="none" stroke-width="1.4"/>
+      <path d="M78 258 Q74 300 76 330 L104 330 L108 262"/>
+      <path d="M142 258 Q146 300 144 330 L116 330 L112 262"/>
+      <path d="M78 296 Q90 300 104 297 M142 296 Q130 300 116 297" fill="none" stroke-width="1.6"/>
+      <path d="M84 276 Q88 284 86 290 M136 276 Q132 284 134 290" fill="none" stroke-width="1.2"/>
+      <path d="M66 352 Q66 328 88 328 L106 328 L106 356 L70 356 Q66 356 66 352 Z" fill="#2f45a8"/>
+      <path d="M154 352 Q154 328 132 328 L114 328 L114 356 L150 356 Q154 356 154 352 Z" fill="#2f45a8"/>
+      <path d="M62 168 Q42 206 46 248 L72 250 L78 196"/>
+      <path d="M158 168 Q178 206 174 248 L148 250 L142 196"/>
+      <path d="M47 226 Q60 230 74 228 M173 226 Q160 230 146 228" fill="none" stroke-width="1.6"/>
+      <path d="M56 196 Q60 206 58 214 M164 196 Q160 206 162 214" fill="none" stroke-width="1.2"/>
+      <path d="M44 250 Q42 272 60 272 Q76 270 74 252 Z" fill="#2f45a8"/>
+      <path d="M176 250 Q178 272 160 272 Q144 270 146 252 Z" fill="#2f45a8"/>
+      <path d="M62 166 Q66 144 92 140 L128 140 Q154 144 158 166 L156 268 L64 268 Z"/>
+      <path d="M110 152 L110 180 M74 246 Q110 252 146 246" fill="none" stroke-width="1.4"/>
+      <rect x="86" y="186" width="48" height="34" rx="7"/>
+      <circle cx="100" cy="203" r="5" fill="#2f45a8"/><circle cx="118" cy="203" r="5"/>
+      <path d="M128 194 l0 18" fill="none" stroke-width="1.6"/>
+      <ellipse cx="110" cy="142" rx="48" ry="10"/>
+      <circle cx="110" cy="82" r="58"/>
+      <path d="M70 78 Q70 50 110 48 Q150 50 150 78 Q150 112 110 114 Q70 112 70 78 Z" fill="#2f45a8"/>
+      <path d="M84 66 Q92 56 108 56 M82 80 Q82 76 84 72" fill="none" stroke="#ffffff" stroke-width="3"/>
+      <path d="M156 60 Q164 80 158 104" fill="none" stroke-width="1.4"/>
+    </g>
+  </g>
+</svg>
