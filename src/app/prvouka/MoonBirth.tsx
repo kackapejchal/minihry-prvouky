@@ -36,7 +36,7 @@ export function MoonBirth({ onClose }: { onClose: () => void }) {
   // Po dohrání se chvíli ukáže hotový Měsíc a pak se vrátí pohled s fázemi Měsíce.
   const closeRef = useRef(onClose); closeRef.current = onClose;
   const ref = useRef<HTMLCanvasElement | null>(null);
-  const [t0, setT0] = useState(() => performance.now());
+  const [t0] = useState(() => performance.now());
   const [step, setStep] = useState(0);
   useEffect(() => {
     let raf = 0;
@@ -72,14 +72,6 @@ export function MoonBirth({ onClose }: { onClose: () => void }) {
         <div className="flex items-center gap-1.5" aria-hidden="true">
           {BIRTH_STEPS.map((_, i) => <span key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === step ? 22 : 8, background: i <= step ? '#f0a12c' : 'rgba(255,255,255,.3)' }} />)}
         </div>
-        <button
-          type="button"
-          onClick={() => { setT0(performance.now()); setStep(0); }}
-          className="h-10 px-5 rounded-full text-sm font-bold"
-          style={{ background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.25)' }}
-        >
-          ↻ Přehrát znovu
-        </button>
       </div>
       <style>{'@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'}</style>
     </div>
