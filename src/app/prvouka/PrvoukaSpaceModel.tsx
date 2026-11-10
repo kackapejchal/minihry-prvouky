@@ -1224,8 +1224,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           onPointerLeave={() => !dragging.current && setGrab('none')}
           aria-label="Pohled shora: Slunce, Země a Měsíc na oběžné dráze. Měsícem jde táhnout po dráze."
         />
-        {birth ? <MoonBirth onClose={() => setBirth(false)} next={{ question: 'Chceš vidět, jak vznikla Země?', label: 'Jak vznikla Země', onClick: () => { setBirth(false); setEarthBirth(true); } }} /> : null}
-        {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} next={{ question: 'Chceš vidět, jak vznikl Měsíc?', label: 'Jak vznikl Měsíc', onClick: () => { setEarthBirth(false); setBirth(true); } }} /> : null}
+        {birth ? <MoonBirth onClose={() => setBirth(false)} next={{ question: 'Chceš vidět, jak vznikla Země?', label: 'Podívej se, jak vznikla Země', onClick: () => { setBirth(false); setEarthBirth(true); } }} /> : null}
+        {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} next={{ question: 'Chceš vidět, jak vznikl Měsíc?', label: 'Podívej se, jak vznikl Měsíc', onClick: () => { setEarthBirth(false); setBirth(true); } }} /> : null}
         {why ? <EclipseWhy onClose={() => setWhy(false)} /> : null}
         <div className="group absolute top-3 right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
           <div className="flex items-center gap-2">

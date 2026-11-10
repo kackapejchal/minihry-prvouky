@@ -74,21 +74,21 @@ export function MoonBirth({ onClose, next }: { onClose: () => void; next?: { que
         <div className="flex items-center gap-1.5" aria-hidden="true">
           {BIRTH_STEPS.map((_, i) => <span key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === step ? 22 : 8, background: i <= step ? '#f0a12c' : 'rgba(255,255,255,.3)' }} />)}
         </div>
+        {/* Po dohrání nenápadně nabídne navazující animaci (Země ↔ Měsíc). */}
+        {done && next ? (
+          <button
+            type="button"
+            onClick={next.onClick}
+            className="mt-1 inline-flex items-center gap-2 h-11 pl-2 pr-5 rounded-full bg-white text-[#0f1d4d] font-bold shadow-lg hover:bg-[#eef1f8] transition-colors"
+            style={{ animation: 'fadeIn' + '' + ' .6s ease' }}
+          >
+            <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#f0a12c', color: '#2a1700' }} aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 ml-0.5" fill="currentColor"><path d="M7 5v14l12-7z" /></svg>
+            </span>
+            {next.label}
+          </button>
+        ) : null}
       </div>
-      {done ? (
-        <div className="absolute inset-0 z-20 flex items-center justify-center p-6" style={{ background: 'rgba(4,6,15,.55)' }}>
-          <div className="rounded-3xl bg-white text-[#0f1d4d] p-6 max-w-sm w-full flex flex-col items-center gap-4 text-center shadow-2xl">
-            <p className="text-xl font-bold leading-snug">{next ? next.question : 'Hotovo!'}</p>
-            {next ? (
-              <button type="button" onClick={next.onClick} className="w-full h-12 rounded-full font-bold inline-flex items-center justify-center gap-2" style={{ background: '#f0a12c', color: '#2a1700', boxShadow: '0 3px 0 #b8741a' }}>
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z" /></svg>
-                {next.label}
-              </button>
-            ) : null}
-            <button type="button" onClick={onClose} className="w-full h-11 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] font-bold text-[#4e5871]">Zpět na fáze Měsíce</button>
-          </div>
-        </div>
-      ) : null}
       <style>{'@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'}</style>
     </div>
   );
