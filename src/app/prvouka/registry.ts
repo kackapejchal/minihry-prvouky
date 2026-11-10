@@ -13,7 +13,7 @@ const ILLUSTRATIONS = 'https://qypiuvqglsmxdsnyazih.supabase.co/storage/v1/objec
 export type PrvoukaGameType =
   | 'prvoukaZvirata' | 'prvoukaOvoce' | 'prvoukaHodiny' | 'prvoukaRokDen' | 'prvoukaBezpecnost'
   | 'prvoukaVesmir' | 'prvoukaMesic' | 'prvoukaPodminky' | 'prvoukaSymboly' | 'prvoukaZeme'
-  | 'prvoukaModelSoustava' | 'prvoukaModelMesic' | 'prvoukaHvezdy' | 'prvoukaSouhvezdi' | 'prvoukaAstronaut';
+  | 'prvoukaModelSoustava' | 'prvoukaModelMesic' | 'prvoukaHvezdy' | 'prvoukaSouhvezdi' | 'prvoukaObleceni';
 
 export interface PrvoukaLandingGame {
   id: PrvoukaGameType;
@@ -38,7 +38,7 @@ export interface PrvoukaLandingGame {
   /** Ročníky, které konfigurátor nabídne (výchozí 1. a 2.). */
   grades?: PrvoukaGrade[];
   /** Interaktivní model místo kvízu (Sluneční soustava, fáze Měsíce). */
-  model?: 'soustava' | 'mesic' | 'hvezdy' | 'souhvezdi' | 'astronaut';
+  model?: 'soustava' | 'mesic' | 'hvezdy' | 'souhvezdi' | 'obleceni';
 }
 
 const TRETAK = `${import.meta.env.BASE_URL}prvouka/tretak/karty`;
@@ -156,17 +156,18 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     model: 'souhvezdi',
   },
   {
-    id: 'prvoukaAstronaut',
-    dataId: 'astronaut',
-    name: 'Výlet do vesmíru',
-    description: 'oblékni astronauta – co potřebuješ na Měsíci a na Marsu?',
-    longDescription: 'Dítě letí na Měsíc nebo na Mars a vybírá, co si vezme. Správné věci (skafandr, boty, rukavice, batoh se vzduchem, helma) se mu hned oblékají a ke každé se ukáže, proč je potřeba – navazuje na podmínky života. Nevhodné věci jako deštník nebo plavky vrátí krátké vysvětlení.',
-    icon: '🧑‍🚀',
+    id: 'prvoukaObleceni',
+    dataId: 'obleceni',
+    name: 'Oblékni se podle počasí',
+    description: 'prší, sněží, je horko nebo fouká – co si Sam vezme?',
+    longDescription: 'Venku prší, sněží, je horko nebo fouká a děti vybírají, co si Sam oblékne. U správné věci se ukáže, proč se hodí, u nevhodné (kraťasy v mrazu, deštník ve větru) krátké vysvětlení. Bonusové kolo pro 3. ročník: výlet na Měsíc ve skafandru.',
+    icon: '🧥',
     bg: '#E3EEFC',
     playBg: '#e3eefc',
-    image: `${import.meta.env.BASE_URL}prvouka/ill/astronaut/karta.svg`,
-    grades: [3],
-    model: 'astronaut',
+    image: `${import.meta.env.BASE_URL}prvouka/ill/astronaut/dily/kid.png`,
+    imagePosition: 'center 20%',
+    grades: [1, 2, 3],
+    model: 'obleceni',
   },
   {
     id: 'prvoukaVesmir',
@@ -242,9 +243,9 @@ export function prvoukaLandingGame(id: string): PrvoukaLandingGame | undefined {
 /** Skupiny na rozcestníku prvouky (jako „Poznávám čísla“ u matematiky). */
 export const PRVOUKA_GAME_GROUPS: Array<{ title: string; games: PrvoukaGameType[] }> = [
   { title: 'Poznávám přírodu', games: ['prvoukaZvirata', 'prvoukaOvoce'] },
-  { title: 'Orientace v čase', games: ['prvoukaHodiny', 'prvoukaRokDen'] },
+  { title: 'Orientace v čase', games: ['prvoukaHodiny', 'prvoukaRokDen', 'prvoukaObleceni'] },
   { title: 'Bezpečí a zdraví', games: ['prvoukaBezpecnost'] },
-  { title: '3. ročník: Vesmír a Země', games: ['prvoukaModelSoustava', 'prvoukaModelMesic', 'prvoukaHvezdy', 'prvoukaVesmir', 'prvoukaMesic', 'prvoukaSouhvezdi', 'prvoukaAstronaut', 'prvoukaPodminky'] },
+  { title: '3. ročník: Vesmír a Země', games: ['prvoukaModelSoustava', 'prvoukaModelMesic', 'prvoukaHvezdy', 'prvoukaVesmir', 'prvoukaMesic', 'prvoukaSouhvezdi', 'prvoukaPodminky'] },
   { title: '3. ročník: Naše republika', games: ['prvoukaSymboly', 'prvoukaZeme'] },
 ];
 
@@ -315,20 +316,22 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
       },
     };
   }
-  if (game.model === 'astronaut') {
+  if (game.model === 'obleceni') {
     return {
-      grade: { name: 'Ročník', type: 'select' as const, defaultValue: 3, options: [{ value: 3, label: '3. ročník' }], description: 'Vesmír a podmínky života – 3. ročník' },
-      places: {
-        name: 'Kam letíme',
+      grade: { name: 'Ročník', type: 'select' as const, defaultValue: 1, options: [{ value: 1, label: '1. ročník' }, { value: 2, label: '2. ročník' }, { value: 3, label: '3. ročník' }], description: 'Počasí a oblékání' },
+      weather: {
+        name: 'Jaké počasí',
         type: 'multiselect' as const,
-        defaultValue: ['mesic', 'mars'],
+        defaultValue: ['prsi', 'snezi', 'horko', 'fouka'],
         options: [
-          { value: 'mesic', label: '🌕 Na Měsíc' },
-          { value: 'mars', label: '🔴 Na Mars' },
+          { value: 'prsi', label: '🌧️ Prší' },
+          { value: 'snezi', label: '❄️ Sněží a mrzne' },
+          { value: 'horko', label: '☀️ Horko' },
+          { value: 'fouka', label: '🌬️ Fouká' },
+          { value: 'mesic', label: '🚀 Bonus: výlet na Měsíc (3. ročník)' },
         ],
-        description: 'Každé místo je jedna úloha',
+        description: 'Každé počasí je jedna úloha',
       },
-      decoys: { name: 'Nabízet i věci, které nejsou potřeba', type: 'boolean' as const, defaultValue: true, description: 'Deštník, plavky, kšiltovka, žabky – děti zdůvodňují, proč je nepotřebují' },
     };
   }
   // Model hvězdné oblohy nic nenastavuje – roční období se přepínají přímo v modelu.

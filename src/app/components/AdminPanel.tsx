@@ -246,7 +246,7 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
     games: group.games
       .map((id) => prvoukaLandingGame(id))
       .filter((game): game is NonNullable<typeof game> => Boolean(game))
-      .map((game) => ({ id: game.id, name: game.name, description: game.description, bg: game.bg, image: game.image, emoji: game.icon, imagePosition: game.imagePosition, isModel: Boolean(game.model) && game.model !== 'souhvezdi' && game.model !== 'astronaut' })),
+      .map((game) => ({ id: game.id, name: game.name, description: game.description, bg: game.bg, image: game.image, emoji: game.icon, imagePosition: game.imagePosition, isModel: Boolean(game.model) && game.model !== 'souhvezdi' && game.model !== 'obleceni' })),
   }));
 
   const gameGroups: Array<{ title: string; games: Array<{ id: string; name: string; description: string; bg: string; image?: string; emoji?: string; imagePosition?: string; isModel?: boolean }> }> =
