@@ -299,6 +299,8 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         ctx.setLineDash([3, 6]); ctx.strokeStyle = 'rgba(170,190,255,.14)';
         ctx.beginPath(); ctx.arc(pole.x, pole.y, R * 0.5, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
       }
+      // Postava souhvězdí ze starého atlasu (Hevelius 1690, volné dílo) – napasovaná na dvě hvězdy.
+      if (!all) drawFigure(ctx, st.view, by);
       for (const cons of list) {
         const l = lvl(cons);
         for (const [a, b] of cons.edges) {
@@ -803,3 +805,30 @@ function ConsTile({ c, on, hot = false, check = false, onClick, onHover }: { c: 
   );
 }
 
+
+/**
+ * Postavy souhvězdí z atlasu Johanna Hevelia „Firmamentum Sobiescianum“ (1690, volné dílo, Wikimedia Commons).
+ * Obrázek je zrcadlově otočený (Hevelius kreslil jako na globu zvenku) a převedený na světlou linku.
+ * Dvě kotvy: pixel hvězdy v obrázku → stejná hvězda v modelu; podle nich se obrázek posune, otočí a zvětší.
+ */
+const FIGURES: Record<string, { src: string; a: [string, number, number]; b: [string, number, number] }> = {
+  labut: { src: 'labut.png', a: ['albireo', 542, 485], b: ['deneb', 63, 332] },
+};
+const figImg: Record<string, HTMLImageElement> = {};
+function drawFigure(ctx: CanvasRenderingContext2D, id: string, by: Record<string, { x: number; y: number }>) {
+  const f = FIGURES[id];
+  if (!f) return;
+  let img = figImg[id];
+  if (!img) { img = new Image(); img.src = `${import.meta.env.BASE_URL}prvouka/souhvezdi/${f.src}`; figImg[id] = img; }
+  if (!img.complete || !img.naturalWidth) return;
+  const qa = by[f.a[0]], qb = by[f.b[0]];
+  if (!qa || !qb) return;
+  const pa = { x: f.a[1], y: f.a[2] }, pb = { x: f.b[1], y: f.b[2] };
+  const s = Math.hypot(qb.x - qa.x, qb.y - qa.y) / Math.hypot(pb.x - pa.x, pb.y - pa.y);
+  const rot = Math.atan2(qb.y - qa.y, qb.x - qa.x) - Math.atan2(pb.y - pa.y, pb.x - pa.x);
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.translate(qa.x, qa.y); ctx.rotate(rot); ctx.scale(s, s);
+  ctx.drawImage(img, -pa.x, -pa.y);
+  ctx.restore();
+}
