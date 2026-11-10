@@ -302,7 +302,9 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
         if (cancelled) return;
         const c = document.createElement('canvas'); c.width = 900; c.height = 300;
         const S = img.width;
-        c.getContext('2d')!.drawImage(img, S * 0.22, S * 0.4, S * 0.56, S * 0.19, 0, 0, 900, 300);
+        // U Saturnu a Uranu je koule kvůli prstencům v obrázku menší – výřez se zmenší stejně, ať jsou vidět jen mraky.
+        const k = 1 / (RING_FACTOR[id as PlanetKey] ?? 1);
+        c.getContext('2d')!.drawImage(img, S * (0.5 - 0.22 * k), S * (0.5 - 0.08 * k), S * 0.44 * k, S * 0.147 * k, 0, 0, 900, 300);
         const data = c.toDataURL('image/jpeg', 0.85);
         setJumpSurfaces((m) => ({ ...m, [id]: data }));
       };
@@ -696,7 +698,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(90deg, #f0a12c 0%, #b8461a 100%)' }}
               >
-                <img src={`${import.meta.env.BASE_URL}prvouka/ill/skok-kluk.png`} alt="" className="absolute right-4 -top-1 h-24 object-contain" style={{ transform: 'translateY(-6px)' }} />
+                <img src={`${import.meta.env.BASE_URL}prvouka/ill/skok-holka.png`} alt="" className="absolute right-4 -top-1 h-24 object-contain" style={{ transform: 'translateY(-6px)' }} />
                 <span className="absolute left-3 bottom-2.5">
                   <span className="block text-xl font-bold leading-tight">Skoč si tady</span>
                   <span className="block text-xs opacity-90">Jak vysoko a kolik vážíš? →</span>
@@ -730,7 +732,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(90deg, #f0a12c 0%, #b8461a 100%)' }}
               >
-                <img src={`${import.meta.env.BASE_URL}prvouka/ill/skok-kluk.png`} alt="" className="absolute right-4 -top-1 h-24 object-contain" style={{ transform: 'translateY(-6px)' }} />
+                <img src={`${import.meta.env.BASE_URL}prvouka/ill/skok-holka.png`} alt="" className="absolute right-4 -top-1 h-24 object-contain" style={{ transform: 'translateY(-6px)' }} />
                 <span className="absolute left-3 bottom-2.5">
                   <span className="block text-xl font-bold leading-tight">Skoč si tady</span>
                   <span className="block text-xs opacity-90">Jak vysoko a kolik vážíš? →</span>

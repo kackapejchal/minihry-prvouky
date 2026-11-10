@@ -163,9 +163,9 @@ function duration(kind: 'skok' | 'micek', b: JumpBody) {
   return kind === 'skok' ? (2 * Math.sqrt(2 * EARTH_G * EARTH_JUMP_M)) / g : Math.sqrt((2 * DROP_M) / g);
 }
 
-/** Dítě z ilustrací Vividbooks (kluk z matematiky 1. ročníku) – nohy na čáře y. */
-const KID_SRC = `${import.meta.env.BASE_URL}prvouka/ill/skok-kluk.png`;
+/** Dítě z ilustrací Vividbooks (holčička z matematiky 1. ročníku) – nohy na čáře y. */
+const KID_SRC = `${import.meta.env.BASE_URL}prvouka/ill/skok-holka.png`;
 function Kid({ x, y, size }: { x: number; y: number; size: number }) {
-  const hgt = size * 2, wid = hgt * (239 / 400);
+  const hgt = size * 2, wid = hgt * (259 / 400);
   return <img src={KID_SRC} alt="" className="absolute select-none pointer-events-none" draggable={false} style={{ left: x - wid / 2, top: y - hgt, width: wid, height: hgt }} />;
 }
