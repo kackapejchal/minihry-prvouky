@@ -117,6 +117,12 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   // Z vybraných ročních období se souhvězdí losují náhodně (při každé nové hře znovu).
   const gameSeasons: string[] = Array.isArray(settings?.seasons) && settings!.seasons.length ? settings!.seasons : ['cely-rok'];
   const gameCount = Number(settings?.rounds) || 5;
+  // Kreslení (jako v Písance): dítě vede čáru prstem / perem od hvězdy k hvězdě, čára zůstane, jak ji nakreslí.
+  const drawMode = isGame && settings?.draw === 'kresli';
+  const strokes = useRef<Array<Array<{ x: number; y: number }>>>([]);
+  const active = useRef<Array<{ x: number; y: number }> | null>(null);
+  const stepRef = useRef(0);
+  // stepRef.current se drží s krokem (pro tahání prstem, kde se nečeká na nové vykreslení).
   const drawPick = () => {
     const pool = CONSTELLATIONS.filter((x) => gameSeasons.includes(x.season)).map((x) => x.id);
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
@@ -166,6 +172,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   }, []);
 
   const resetRound = (i: number) => {
+    strokes.current = []; active.current = null; stepRef.current = 0;
     setRound(i); setStep(0); setMistakes(0); setRoundDone(false);
   };
   const restart = () => { if (isGame) setRounds(buildRounds(drawPick(), true)); setCleanRounds(0); setFinished(false); resetRound(0); };
@@ -361,7 +368,19 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
     }
     if (rr.type === 'connect') {
       const ord = stepsOf(rr.c), brk = breaksOf(rr.c);
-      for (let i = 1; i < st.step; i++) if (!brk.has(i)) line(st.byId[ord[i - 1]], st.byId[ord[i]]);
+      if (drawMode && !st.roundDone) {
+        // Přerušovaná vodicí čára k další hvězdě (jako v Písance) a čáry, které dítě nakreslilo.
+        if (st.step > 0 && !brk.has(st.step) && st.step < ord.length) {
+          const a = st.byId[ord[st.step - 1]], b = st.byId[ord[st.step]];
+          ctx.save(); ctx.setLineDash([7, 8]); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(220,228,255,.55)';
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore();
+        }
+        ctx.strokeStyle = 'rgba(255,217,138,.95)'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        for (const pts of [...strokes.current, ...(active.current ? [active.current] : [])]) {
+          if (pts.length < 2) continue;
+          ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (const q of pts) ctx.lineTo(q.x, q.y); ctx.stroke();
+        }
+      } else for (let i = 1; i < st.step; i++) if (!brk.has(i)) line(st.byId[ord[i - 1]], st.byId[ord[i]]);
     }
     if (rr.type === 'polarka') {
       polarkaGuide(st.roundDone);
@@ -430,7 +449,57 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
     setHover(skyHit(e));
     e.currentTarget.style.cursor = hover.current ? 'pointer' : 'default';
   };
+  // ——— Kreslení prstem ———
+  const pt = (e: React.PointerEvent<HTMLCanvasElement>) => { const rc = e.currentTarget.getBoundingClientRect(); return { x: e.clientX - rc.left, y: e.clientY - rc.top }; };
+  const reach = (n: number) => {
+    const ord = stepsOf(c!.id);
+    stepRef.current = n; setStep(n);
+    if (n === ord.length) { setRoundDone(true); setFeedback({ isCorrect: true, info: c!.text }); if (mistakes === 0) setCleanRounds((k) => k + 1); }
+  };
+  const drawDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const ord = stepsOf(c!.id), brk = breaksOf(c!.id), s = stepRef.current, p = pt(e);
+    const startNew = s === 0 || brk.has(s);
+    const startId = startNew ? ord[s] : ord[s - 1], sp = byId[startId];
+    if (Math.hypot(sp.x - p.x, sp.y - p.y) > 44) {
+      if (placed.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < 30)) {
+        flash.current = { x: p.x, y: p.y, t: performance.now(), ok: false };
+        setMistakes((m) => m + 1);
+        setFeedback({ isCorrect: false, hint: `Začni u hvězdy s číslem ${startNew ? s + 1 : s}.` });
+      }
+      return;
+    }
+    e.currentTarget.setPointerCapture(e.pointerId);
+    active.current = [{ x: sp.x, y: sp.y }];
+    if (startNew) { flash.current = { x: sp.x, y: sp.y, t: performance.now(), ok: true }; reach(s + 1); }
+  };
+  const drawMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!active.current) return;
+    const ord = stepsOf(c!.id), brk = breaksOf(c!.id), s = stepRef.current, p = pt(e);
+    active.current.push(p);
+    const tp = byId[ord[s]];
+    if (tp && Math.hypot(tp.x - p.x, tp.y - p.y) < 32) {
+      // Dojel ke správné hvězdě: čára se k ní dotáhne a kreslí se dál od ní.
+      active.current.push({ x: tp.x, y: tp.y });
+      strokes.current.push(active.current);
+      flash.current = { x: tp.x, y: tp.y, t: performance.now(), ok: true };
+      const n = s + 1;
+      active.current = n < ord.length && !brk.has(n) ? [{ x: tp.x, y: tp.y }] : null;
+      reach(n);
+    }
+  };
+  const drawUp = () => {
+    const pts = active.current; active.current = null;
+    if (!pts || pts.length < 2) return;
+    const moved = Math.hypot(pts[pts.length - 1].x - pts[0].x, pts[pts.length - 1].y - pts[0].y);
+    if (moved > 30 && !roundDone) {
+      setMistakes((m) => m + 1);
+      setFeedback({ isCorrect: false, hint: `Veď čáru až k hvězdě s číslem ${stepRef.current + 1}.` });
+    }
+  };
+  const isDrawing = drawMode && mode === 'hra' && r.type === 'connect' && !roundDone && !feedback;
+
   const onTap = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (isDrawing) { drawDown(e); return; }
     if (skyActive) {
       const id = skyHit(e);
       if (!id) return;
@@ -477,12 +546,19 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
       : breaksOf(c!.id).has(step)
         ? `Tahle čára je hotová. Novou čáru začni u hvězdy s číslem ${step + 1}.`
         : `Teď klepni na hvězdu s číslem ${step + 1}.`;
+  const drawTask = r.type === 'connect' && drawMode
+    ? step === 0
+      ? `Polož prst na hvězdu s číslem 1 a veď čáru po souhvězdí ${c!.name} podle čísel.`
+      : breaksOf(c!.id).has(step)
+        ? `Tahle čára je hotová. Zvedni prst a novou čáru začni u hvězdy s číslem ${step + 1}.`
+        : `Veď čáru po přerušované cestě k hvězdě s číslem ${step + 1}.`
+    : null;
   const doneText = r.type === 'polarka' ? POLARKA_TEXT : c!.text;
 
   return (
     <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
       <div className={`relative rounded-3xl overflow-hidden bg-[#05081a] min-h-[60svh] lg:min-h-0 ${settings ? NAV_LEFT : ''}`}>
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none', cursor: mode === 'hra' && !roundDone ? 'pointer' : 'default' }} onPointerDown={onTap} onPointerMove={onMove} onPointerLeave={() => setHover(null)} aria-label="Noční obloha se souhvězdím" />
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none', cursor: mode === 'hra' && !roundDone ? 'pointer' : 'default' }} onPointerDown={onTap} onPointerMove={(e) => (isDrawing ? drawMove(e) : onMove(e))} onPointerUp={drawUp} onPointerCancel={drawUp} onPointerLeave={() => setHover(null)} aria-label="Noční obloha se souhvězdím" />
       </div>
 
       <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto">
@@ -549,7 +625,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                 </>
               ) : (
                 <>
-                  <p className="text-base leading-relaxed text-[#4e5871]">{task}</p>
+                  <p className="text-base leading-relaxed text-[#4e5871]">{drawTask ?? task}</p>
                 </>
               )}
             </>

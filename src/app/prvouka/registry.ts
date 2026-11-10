@@ -278,6 +278,16 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
         }),
         description: 'Hra z vybraných období vybere souhvězdí náhodně. Po Velkém voze děti hledají Polárku.',
       },
+      draw: {
+        name: 'Jak spojujeme',
+        type: 'select' as const,
+        defaultValue: 'klik',
+        options: [
+          { value: 'klik', label: 'Klepnutím na hvězdy' },
+          { value: 'kresli', label: 'Kreslením prstem nebo perem' },
+        ],
+        description: 'Kreslení je jako v Písance: přerušovaná čára ukáže cestu k další hvězdě. Hodí se na interaktivní tabuli a tablet.',
+      },
       rounds: {
         name: 'Počet úloh',
         type: 'select' as const,
