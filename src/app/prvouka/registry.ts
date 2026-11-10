@@ -6,6 +6,8 @@
 import { PRVOUKA_GAMES, defaultPrvoukaTopics } from './data/catalog';
 import type { PrvoukaGrade } from './data/types';
 
+import { CONSTELLATIONS, SEASONS } from './stars-data';
+
 const ILLUSTRATIONS = 'https://qypiuvqglsmxdsnyazih.supabase.co/storage/v1/object/public/platform-shared/laiout-illustrations/assets';
 
 export type PrvoukaGameType =
@@ -145,7 +147,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     dataId: 'souhvezdi',
     name: 'Souhvězdí',
     description: 'spoj hvězdy podle čísel a najdi Polárku.',
-    longDescription: 'Děti si vyberou souhvězdí nebo celé roční období a spojují hvězdy podle čísel. Po Velkém voze podle jeho zadních hvězd najdou Polárku, která ukazuje sever.',
+    longDescription: 'Děti spojují hvězdy souhvězdí podle čísel. V nastavení vyberete, která souhvězdí – ze všech ročních období. Po Velkém voze podle jeho zadních hvězd najdou Polárku, která ukazuje sever.',
     icon: '✨',
     bg: '#D0DBFF',
     playBg: '#05081a',
@@ -260,21 +262,39 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
       labels: { name: 'Popisky planet', type: 'boolean' as const, defaultValue: true, description: 'Jména planet u modelu' },
     };
   }
-  if (game.model === 'hvezdy' || game.model === 'souhvezdi') {
+  if (game.model === 'souhvezdi') {
+    // Stejně jako u ostatních her prvouky: ročník a zaškrtávací seznam, co se procvičuje.
+    return {
+      grade: { name: 'Ročník', type: 'select' as const, defaultValue: 3, options: [{ value: 3, label: '3. ročník' }], description: 'Vesmír – 3. ročník, 1. díl' },
+      constellations: {
+        name: 'Která souhvězdí spojujeme',
+        type: 'multiselect' as const,
+        defaultValue: ['vuz', 'kasiopeja', 'orion'],
+        // Text v závorce se ukáže šedě pod názvem (jako strany sešitu u ostatních her).
+        options: (['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as const).flatMap((sid) =>
+          CONSTELLATIONS.filter((c) => c.season === sid).map((c) => ({
+            value: c.id,
+            label: `${c.name} (str. ${SEASONS.find((x) => x.id === sid)!.icon} ${sid === 'cely-rok' ? 'po celý rok' : SEASONS.find((x) => x.id === sid)!.name.toLowerCase()}${c.id === 'vuz' ? ' · i s hledáním Polárky' : ''})`,
+          })),
+        ),
+        description: 'Každé souhvězdí je jedno kolo spojovačky. Po Velkém voze děti hledají Polárku.',
+      },
+    };
+  }
+  if (game.model === 'hvezdy') {
     return {
       season: {
-        name: game.model === 'hvezdy' ? 'Obloha na začátku' : 'Předvybraná souhvězdí',
+        name: 'Obloha na začátku',
         type: 'select' as const,
         defaultValue: 'vse',
         options: [
-          { value: 'vse', label: game.model === 'hvezdy' ? 'Celá obloha' : 'Velký vůz, Kasiopeja, Orion' },
-          { value: 'cely-rok', label: 'Po celý rok (u Polárky)' },
+          { value: 'vse', label: 'Celá obloha' },
           { value: 'jaro', label: 'Jaro' },
           { value: 'leto', label: 'Léto' },
           { value: 'podzim', label: 'Podzim' },
           { value: 'zima', label: 'Zima' },
         ],
-        description: game.model === 'hvezdy' ? 'Období jde přepnout i během promítání' : 'Děti si výběr můžou ještě změnit',
+        description: 'Období jde přepnout i během promítání',
       },
     };
   }

@@ -269,7 +269,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
       'timeBasedGame',
 
       // Prvouka: ročník, témata a počet úloh
-      'grade', 'topics', 'rounds'
+      'grade', 'topics', 'rounds', 'constellations'
     ];
 
     // Pokud je to základní klíč, není pokročilé

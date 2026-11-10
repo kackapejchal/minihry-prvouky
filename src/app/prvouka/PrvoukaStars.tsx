@@ -105,9 +105,11 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const startSeason: SeasonFilter = ['cely-rok', 'jaro', 'leto', 'podzim', 'zima'].includes(settings?.season) ? settings!.season : 'vse';
   const pickFor = (f: SeasonFilter) => (f === 'vse' ? DEFAULT_PICK : CONSTELLATIONS.filter((x) => x.season === f).map((x) => x.id));
   const still = useMemo(prefersReducedMotion, []);
-  const [mode, setMode] = useState<Mode>(isGame ? 'vyber' : 'prohlizet');
+  // Hra bere souhvězdí z nastavení hry (zaškrtávací seznam) a začíná rovnou spojovačkou.
+  const gamePick: string[] = Array.isArray(settings?.constellations) && settings!.constellations.length ? settings!.constellations : DEFAULT_PICK;
+  const [mode, setMode] = useState<Mode>(isGame ? 'hra' : 'prohlizet');
   const [picked, setPicked] = useState<string[]>(() => pickFor(startSeason));
-  const [rounds, setRounds] = useState<Round[]>(() => buildRounds(DEFAULT_PICK));
+  const [rounds, setRounds] = useState<Round[]>(() => buildRounds(isGame ? gamePick : DEFAULT_PICK));
   const [view, setView] = useState<SceneId>('all');
   const [season, setSeason] = useState<SeasonFilter>(isGame ? 'vse' : startSeason);
   const rot = useRef(0);
@@ -377,7 +379,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
       <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto">
         <div className="relative flex-shrink-0 px-5 pt-5 pb-5 text-white" style={{ background: 'linear-gradient(180deg, #121c55 0%, #0b1236 100%)' }}>
           {/* Ve hře a ve výběru je „zpět“ nahoře, stejně jako u Závodu planet ve Sluneční soustavě. */}
-          {mode === 'hra' || (mode === 'vyber' && !isGame) ? (
+          {!isGame && mode !== 'prohlizet' ? (
             <div className="flex">
               <button
                 type="button"
