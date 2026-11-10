@@ -503,8 +503,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 Zpět
               </button>
             </div>
-            {/* Ovládání ve tmavé liště dole – stejně jako přehrávání v modelech. */}
-            <div className="absolute left-3 right-3 bottom-3 z-10 flex justify-center gap-3 rounded-2xl px-3 py-2" style={{ background: 'rgba(8,12,30,.78)', border: '1px solid rgba(255,255,255,.12)', backdropFilter: 'blur(6px)' }}>
+            {/* Tlačítka dole přímo na povrchu, bez lišty. */}
+            <div className="absolute left-3 right-3 bottom-4 z-10 flex justify-center gap-3">
               {([['skok', 'Skoč!'], ['micek', 'Pusť míček']] as const).map(([k, label]) => (
                 <button
                   key={k}
