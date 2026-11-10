@@ -148,7 +148,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
             </div>
           ) : null}
           <div className="relative mt-16 mb-4" style={{ width: 'min(52%, 210px)', aspectRatio: `${SAM_W} / ${SAM_H}` }}>
-            <img src={`${ART}/sam.png`} alt="Sam" className="absolute" style={{ left: `${(15 / SAM_W) * 100}%`, top: `${(10 / SAM_H) * 100}%`, width: `${(174 / SAM_W) * 100}%`, height: `${(382 / SAM_H) * 100}%` }} draggable={false} />
+            <img src={`${ART}/${outfit.dolu && outfit.dolu !== 'kratasy' ? `sam-${outfit.dolu}` : 'sam'}.png`} alt="Sam" className="absolute" style={{ left: `${(15 / SAM_W) * 100}%`, top: `${(10 / SAM_H) * 100}%`, width: `${(174 / SAM_W) * 100}%`, height: `${(382 / SAM_H) * 100}%` }} draggable={false} />
             {worn.flatMap((it) => it.pieces.map((p, i) => {
               const [x0, y0, x1, y1] = p.box;
               return (
