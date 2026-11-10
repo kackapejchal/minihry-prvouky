@@ -86,11 +86,14 @@ function drawStar(ctx: CanvasRenderingContext2D, p: Placed, glow = 1) {
   ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
 }
 
-function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number) {
-  ctx.font = `700 ${size}px VisbyRound, system-ui, sans-serif`;
+function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number, map = false) {
+  // map = popisek na celé mapě: malý, verzálky s prostrkáním jako na tištěné otočné mapě
+  ctx.font = `${map ? 600 : 700} ${size}px VisbyRound, system-ui, sans-serif`;
+  (ctx as any).letterSpacing = map ? `${size * 0.08}px` : '0px';
   ctx.textAlign = 'center';
-  ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(6,10,28,.9)'; ctx.strokeText(text, x, y);
+  ctx.lineWidth = map ? 3 : 4; ctx.strokeStyle = 'rgba(6,10,28,.9)'; ctx.strokeText(text, x, y);
   ctx.fillStyle = color; ctx.fillText(text, x, y);
+  (ctx as any).letterSpacing = '0px';
 }
 
 const ALL_TEXT = 'Všechna souhvězdí na jedné mapě. Uprostřed je Polárka – kolem ní se celá obloha během noci pomalu otáčí. Najednou je ale nikdy neuvidíme: některá souhvězdí jsou vidět v létě, jiná v zimě. Vyber roční období a mapa se otočí jako otočná mapa hvězdné oblohy.';
@@ -285,8 +288,11 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
       for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.4 : all && !vse ? 0 : 0.2; drawStar(ctx, vse ? { ...p, r: p.r * 0.8 } : p, p.id === 'polarka' ? 1.5 : vse ? 0.6 : 1); }
       ctx.globalAlpha = 1;
       // Popisky bez překrývání: každý dostane místo, kde nezakryje jiný popisek.
-      const boxes: Array<{ x0: number; x1: number; y0: number; y1: number }> = [];
-      const overlap = (bx: { x0: number; x1: number; y0: number; y1: number }) => boxes.reduce((acc, o) => acc + Math.max(0, Math.min(bx.x1, o.x1) - Math.max(bx.x0, o.x0)) * Math.max(0, Math.min(bx.y1, o.y1) - Math.max(bx.y0, o.y0)), 0);
+      type Box = { x0: number; x1: number; y0: number; y1: number };
+      const boxes: Box[] = [], labs: Box[] = [];
+      const area = (bx: Box, list2: Box[]) => list2.reduce((acc, o) => acc + Math.max(0, Math.min(bx.x1, o.x1) - Math.max(bx.x0, o.x0)) * Math.max(0, Math.min(bx.y1, o.y1) - Math.max(bx.y0, o.y0)), 0);
+      // Překryv s jiným popiskem je mnohem horší než přes kousek čáry.
+      const overlap = (bx: Box) => area(bx, boxes) + area(bx, labs) * 60;
       // Popisky ať nezakrývají ani hvězdy souhvězdí (a body uprostřed čar).
       if (all) for (const cons of list) {
         if (lvl(cons) === 0 && !vse) continue;
@@ -294,7 +300,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         for (const [a, b] of cons.edges) for (const t of [0.25, 0.5, 0.75]) { const x = by[a].x + (by[b].x - by[a].x) * t, y = by[a].y + (by[b].y - by[a].y) * t; boxes.push({ x0: x - 4, x1: x + 4, y0: y - 4, y1: y + 4 }); }
       }
       const place = (text: string, size: number, spots: Array<[number, number]>, color: string, force = true) => {
-        const half = text.length * size * 0.29 + 3;
+        const half = text.length * size * (vse ? 0.36 : 0.29) + 3;
         let best: { x: number; y: number; o: number } | null = null;
         for (const [x, y] of spots) {
           const cx = Math.min(w - half - 4, Math.max(half + 4, x)), cy = Math.max(size + 4, Math.min(h - 6, y));
@@ -303,12 +309,12 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
           if (o === 0) break;
         }
         if (!best || (!force && best.o > 0)) return;
-        boxes.push({ x0: best.x - half, x1: best.x + half, y0: best.y - size, y1: best.y + 3 });
-        label(ctx, text, best.x, best.y, color, size);
+        labs.push({ x0: best.x - half, x1: best.x + half, y0: best.y - size, y1: best.y + 3 });
+        label(ctx, text, best.x, best.y, color, size, vse);
       };
       if (st.view === 'vuz' || st.view === 'maly-vuz' || all) {
-        const p = by.polarka, size = all ? fs - 3 : fs;
-        place(st.view === 'vuz' ? 'Polárka – sever' : 'Polárka', size, all ? [[p.x, p.y + p.r + size + 6], [p.x, p.y - p.r - 10]] : [[p.x, p.y - p.r - 14]], '#7fd3ff');
+        const p = by.polarka, size = all ? (vse ? Math.max(10, fs - 5) : fs - 3) : fs;
+        place(st.view === 'vuz' ? 'Polárka – sever' : vse ? 'POLÁRKA' : 'Polárka', size, all ? [[p.x, p.y + p.r + size + 6], [p.x, p.y - p.r - 10]] : [[p.x, p.y - p.r - 14]], '#7fd3ff');
       }
       for (const cons of list) {
         const l = lvl(cons);
@@ -318,12 +324,16 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         const top = Math.min(...ts.map((p) => p.y)), bottom = Math.max(...ts.map((p) => p.y));
         const cx = (x0 + x1) / 2, cy = (top + bottom) / 2;
         if (all && !vse && l === 1 && cons.id !== 'vuz') continue;
-        const size = all ? (vse ? Math.max(11, fs - 4) : l === 2 ? fs : Math.max(11, fs - 4)) : fs + 4;
+        const size = all ? (vse ? Math.max(10, fs - 6) : l === 2 ? fs : Math.max(11, fs - 4)) : fs + 4;
         const half = cons.name.length * size * 0.29;
+        const hw = vse ? cons.name.length * size * 0.36 : half;
         const spots: Array<[number, number]> = all
-          ? [[cx, top - 10], [cx, bottom + size + 8], [x1 + half + 10, cy + size / 3], [x0 - half - 10, cy + size / 3], [cx, cy + size / 3]]
+          ? [[cx, top - 8], [cx, bottom + size + 6], [x1 + hw + 8, cy + size / 3], [x0 - hw - 8, cy + size / 3],
+             [x1 + hw + 4, top + size], [x0 - hw - 4, top + size], [x1 + hw + 4, bottom], [x0 - hw - 4, bottom],
+             [cx, top - size - 10], [cx, bottom + size * 2 + 8], [cx, cy + size / 3]]
           : [[cx, Math.max(fs + 6, top - 26)]];
-        place(cons.name, size, spots, l === 2 ? GOLD : 'rgba(255,217,138,.45)');
+        const text = vse ? cons.name.toUpperCase() : cons.name;
+        place(text, size, spots, vse ? 'rgba(226,232,255,.82)' : l === 2 ? GOLD : 'rgba(255,217,138,.45)');
         // Jména jasných hvězd: u jednoho souhvězdí vždy, na celé obloze jen u vybraného období.
         if (!all || (!vse && l === 2)) for (const id of cons.named ?? []) {
           if (id === 'polarka') continue;
