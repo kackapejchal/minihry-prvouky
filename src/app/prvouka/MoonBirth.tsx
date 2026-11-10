@@ -40,6 +40,8 @@ export function MoonBirth({ onClose, next }: { onClose: () => void; next?: { que
   const [step, setStep] = useState(0);
   // Po dohrání nabídne navazující animaci (Země → Měsíc, Měsíc → Země) nebo návrat na fáze.
   const [done, setDone] = useState(false);
+  // Bez navazující nabídky (obě videa už proběhla) se po dohrání samo vrátí na model.
+  useEffect(() => { if (!done || next) return; const id = window.setTimeout(() => closeRef.current(), 2000); return () => window.clearTimeout(id); }, [done, next]);
   useEffect(() => {
     let raf = 0;
     const frame = (now: number) => {
@@ -173,6 +175,6 @@ function draw(cv: HTMLCanvasElement, t: number) {
   // Popisky
   ctx.font = `700 ${Math.max(13, R * 0.2)}px VisbyRound, system-ui, sans-serif`;
   ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(231,236,255,.85)';
-  ctx.fillText(cool > 0.5 ? 'Země' : 'mladá Země', cx, cy + R + Math.max(18, R * 0.3));
+  ctx.fillText(cool > 0.5 ? 'Země' : 'mladá Země', cx, cy + R * 1.08 + Math.max(30, R * 0.45));
   if (t > 13 && moonR > 2) ctx.fillText('Měsíc', mx, my - moonR - 10);
 }

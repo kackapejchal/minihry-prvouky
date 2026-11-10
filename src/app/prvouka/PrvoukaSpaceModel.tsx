@@ -1141,6 +1141,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   // Jak vznikl Měsíc: animace přes celý pohled shora.
   const [birth, setBirth] = useState(false);
   const [earthBirth, setEarthBirth] = useState(false);
+  // Která videa o vzniku už v téhle řadě proběhla – když obě, druhé nic nenabízí a vrátí se na model.
+  const [seenBirth, setSeenBirth] = useState<{ moon: boolean; earth: boolean }>({ moon: false, earth: false });
   // Proč není zatmění každý měsíc: animace z boku.
   const [why, setWhy] = useState(false);
   const eclipseRef = useRef<Eclipse>(null);
@@ -1224,8 +1226,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           onPointerLeave={() => !dragging.current && setGrab('none')}
           aria-label="Pohled shora: Slunce, Země a Měsíc na oběžné dráze. Měsícem jde táhnout po dráze."
         />
-        {birth ? <MoonBirth onClose={() => setBirth(false)} next={{ question: 'Chceš vidět, jak vznikla Země?', label: 'Podívej se, jak vznikla Země', onClick: () => { setBirth(false); setEarthBirth(true); } }} /> : null}
-        {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} next={{ question: 'Chceš vidět, jak vznikl Měsíc?', label: 'Podívej se, jak vznikl Měsíc', onClick: () => { setEarthBirth(false); setBirth(true); } }} /> : null}
+        {birth ? <MoonBirth onClose={() => setBirth(false)} next={seenBirth.earth ? undefined : { question: 'Chceš vidět, jak vznikla Země?', label: 'Podívej se, jak vznikla Země', onClick: () => { setBirth(false); setSeenBirth((v) => ({ ...v, earth: true })); setEarthBirth(true); } }} /> : null}
+        {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} next={seenBirth.moon ? undefined : { question: 'Chceš vidět, jak vznikl Měsíc?', label: 'Podívej se, jak vznikl Měsíc', onClick: () => { setEarthBirth(false); setSeenBirth((v) => ({ ...v, moon: true })); setBirth(true); } }} /> : null}
         {why ? <EclipseWhy onClose={() => setWhy(false)} /> : null}
         <div className="group absolute top-3 right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
           <div className="flex items-center gap-2">
@@ -1357,7 +1359,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
               <button
                 type="button"
                 aria-pressed={birth}
-                onClick={() => { setEclipse(null); setEarthBirth(false); setPlaying(false); setBirth((v) => !v); }}
+                onClick={() => { setEclipse(null); setEarthBirth(false); setPlaying(false); setSeenBirth({ moon: true, earth: false }); setBirth((v) => !v); }}
                 className="col-span-2 relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(135deg, #b8461a 0%, #2a1840 70%, #0b0f24 100%)', outline: birth ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
               >
@@ -1372,7 +1374,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
               <button
                 type="button"
                 aria-pressed={earthBirth}
-                onClick={() => { setEclipse(null); setBirth(false); setPlaying(false); setEarthBirth((v) => !v); }}
+                onClick={() => { setEclipse(null); setBirth(false); setPlaying(false); setSeenBirth({ moon: false, earth: true }); setEarthBirth((v) => !v); }}
                 className="col-span-2 relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(135deg, #2f6fd1 0%, #1b2350 100%)', outline: earthBirth ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
               >

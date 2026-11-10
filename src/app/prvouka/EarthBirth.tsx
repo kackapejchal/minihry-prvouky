@@ -28,6 +28,8 @@ export function EarthBirth({ onClose, next }: { onClose: () => void; next?: { qu
   const [step, setStep] = useState(0);
   // Po dohrání nabídne navazující animaci (Země → Měsíc, Měsíc → Země) nebo návrat na fáze.
   const [done, setDone] = useState(false);
+  // Bez navazující nabídky (obě videa už proběhla) se po dohrání samo vrátí na model.
+  useEffect(() => { if (!done || next) return; const id = window.setTimeout(() => closeRef.current(), 2000); return () => window.clearTimeout(id); }, [done, next]);
   const closeRef = useRef(onClose); closeRef.current = onClose;
   useEffect(() => {
     let raf = 0;
@@ -134,7 +136,7 @@ function draw(cv: HTMLCanvasElement, t: number) {
     if (t > 10) {
       ctx.font = `700 ${Math.max(13, S * 0.03)}px VisbyRound, system-ui, sans-serif`;
       ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(231,236,255,.85)';
-      ctx.fillText(cool > 0.5 ? 'Země' : 'mladá Země', ex, ey + r + Math.max(18, S * 0.04));
+      ctx.fillText(cool > 0.5 ? 'Země' : 'mladá Země', ex, ey + r * 1.08 + Math.max(30, S * 0.06));
     }
   }
   if (zoom < 0.5) {
