@@ -34,6 +34,7 @@ function breaksOf(id: string) {
 }
 const sceneOf = (r: Round): string => (r.type === 'polarka' ? 'vuz' : r.c);
 const GOLD = '#ffd98a';
+const HERO_DOTS: Array<[number, number, number]> = [[6, 18, 2], [14, 70, 1.5], [24, 34, 1], [37, 86, 2], [52, 12, 1.5], [63, 62, 1], [72, 26, 2], [85, 80, 1.5], [93, 44, 2], [46, 50, 1]];
 
 interface Placed { id: string; name: string; x: number; y: number; r: number; color: string; target: boolean }
 
@@ -103,7 +104,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   const [mode, setMode] = useState<Mode>(settings?.mode === 'hra' ? 'hra' : 'prohlizet');
   const [picked, setPicked] = useState<string[]>(DEFAULT_PICK);
   const [rounds, setRounds] = useState<Round[]>(() => buildRounds(DEFAULT_PICK));
-  const [view, setView] = useState<SceneId>('vuz');
+  const [view, setView] = useState<SceneId>('all');
   const [season, setSeason] = useState<SeasonFilter>('vse');
   const rot = useRef(0);
   const zoom = useRef({ z: 1, x: 0, y: 0 });
@@ -370,7 +371,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
       </div>
 
       <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto">
-        <div className="relative flex-shrink-0 px-5 pt-4 pb-5 text-white" style={{ background: 'linear-gradient(180deg, #121c55 0%, #0b1236 100%)' }}>
+        <div className="relative flex-shrink-0 px-5 pt-5 pb-5 text-white" style={{ background: 'linear-gradient(180deg, #121c55 0%, #0b1236 100%)' }}>
           {/* Ve hře a ve výběru je „zpět“ nahoře, stejně jako u Závodu planet ve Sluneční soustavě. */}
           {mode !== 'prohlizet' ? (
             <div className="flex">
@@ -384,7 +385,27 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
               </button>
             </div>
           ) : null}
-          <h2 className={`text-3xl font-bold ${mode === 'prohlizet' ? 'mt-1' : 'mt-3'}`}>{mode === 'prohlizet' ? (view === 'all' ? (season === 'vse' ? 'Celá obloha' : `Obloha ${seasonOf(season).on}`) : constellation(view).name) : mode === 'vyber' ? 'Spoj souhvězdí' : r.type === 'polarka' ? 'Polárka' : c!.name}</h2>
+          {HERO_DOTS.map(([x, y, r], i) => (
+            <span key={i} className="absolute rounded-full pointer-events-none bg-white" style={{ left: `${x}%`, top: `${y}%`, width: r, height: r, opacity: 0.7 }} />
+          ))}
+          {mode === 'prohlizet' ? (
+            <p className="relative text-xs font-bold uppercase tracking-widest text-[#9aa6d1] text-center">
+              {view === 'all' ? (season === 'vse' ? 'Mapa oblohy' : `${seasonOf(season).icon} ${seasonOf(season).name}`) : `${seasonOf(constellation(view).season).icon} ${seasonOf(constellation(view).season).name}`}
+            </p>
+          ) : null}
+          <h2 className={`relative text-3xl font-bold ${mode === 'prohlizet' ? 'mt-1 text-center' : 'mt-3'}`}>{mode === 'prohlizet' ? (view === 'all' ? (season === 'vse' ? 'Celá obloha' : `Obloha ${seasonOf(season).on}`) : constellation(view).name) : mode === 'vyber' ? 'Spoj souhvězdí' : r.type === 'polarka' ? 'Polárka' : c!.name}</h2>
+          {mode === 'prohlizet' ? (
+            // Jako řada planet ve Sluneční soustavě: souhvězdí nakreslená zlatě přes celou šířku.
+            <div className="relative mt-3 h-28 flex items-center justify-center gap-3">
+              {view === 'all'
+                ? (season === 'vse' ? ['kasiopeja', 'vuz', 'labut', 'orion'] : CONSTELLATIONS.filter((x) => x.season === season).slice(0, 4).map((x) => x.id)).map((id, i, arr) => (
+                    <button key={id} type="button" onClick={() => setView(id)} title={constellation(id).name} className="hover:scale-110 transition-transform">
+                      <ConstellationIcon c={constellation(id)} size={arr.length > 3 ? (i % 2 ? 76 : 64) : 84} plain />
+                    </button>
+                  ))
+                : <ConstellationIcon c={constellation(view)} size={112} plain />}
+            </div>
+          ) : null}
           {mode === 'hra' ? (
             <div className="flex items-center gap-1.5 mt-2" aria-label={`Kolo ${round + 1} z ${rounds.length}`}>
               {rounds.map((_, i) => (
@@ -444,25 +465,12 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                   );
                 })}
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {(['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as Season[]).map((sid) => [
-                  <p key={`h-${sid}`} className="col-span-2 text-xs font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
+                  <p key={`h-${sid}`} className="col-span-4 text-xs font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
                   ...CONSTELLATIONS.filter((cons) => cons.season === sid).map((cons) => {
                     const on = picked.includes(cons.id);
-                    return (
-                      <button
-                        key={cons.id}
-                        type="button"
-                        onClick={() => setPicked((p) => (on ? p.filter((x) => x !== cons.id) : [...p, cons.id]))}
-                        aria-pressed={on}
-                        className="relative flex items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs font-bold transition-colors min-w-0"
-                        style={{ background: on ? '#fde9c6' : '#f4f6fb', boxShadow: on ? 'inset 0 0 0 2px #f0a12c' : 'none' }}
-                      >
-                        <ConstellationIcon c={cons} />
-                        <span className="min-w-0 leading-tight flex-1">{cons.name}</span>
-                        <span className="w-5 h-5 flex-shrink-0 rounded-full flex items-center justify-center text-[11px]" style={on ? { background: '#f0a12c', color: '#2a1700' } : { border: '2px solid #c9d0e4' }} aria-hidden="true">{on ? '✓' : ''}</span>
-                      </button>
-                    );
+                    return <ConsTile key={cons.id} c={cons} on={on} check onClick={() => setPicked((p) => (on ? p.filter((x) => x !== cons.id) : [...p, cons.id]))} />;
                   }),
                 ])}
               </div>
@@ -506,29 +514,20 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                 </div>
               ) : null}
               <div className="pt-1">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => setView('all')}
-                    className="col-span-2 flex items-center gap-3 rounded-2xl px-3 py-2 text-left font-bold transition-colors"
+                    className="col-span-4 flex items-center gap-3 rounded-2xl px-3 py-2 text-left font-bold transition-colors"
                     style={{ background: view === 'all' ? '#fde9c6' : '#f4f6fb' }}
                   >
                     <span className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-xl" style={{ background: '#0b1236' }} aria-hidden="true">✨</span>
                     {season === 'vse' ? 'Celá obloha – všechna najednou' : `Obloha ${seasonOf(season).on} – na mapě`}
                   </button>
                   {(season === 'vse' ? (['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as Season[]) : [season, 'cely-rok' as Season]).map((sid) => [
-                    <p key={`h-${sid}`} className="col-span-2 text-xs font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
+                    <p key={`h-${sid}`} className="col-span-4 text-xs font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
                     ...CONSTELLATIONS.filter((cons) => cons.season === sid).map((cons) => (
-                    <button
-                      key={cons.id}
-                      type="button"
-                      onClick={() => setView(cons.id)}
-                      className="flex items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs font-bold transition-colors min-w-0"
-                      style={{ background: view === cons.id ? '#fde9c6' : '#f4f6fb' }}
-                    >
-                      <ConstellationIcon c={cons} />
-                      <span className="min-w-0 leading-tight">{cons.name}</span>
-                    </button>
+                    <ConsTile key={cons.id} c={cons} on={view === cons.id} onClick={() => setView(cons.id)} />
                     )),
                   ])}
                 </div>
@@ -573,19 +572,38 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   );
 }
 
-/** Malý obrázek tvaru souhvězdí do seznamu (čáry a tečky). */
-function ConstellationIcon({ c }: { c: Constellation }) {
+/** Obrázek tvaru souhvězdí (čáry a tečky). V seznamu na tmavé dlaždici, v hlavičce panelu velký bez pozadí. */
+function ConstellationIcon({ c, size = 40, plain = false }: { c: Constellation; size?: number; plain?: boolean }) {
   const proj = projectScene(c.stars);
   const pts = Object.values(proj);
   const minX = Math.min(...pts.map((p) => p.x)), maxX = Math.max(...pts.map((p) => p.x));
   const minY = Math.min(...pts.map((p) => p.y)), maxY = Math.max(...pts.map((p) => p.y));
   const s = 30 / Math.max(maxX - minX, maxY - minY);
   const at = (id: string) => ({ x: 5 + (proj[id].x - minX) * s + (30 - (maxX - minX) * s) / 2, y: 5 + (proj[id].y - minY) * s + (30 - (maxY - minY) * s) / 2 });
+  const k = plain ? 40 / size * 1.6 : 1; // v hlavičce ať čáry nejsou moc tenké
   return (
-    <svg viewBox="0 0 40 40" className="w-10 h-10 flex-shrink-0 rounded-xl" style={{ background: '#0b1236' }} aria-hidden="true">
-      {c.edges.map(([a, b]) => { const p = at(a), q = at(b); return <line key={a + b} x1={p.x} y1={p.y} x2={q.x} y2={q.y} stroke={GOLD} strokeWidth={1.2} />; })}
-      {c.stars.map((st) => { const p = at(st.id); return <circle key={st.id} cx={p.x} cy={p.y} r={1.8} fill="#fff" />; })}
+    <svg viewBox="0 0 40 40" className={`flex-shrink-0 ${plain ? '' : 'rounded-xl'}`} style={{ width: size, height: size, background: plain ? 'none' : '#0b1236', overflow: 'visible' }} aria-hidden="true">
+      {c.edges.map(([a, b]) => { const p = at(a), q = at(b); return <line key={a + b} x1={p.x} y1={p.y} x2={q.x} y2={q.y} stroke={GOLD} strokeWidth={1.2 * Math.max(1, k * 0.8)} strokeLinecap="round" />; })}
+      {c.stars.map((st) => { const p = at(st.id); return <circle key={st.id} cx={p.x} cy={p.y} r={1.8 * Math.max(1, k * 0.7)} fill="#fff" />; })}
     </svg>
   );
 }
 
+/** Dlaždice souhvězdí jako dlaždice planet ve Sluneční soustavě: obrázek nahoře, jméno pod ním. */
+function ConsTile({ c, on, check = false, onClick }: { c: Constellation; on: boolean; check?: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className="relative flex flex-col items-center gap-1 rounded-2xl py-2 px-1 transition-colors min-w-0"
+      style={{ background: on ? '#fde9c6' : '#f4f6fb', boxShadow: check && on ? 'inset 0 0 0 2px #f0a12c' : 'none' }}
+    >
+      <ConstellationIcon c={c} size={52} />
+      <span className="text-xs font-bold text-[#3b4a8c] text-center leading-tight min-h-[2em] flex items-center">{c.name}</span>
+      {check ? (
+        <span className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold" style={on ? { background: '#f0a12c', color: '#2a1700' } : { background: '#fff', border: '2px solid #c9d0e4' }} aria-hidden="true">{on ? '✓' : ''}</span>
+      ) : null}
+    </button>
+  );
+}
