@@ -49,7 +49,7 @@ export function formatMeters(m: number) {
   return `${String(r).replace('.', ',')} m`;
 }
 export function formatSeconds(sec: number) {
-  return `${String(Math.round(sec * 10) / 10).replace('.', ',')} s`;
+  return `${(Math.round(sec * 10) / 10).toFixed(1).replace('.', ',')} s`;
 }
 export function formatKg(kg: number) {
   const r = kg < 10 ? Math.round(kg * 10) / 10 : Math.round(kg);
@@ -138,8 +138,19 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
               {shown === 'micek' ? (
                 <div className="mt-1 flex items-end gap-5 md:gap-8">
                   <span className="flex flex-col items-center">
-                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">míček ze 2 m dopadne za</span>
-                    <span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1 text-[#f0a12c]">{formatSeconds(Math.sqrt((2 * DROP_M) / (EARTH_G * PULL[b])))}</span>
+                    {(() => {
+                      // Stopky: během pádu běží od 0, v každém sloupci se zastaví při dopadu.
+                      const fallT = Math.sqrt((2 * DROP_M) / (EARTH_G * PULL[b]));
+                      const running = action?.kind === 'micek';
+                      const shownT = running ? Math.min(Math.max(0, now - HOLD), fallT) : fallT;
+                      const landed = !running || now - HOLD >= fallT;
+                      return (
+                        <>
+                          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">{landed ? 'míček ze 2 m dopadl za' : 'míček padá…'}</span>
+                          <span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1 text-[#f0a12c]">{formatSeconds(shownT)}</span>
+                        </>
+                      );
+                    })()}
                   </span>
                 </div>
               ) : (
