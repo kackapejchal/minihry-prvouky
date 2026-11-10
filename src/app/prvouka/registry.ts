@@ -159,7 +159,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     id: 'prvoukaObleceni',
     dataId: 'obleceni',
     name: 'Oblékni se podle počasí',
-    description: 'prší, sněží, je horko nebo fouká – co si Sam a Hanka vezmou?',
+    description: 'prší, sněží, je horko nebo fouká – co si vezmu na sebe?',
     longDescription: 'Venku prší, sněží, je horko nebo fouká a děti vybírají, co si Sam nebo Hanka obléknou. U správné věci se ukáže, proč se hodí, u nevhodné (kraťasy v mrazu, deštník ve větru) krátké vysvětlení. Dítě obléká Sama jako v oblékačce – věci ze šatníku se vyměňují – a tlačítkem Jdeme ven! si to zkontroluje. Jde hrát i volně bez počasí.',
     icon: '🧥',
     bg: '#E3EEFC',
