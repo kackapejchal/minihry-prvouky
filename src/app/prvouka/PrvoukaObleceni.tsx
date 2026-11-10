@@ -50,7 +50,7 @@ const H_ITEMS: Item[] = [
   { id: 'plastenka', name: 'Pláštěnka', slot: 'vrsek', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }] },
   { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'vrsek', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/f-zimni-bunda', box: [20, 166, 218, 360], z: 6 }] },
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'hanka/f-kratasy', pieces: [] },
-  { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [56, 318, 184, 428], z: 2 }], boxFor: { sam: [40, 256, 168, 366] } },
+  { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [56, 318, 184, 428], z: 2 }], boxFor: { sam: [40, 246, 168, 368] } },
   { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'hanka/f-tenisky', pieces: [] },
   { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'hanka/f-sandaly', pieces: [{ src: 'hanka/sandaly', box: [47, 424, 191, 478], z: 3 }] },
   { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'hanka/boty', pieces: [{ src: 'hanka/boty', box: [45, 409, 196, 495], z: 3 }] },
@@ -73,7 +73,7 @@ const GROUP: Record<Slot, Lin> = {
   bunda: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
   ruce: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
   destnik: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
-  dolu: { sx: 1.06, cx: 104, hx: 120, sy: 0.94, cy: 269, hy: 321 },
+  dolu: { sx: 1.06, cx: 104, hx: 120, sy: 1.06, cy: 262, hy: 322 },
   boty: { sx: 1.06, cx: 104, hx: 120, sy: 1.06, cy: 392, hy: 481 },
 };
 function mapBox(box: [number, number, number, number], slot: Slot, from: Who, to: Who): [number, number, number, number] {
