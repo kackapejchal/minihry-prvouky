@@ -39,7 +39,7 @@ const ITEMS: Item[] = [
   { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'boty', pieces: [{ src: 'nas-boty', box: [29, 352, 190, 392], z: 3 }] },
   { id: 'holinky', name: 'Holínky', slot: 'boty', thumb: 'holinky', pieces: [{ src: 'holinky', box: [38, 290, 176, 393], z: 3 }] },
   { id: 'zimni-boty', name: 'Zimní boty', slot: 'boty', thumb: 'zimni-boty', pieces: [{ src: 'nas-zimni-boty', box: [20, 307, 186, 392], z: 3 }] },
-  { id: 'palcaky', name: 'Palčáky', slot: 'ruce', thumb: 'palcak-l', pieces: [{ src: 'nas-palcaky', box: [9, 257, 204, 313], z: 7 }] },
+  { id: 'palcaky', name: 'Palčáky', slot: 'ruce', thumb: 'palcak-l', pieces: [{ src: 'ruka-palcak-l', box: [18, 248, 64, 308], z: 7 }, { src: 'ruka-palcak-p', box: [146, 248, 192, 308], z: 7 }] },
   { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'destnik', pieces: [{ src: 'destnik', box: [161, 118, 277, 282], z: 10 }] },
 ];
 // Hanka: rámeček 240 × 495 px, obrázky v hanka/ („f-…“ jsou ploché kusy jen na náhled v šatníku).
