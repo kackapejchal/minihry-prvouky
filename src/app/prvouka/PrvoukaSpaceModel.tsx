@@ -280,6 +280,29 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [jumpAction, setJumpAction] = useState<{ kind: 'skok' | 'micek'; t0: number } | null>(null);
   // Po otevření skákání se panel posune k výběru váhy, ať je hned vidět.
   const jumpPanelRef = useRef<HTMLDivElement | null>(null);
+  // Povrch pod nohama „vyfocený“ z 3D modelu ve zvoleném vzhledu: výřez ze středu koule.
+  const [jumpSurfaces, setJumpSurfaces] = useState<Partial<Record<JumpBody, string>>>({});
+  useEffect(() => {
+    if (!jump) return;
+    const scene = sceneRef.current;
+    if (!scene) return;
+    let cancelled = false;
+    for (const id of ['zeme', ...jumpBodies] as JumpBody[]) {
+      const url = scene.thumbnail(id as SolarBodyId, 900);
+      if (!url) continue;
+      const img = new Image();
+      img.onload = () => {
+        if (cancelled) return;
+        const c = document.createElement('canvas'); c.width = 900; c.height = 300;
+        const S = img.width;
+        c.getContext('2d')!.drawImage(img, S * 0.22, S * 0.4, S * 0.56, S * 0.19, 0, 0, 900, 300);
+        const data = c.toDataURL('image/jpeg', 0.85);
+        setJumpSurfaces((m) => ({ ...m, [id]: data }));
+      };
+      img.src = url;
+    }
+    return () => { cancelled = true; };
+  }, [jump, jumpBodies, style]);
   useEffect(() => { if (jump) window.setTimeout(() => jumpPanelRef.current?.scrollIntoView({ block: 'start' }), 80); }, [jump]);
   // Porovnej se Zemí: velký pohled planeta vedle Země ve skutečném poměru.
   const [compare, setCompare] = useState(false);
@@ -436,8 +459,13 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               thumbs={thumbs}
               action={jumpAction}
               weight={weight}
+              surfaces={jumpSurfaces}
               onDone={() => setJumpAction(null)}
             />
+            {/* Stejný přepínač vzhledu jako v liště modelu – převezme i nastavení na začátku. */}
+            <div className="absolute right-4 bottom-4 z-10 rounded-2xl px-2 py-1" style={{ background: 'rgba(8,12,30,.7)', border: '1px solid rgba(255,255,255,.12)' }}>
+              <SpaceSegmented label="Vzhled" value={style} onChange={setStyle} options={[{ value: 'realny', label: 'Opravdový' }, { value: 'kresleny', label: 'Kreslený' }]} />
+            </div>
             <div className="absolute left-4 top-3 z-10">
               <button type="button" onClick={() => { setJump(false); setJumpAction(null); }} className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors">
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>

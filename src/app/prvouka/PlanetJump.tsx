@@ -57,8 +57,10 @@ export const TIMES = (b: JumpBody) => {
 type Action = { kind: 'skok' | 'micek'; t0: number } | null;
 
 /** Plocha s 2–3 sloupci vedle sebe: postavička, která skáče, a míček, který padá. */
-export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30 }: {
+export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, surfaces = {} }: {
   weight?: number;
+  /** Povrch ze 3D modelu v právě zvoleném vzhledu (Opravdový / Kreslený); bez něj kreslená textura. */
+  surfaces?: Partial<Record<JumpBody, string>>;
   bodies: JumpBody[];
   names: Record<string, string>;
   thumbs: Partial<Record<SolarBodyId, string>>;
@@ -139,12 +141,21 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30 }
             ) : null}
             {/* míček */}
             {action?.kind === 'micek' ? (
-              <span className="absolute rounded-full" style={{ left: colW * 0.62, top: ballY - 18, width: 18, height: 18, background: 'radial-gradient(circle at 35% 35%, #ffd98a, #f0a12c 70%)', boxShadow: '0 0 10px rgba(240,161,44,.6)' }} />
+              // Barevný nafukovací míč (bez záře), ať je jasné, že je to míč.
+              <svg viewBox="0 0 40 40" className="absolute" style={{ left: colW * 0.62, top: ballY - 30, width: 30, height: 30 }} aria-hidden="true">
+                <circle cx="20" cy="20" r="18" fill="#ffffff" />
+                <path d="M20 2 A18 18 0 0 1 38 20 L20 20 Z" fill="#e8463b" />
+                <path d="M38 20 A18 18 0 0 1 20 38 L20 20 Z" fill="#f6c22c" />
+                <path d="M20 38 A18 18 0 0 1 2 20 L20 20 Z" fill="#2f7fd6" />
+                <circle cx="20" cy="20" r="4" fill="#ffffff" />
+                <circle cx="20" cy="20" r="18" fill="none" stroke="#1b2350" strokeWidth="2" />
+                <ellipse cx="13" cy="11" rx="4" ry="2.5" fill="rgba(255,255,255,.55)" transform="rotate(-30 13 11)" />
+              </svg>
             ) : null}
             {/* postavička */}
             <Kid x={cx - colW * i} y={groundY - up * pxPerM} size={kid} />
             {/* povrch */}
-            <div className="absolute left-0 right-0 bottom-0" style={{ top: groundY, backgroundColor: GROUND[b], backgroundImage: `${GAS.includes(b) ? 'linear-gradient(180deg, rgba(255,255,255,.15), rgba(6,10,28,.55)), ' : 'linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.25)), '}url(${surface(b)})`, backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: 'inset 0 6px 10px rgba(0,0,0,.25)' }} />
+            <div className="absolute left-0 right-0 bottom-0" style={{ top: groundY, backgroundColor: GROUND[b], backgroundImage: `${GAS.includes(b) ? 'linear-gradient(180deg, rgba(255,255,255,.15), rgba(6,10,28,.55)), ' : 'linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.25)), '}url(${surfaces[b] ?? surface(b)})`, backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: 'inset 0 6px 10px rgba(0,0,0,.25)' }} />
             <span className="absolute left-0 right-0 text-center text-xs md:text-sm font-bold text-white/85" style={{ top: groundY + 10 }}>
               {GAS.includes(b) ? 'nemá pevný povrch – stojíme na mracích' : ''}
             </span>
