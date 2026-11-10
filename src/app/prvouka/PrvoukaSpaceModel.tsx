@@ -18,6 +18,7 @@ import {
   type Eclipse,
 } from './space-engine';
 import { SolarScene3D, yearsPerSecond, type DayPart, type SolarBodyId, type SolarStyle } from './solar-3d';
+import { JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
 
 /**
  * Interaktivní modely 3. ročníku (Putování vesmírem, Schovaná v Mléčné dráze, Jediná obyvatelná):
@@ -271,6 +272,11 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [dayPart, setDayPart] = useState<DayPart>('den');
   // Závod planet: všechny vyrazí ze startovní čáry, panel počítá oběhy.
   const [race, setRace] = useState(false);
+  // Skákání na planetách: Země + dvě vybraná tělesa vedle sebe – skok, pád míčku a váha.
+  const [jump, setJump] = useState(false);
+  const [jumpBodies, setJumpBodies] = useState<JumpBody[]>(['mesic', 'jupiter']);
+  const [weight, setWeight] = useState(30);
+  const [jumpAction, setJumpAction] = useState<{ kind: 'skok' | 'micek'; t0: number } | null>(null);
   // Porovnej se Zemí: velký pohled planeta vedle Země ve skutečném poměru.
   const [compare, setCompare] = useState(false);
   // Porovnání ukazuje planety velké – malé obrázky z panelu by byly rozpixlované, tak se vykreslí ostřejší.
@@ -416,6 +422,31 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             thumbs={compareThumbs}
             onClose={() => setCompare(false)}
           />
+        ) : null}
+        {jump ? (
+          <div className="absolute inset-0 z-30 text-white" style={{ background: 'radial-gradient(circle at 50% 30%, #16205a 0%, #060a1c 80%)' }}>
+            <JumpStage
+              bodies={['zeme', ...jumpBodies]}
+              names={Object.fromEntries((['zeme', ...JUMP_CHOICES] as SolarBodyId[]).map((id) => [id, bodyName(id)]))}
+              thumbs={thumbs}
+              action={jumpAction}
+              onDone={() => setJumpAction(null)}
+            />
+            <div className="absolute left-0 right-0 bottom-4 z-10 flex justify-center gap-3">
+              {([['skok', '🦘 Skoč!'], ['micek', '⚽ Pusť míček']] as const).map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  disabled={Boolean(jumpAction)}
+                  onClick={() => setJumpAction({ kind: k, t0: performance.now() })}
+                  className="h-12 px-6 rounded-full text-lg font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                  style={{ background: '#f0a12c', color: '#2a1700', boxShadow: '0 3px 0 #b8741a' }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         ) : null}
         {/* Ovládací lišta: přehrávání, dvě volby „jedna ze dvou“ a vypínač popisků – každý druh vypadá jinak. */}
         <div
@@ -688,26 +719,26 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             {HERO_STARS.map(([x, y, r, c], i) => (
               <span key={i} className="absolute rounded-full pointer-events-none" style={{ left: `${x}%`, top: `${y}%`, width: r, height: r, background: c, opacity: 0.8 }} />
             ))}
-            {race ? (
+            {race || jump ? (
               // Během závodu je „zpět“ nahoře, stejně jako „Celá soustava“ v detailu planety.
               <div className="relative flex">
                 <button
                   type="button"
-                  onClick={() => setRace(false)}
+                  onClick={() => { setRace(false); setJump(false); setJumpAction(null); }}
                   className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors"
                 >
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-                  Konec závodu
+                  {jump ? 'Zpět na soustavu' : 'Konec závodu'}
                 </button>
               </div>
             ) : (
               <p className="relative text-xs font-bold uppercase tracking-widest text-[#9aa6d1] text-center">Celá soustava</p>
             )}
-            <h2 className={`relative font-bold text-center ${race ? 'text-2xl mt-2' : 'text-3xl mt-1'}`}>{race ? 'Závod planet' : 'Sluneční soustava'}</h2>
+            <h2 className={`relative font-bold text-center ${race || jump ? 'text-2xl mt-2' : 'text-3xl mt-1'}`}>{jump ? 'Skákání na planetách' : race ? 'Závod planet' : 'Sluneční soustava'}</h2>
             {/* Jako na plakátu: obrovské Slunce vlevo (vidět jen okraj se září), planety za ním v řadě
                 a ve velikostech blíž skutečnosti. Řada se v úzkém panelu poměrně zmenší. */}
             {/* Během závodu je řada planet v panelu jako výsledková tabulka – hlavička se zmenší, ať se vše vejde bez rolování. */}
-            {race ? null : (
+            {race || jump ? null : (
             <div className="relative mt-4 -mx-5 h-32">
               <button
                 type="button"
@@ -740,7 +771,57 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             )}
           </div>
           <div className="p-5 flex flex-col gap-3">
-            {race ? (
+            {jump ? (
+              <>
+                <div className="flex items-start gap-3">
+                  <p className="text-base leading-relaxed flex-1 text-[#4e5871]">{JUMP_TEXT}</p>
+                  <ReadButton text={JUMP_TEXT} iconOnly />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[#56628a] mb-2">Porovnej Zemi s… (vyber dvě)</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {JUMP_CHOICES.map((id) => {
+                      const on = jumpBodies.includes(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => { setJumpAction(null); setJumpBodies((b) => (on ? (b.length > 1 ? b.filter((x) => x !== id) : b) : [...b.slice(-1), id])); }}
+                          aria-pressed={on}
+                          className="flex flex-col items-center gap-1 rounded-2xl py-2 transition-colors"
+                          style={{ background: on ? '#fde9c6' : '#f4f6fb' }}
+                        >
+                          <img src={thumbs[id as SolarBodyId] ?? planetIcon(id as PlanetKey)} alt="" className="w-9 h-9 object-contain" />
+                          <span className="text-xs font-bold" style={{ color: BODY_COLOR[id as SolarBodyId] }}>{bodyName(id as SolarBodyId)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-[#eef1f8] p-3">
+                  <label className="flex items-center justify-between gap-3 text-sm font-bold text-[#0f1d4d]">
+                    <span>Kolik vážíš na Zemi?</span>
+                    <span className="tabular-nums">{weight} kg</span>
+                  </label>
+                  <input type="range" min={15} max={60} value={weight} onChange={(e) => setWeight(Number(e.target.value))} className="w-full mt-2 accent-[#f0a12c]" aria-label="Kolik vážíš na Zemi" />
+                  <div className="flex flex-col gap-1.5 mt-2">
+                    {(['zeme', ...jumpBodies] as JumpBody[]).map((id) => (
+                      <div key={id} className="flex items-center gap-3 rounded-xl bg-white px-3 py-1.5">
+                        <img src={thumbs[id as SolarBodyId] ?? planetIcon(id as PlanetKey)} alt="" className="w-7 h-7 object-contain flex-shrink-0" />
+                        <span className="flex-1 min-w-0 font-bold" style={{ color: BODY_COLOR[id as SolarBodyId] }}>{bodyName(id as SolarBodyId)}</span>
+                        <span className="text-right leading-tight">
+                          <span className="block font-bold tabular-nums text-[#0f1d4d]">váha ukáže {formatKg(weight * PULL[id])}</span>
+                          <span className="block text-xs text-[#56628a]">vyskočíš {formatMeters(jumpHeight(id))}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-[#56628a] mt-2 leading-snug">Ty se nezměníš. Jen tě {jumpBodies.some((b) => PULL[b] > 1.2) ? 'velká planeta přitahuje víc a malé těleso méně' : 'menší těleso přitahuje méně'} – proto by váha ukázala jiné číslo.</p>
+                </div>
+                {jumpBodies.some((b) => GAS.includes(b)) ? <p className="text-xs text-[#56628a] leading-snug">{bodyName(jumpBodies.find((b) => GAS.includes(b)) as SolarBodyId)} nemá pevný povrch, na který by se dalo stoupnout. Jako bychom stáli na jeho mracích.</p> : null}
+                <p className="text-xs text-[#9aa6d1]">{jumpBodies.map((b) => `${bodyName(b as SolarBodyId)} tě přitahuje ${TIMES(b)}.`).join(' ')}</p>
+              </>
+            ) : race ? (
               <>
                 <div className="flex items-start gap-3">
                   <p className="text-base leading-relaxed flex-1 text-[#4e5871]">{RACE_TEXT}</p>
@@ -823,6 +904,20 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                   <span className="absolute left-3 bottom-2.5">
                     <span className="block text-xl font-bold leading-tight">Závod planet</span>
                     <span className="block text-xs opacity-90">Která oběhne Slunce nejrychleji? →</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setRace(false); setJump(true); }}
+                  className="relative w-full overflow-hidden rounded-2xl h-24 p-3 mt-2 text-left text-white hover:-translate-y-0.5 transition-transform"
+                  style={{ background: 'linear-gradient(90deg, #f0a12c 0%, #b8461a 100%)' }}
+                >
+                  {/* Postavička ve výskoku nad Měsícem. */}
+                  <span className="absolute right-4 top-2 text-4xl" aria-hidden="true">🦘</span>
+                  <img src={thumbs.mesic ?? ''} alt="" className="absolute right-12 bottom-1 w-10 h-10 object-contain" style={{ display: thumbs.mesic ? 'block' : 'none' }} />
+                  <span className="absolute left-3 bottom-2.5">
+                    <span className="block text-xl font-bold leading-tight">Skákání na planetách</span>
+                    <span className="block text-xs opacity-90">Kde vyskočíš nejvýš a kolik tam vážíš? →</span>
                   </span>
                 </button>
               </div>
@@ -927,6 +1022,7 @@ const ECLIPSE_INFO: Record<'slunce' | 'mesic', { name: string; note: string }> =
 const ECLIPSE_WHY = 'Dráha Měsíce je trochu nakloněná. Při novu a úplňku proto Měsíc většinou projde kousek nad stínem, nebo pod ním. Zatmění nastane, jen když se trefí přesně.';
 /** Měsíc má poloměr 1 737 km, Země 6 371 km → Měsíc je asi 0,27 Země (Země je 3,7× širší). */
 const MOON_EARTH_RATIO = 1737 / 6371;
+const JUMP_TEXT = 'Na každé planetě vyskočíš jinak vysoko. Čím víc tě planeta přitahuje, tím níž vyskočíš a tím rychleji padá míček. Na Měsíci skáčeš jako klokan, na Jupiteru se skoro neodlepíš od země.';
 const RACE_TEXT = 'Všechny planety vyrazily ze startovní čáry najednou. Čím dál je planeta od Slunce, tím delší cestu má a tím déle jí trvá jeden oběh. Jeden oběh kolem Slunce je pro planetu jeden její rok.';
 const DAY_NIGHT_TEXT = 'Země se pořád otáčí kolem své osy. Jedna celá otočka trvá jeden den. Polovina Země, která je zrovna otočená ke Slunci, má den. Druhá polovina je ve stínu a má noc.';
 const DAY_PART_TEXT: Record<DayPart, string> = { den: 'U nás je den', noc: 'U nás je noc', rano: 'U nás vychází Slunce', vecer: 'U nás zapadá Slunce' };
