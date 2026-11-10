@@ -18,6 +18,7 @@ import {
   type Eclipse,
 } from './space-engine';
 import { SolarScene3D, yearsPerSecond, type DayPart, type SolarBodyId, type SolarStyle } from './solar-3d';
+import { MoonBirth } from './MoonBirth';
 import { JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
 
 /**
@@ -1023,6 +1024,7 @@ const ECLIPSE_WHY = 'Dráha Měsíce je trochu nakloněná. Při novu a úplňku
 /** Měsíc má poloměr 1 737 km, Země 6 371 km → Měsíc je asi 0,27 Země (Země je 3,7× širší). */
 const MOON_EARTH_RATIO = 1737 / 6371;
 const JUMP_TEXT = 'Na každé planetě vyskočíš jinak vysoko. Čím víc tě planeta přitahuje, tím níž vyskočíš a tím rychleji padá míček. Na Měsíci skáčeš jako klokan, na Jupiteru se skoro neodlepíš od země.';
+const BIRTH_NOTE = 'Měsíc tu nebyl odjakživa. Vědci si myslí, že vznikl z kousků, které se rozletěly, když do mladé Země narazila menší planeta.';
 const RACE_TEXT = 'Všechny planety vyrazily ze startovní čáry najednou. Čím dál je planeta od Slunce, tím delší cestu má a tím déle jí trvá jeden oběh. Jeden oběh kolem Slunce je pro planetu jeden její rok.';
 const DAY_NIGHT_TEXT = 'Země se pořád otáčí kolem své osy. Jedna celá otočka trvá jeden den. Polovina Země, která je zrovna otočená ke Slunci, má den. Druhá polovina je ve stínu a má noc.';
 const DAY_PART_TEXT: Record<DayPart, string> = { den: 'U nás je den', noc: 'U nás je noc', rano: 'U nás vychází Slunce', vecer: 'U nás zapadá Slunce' };
@@ -1082,6 +1084,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   const [today, setToday] = useState<string | null>(null);
   // Zatmění: Měsíc se postaví do novu / úplňku a model ukáže stín.
   const [eclipse, setEclipse] = useState<Eclipse>(null);
+  // Jak vznikl Měsíc: animace přes celý pohled shora.
+  const [birth, setBirth] = useState(false);
   const eclipseRef = useRef<Eclipse>(null);
   eclipseRef.current = eclipse;
   const dayRef = useRef(day);
@@ -1113,8 +1117,9 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
 
   const idx = phaseIndex(day);
   const phase = MOON_PHASE_INFO[idx];
-  const jump = (d: number) => { setPlaying(false); setToday(null); setEclipse(null); setDay(d); };
+  const jump = (d: number) => { setPlaying(false); setToday(null); setEclipse(null); setBirth(false); setDay(d); };
   const showEclipse = (e: Exclude<Eclipse, null>) => {
+    setBirth(false);
     const d = e === 'slunce' ? 0 : SYNODIC / 2;
     setPlaying(false); setToday(null); dayRef.current = d; setDay(d); setEclipse(e);
   };
@@ -1162,6 +1167,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           onPointerLeave={() => !dragging.current && setGrab('none')}
           aria-label="Pohled shora: Slunce, Země a Měsíc na oběžné dráze. Měsícem jde táhnout po dráze."
         />
+        {birth ? <MoonBirth onClose={() => setBirth(false)} /> : null}
         <div className="group absolute top-3 right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
           <div className="flex items-center gap-2">
             <span className="text-sm md:text-base font-bold text-[#e7ecff]">Chyť Měsíc a táhni ho</span>
@@ -1231,7 +1237,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
             <button type="button" onClick={() => stepPhase(-1)} aria-label="Předchozí fáze" className="w-10 h-10 flex-shrink-0 rounded-full bg-white text-[#0f1d4d] flex items-center justify-center hover:scale-105 transition-transform">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             </button>
-            <h2 className="text-3xl font-bold text-center leading-tight">{eclipseInfo ? eclipseInfo.name : phase.name}</h2>
+            <h2 className="text-3xl font-bold text-center leading-tight">{birth ? 'Jak vznikl Měsíc' : eclipseInfo ? eclipseInfo.name : phase.name}</h2>
             <button type="button" onClick={() => stepPhase(1)} aria-label="Další fáze" className="w-10 h-10 flex-shrink-0 rounded-full bg-white text-[#0f1d4d] flex items-center justify-center hover:scale-105 transition-transform">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
@@ -1241,7 +1247,9 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
         <div className="px-5 pt-4 pb-6 flex flex-col gap-3">
           {/* Vždy na výšku dvou řádků – popis fáze se zalomí za tečkou, ať text pod ním neposkakuje. */}
           <p className="text-[15px] leading-snug text-[#4e5871] min-h-[2.75em]">
-            {eclipseInfo
+            {birth
+              ? BIRTH_NOTE
+              : eclipseInfo
               ? eclipseInfo.note
               : phase.note.split(/(?<=\.) (?=\p{Lu})/u).map((part, i) => <React.Fragment key={i}>{i > 0 ? <br /> : null}{part}</React.Fragment>)}
           </p>
@@ -1278,6 +1286,21 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
                   </span>
                 </button>
               ))}
+              <button
+                type="button"
+                aria-pressed={birth}
+                onClick={() => { setEclipse(null); setPlaying(false); setBirth((v) => !v); }}
+                className="col-span-2 relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                style={{ background: 'linear-gradient(135deg, #b8461a 0%, #2a1840 70%, #0b0f24 100%)', outline: birth ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
+              >
+                {/* Horká Země a malý Měsíc vedle ní. */}
+                <span className="absolute right-12 top-3 w-10 h-10 rounded-full" style={{ background: 'radial-gradient(circle at 35% 35%, #ffc478, #d66228 60%, #78281a)', boxShadow: '0 0 14px 4px rgba(255,140,60,.35)' }} />
+                <span className="absolute right-4 top-4 w-4 h-4 rounded-full" style={{ background: 'radial-gradient(circle at 35% 35%, #f2efe6, #8c8a84)' }} />
+                <span className="absolute left-3 bottom-2.5">
+                  <span className="block text-base font-bold leading-tight">Jak vznikl Měsíc</span>
+                  <span className="block text-xs opacity-90">{birth ? 'zpět na fáze ←' : 'krátká animace →'}</span>
+                </span>
+              </button>
             </div>
           </div>
           <div className="pt-1">
