@@ -261,7 +261,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         by = Object.fromEntries(pl.map((p) => [p.id, p]));
       }
       const vse = all && st.season === 'vse';
-      if (all) {
+      if (vse) {
         // Otočná mapa: kruh oblohy s jemným okrajem, ať mapa nepůsobí jako rozsypané čáry.
         const pole = by.polarka;
         const R = Math.max(...pl.filter((p) => (starLvl[p.id] ?? 0) >= 1).map((p) => Math.hypot(p.x - pole.x, p.y - pole.y))) + fs * 2.2;
@@ -277,15 +277,22 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         for (const [a, b] of cons.edges) {
           const pick = all && !vse && l === 2;
           if (vse) { ctx.strokeStyle = 'rgba(255,217,138,.62)'; ctx.lineWidth = 1.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); }
-          else line(by[a], by[b], pick ? 1 : l === 2 ? 0.9 : l === 1 ? 0.28 : 0.07, pick);
+          else if (all) { if (l === 0) continue; ctx.strokeStyle = l === 2 ? 'rgba(255,217,138,.95)' : 'rgba(255,217,138,.22)'; ctx.lineWidth = l === 2 ? 2.4 : 1.4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); }
+          else line(by[a], by[b], 0.9);
         }
       }
       if (st.view === 'vuz') polarkaGuide(true);
-      for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.55 : 0.2; drawStar(ctx, vse ? { ...p, r: p.r * 0.8 } : p, p.id === 'polarka' ? 1.5 : vse ? 0.6 : 1); }
+      for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.4 : all && !vse ? 0 : 0.2; drawStar(ctx, vse ? { ...p, r: p.r * 0.8 } : p, p.id === 'polarka' ? 1.5 : vse ? 0.6 : 1); }
       ctx.globalAlpha = 1;
       // Popisky bez překrývání: každý dostane místo, kde nezakryje jiný popisek.
       const boxes: Array<{ x0: number; x1: number; y0: number; y1: number }> = [];
       const overlap = (bx: { x0: number; x1: number; y0: number; y1: number }) => boxes.reduce((acc, o) => acc + Math.max(0, Math.min(bx.x1, o.x1) - Math.max(bx.x0, o.x0)) * Math.max(0, Math.min(bx.y1, o.y1) - Math.max(bx.y0, o.y0)), 0);
+      // Popisky ať nezakrývají ani hvězdy souhvězdí (a body uprostřed čar).
+      if (all) for (const cons of list) {
+        if (lvl(cons) === 0 && !vse) continue;
+        for (const st2 of cons.stars) { const p = by[st2.id]; boxes.push({ x0: p.x - 7, x1: p.x + 7, y0: p.y - 7, y1: p.y + 7 }); }
+        for (const [a, b] of cons.edges) for (const t of [0.25, 0.5, 0.75]) { const x = by[a].x + (by[b].x - by[a].x) * t, y = by[a].y + (by[b].y - by[a].y) * t; boxes.push({ x0: x - 4, x1: x + 4, y0: y - 4, y1: y + 4 }); }
+      }
       const place = (text: string, size: number, spots: Array<[number, number]>, color: string, force = true) => {
         const half = text.length * size * 0.29 + 3;
         let best: { x: number; y: number; o: number } | null = null;
@@ -310,7 +317,8 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         const x0 = Math.min(...ts.map((p) => p.x)), x1 = Math.max(...ts.map((p) => p.x));
         const top = Math.min(...ts.map((p) => p.y)), bottom = Math.max(...ts.map((p) => p.y));
         const cx = (x0 + x1) / 2, cy = (top + bottom) / 2;
-        const size = all ? (vse ? Math.max(11, fs - 4) : l === 2 ? fs + 3 : fs - 4) : fs + 4;
+        if (all && !vse && l === 1 && cons.id !== 'vuz') continue;
+        const size = all ? (vse ? Math.max(11, fs - 4) : l === 2 ? fs : Math.max(11, fs - 4)) : fs + 4;
         const half = cons.name.length * size * 0.29;
         const spots: Array<[number, number]> = all
           ? [[cx, top - 10], [cx, bottom + size + 8], [x1 + half + 10, cy + size / 3], [x0 - half - 10, cy + size / 3], [cx, cy + size / 3]]
@@ -319,8 +327,8 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         // Jména jasných hvězd: u jednoho souhvězdí vždy, na celé obloze jen u vybraného období.
         if (!all || (!vse && l === 2)) for (const id of cons.named ?? []) {
           if (id === 'polarka') continue;
-          const p = by[id], sz = fs - 2;
-          place(p.name, sz, [[p.x, p.y + p.r + fs + (all ? 2 : 6)], [p.x, p.y - p.r - 8]], '#dfe6ff', false);
+          const p = by[id], sz = all ? Math.max(11, fs - 4) : fs - 2;
+          place(p.name, sz, [[p.x, p.y + p.r + fs + (all ? 2 : 6)], [p.x, p.y - p.r - 8], [p.x + p.r + p.name.length * sz * 0.3 + 8, p.y + sz / 3], [p.x - p.r - p.name.length * sz * 0.3 - 8, p.y + sz / 3]], '#dfe6ff', false);
         }
       }
       return;
@@ -586,26 +594,6 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                     )),
                   ])}
                 </div>
-              </div>
-              <div className="pt-1">
-                <p className="text-xs font-bold text-[#56628a] mb-2">Vyzkoušej si</p>
-                <button
-                  type="button"
-                  onClick={openPicker}
-                  className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                  style={{ background: 'linear-gradient(90deg, #4a43e8 0%, #0b1236 100%)' }}
-                >
-                  {/* Malý Velký vůz s čísly jako ve hře. */}
-                  <svg viewBox="0 0 120 60" className="absolute right-2 top-2 w-28 h-14" aria-hidden="true">
-                    <polyline points="8,48 30,34 50,32 70,34 82,44 104,38 104,16 70,34" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinejoin="round" />
-                    {[[8, 48], [30, 34], [50, 32], [70, 34], [82, 44], [104, 38], [104, 16]].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="3" fill="#fff" />)}
-                    <circle cx="16" cy="40" r="6" fill="#f0a12c" /><text x="16" y="43" textAnchor="middle" fontSize="8" fontWeight="700" fill="#2a1700">1</text>
-                  </svg>
-                  <span className="absolute left-3 bottom-2.5">
-                    <span className="block text-xl font-bold leading-tight">Spoj souhvězdí</span>
-                    <span className="block text-xs opacity-90">Spojuj hvězdy podle čísel →</span>
-                  </span>
-                </button>
               </div>
             </>
           )}
