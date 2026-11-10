@@ -395,7 +395,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
           ) : (
             <>
               <div>
-                <p className="text-sm font-bold text-[#56628a] mb-2">Roční období</p>
+                <p className="text-xs font-bold text-[#56628a] mb-2">Roční období</p>
                 <div className="flex flex-wrap gap-1.5">
                   {(['vse', 'jaro', 'leto', 'podzim', 'zima'] as SeasonFilter[]).map((f) => (
                     <button
@@ -430,13 +430,13 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                     {season === 'vse' ? 'Celá obloha – všechna najednou' : `Obloha ${seasonOf(season).on} – na mapě`}
                   </button>
                   {(season === 'vse' ? (['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as Season[]) : [season, 'cely-rok' as Season]).map((sid) => [
-                    <p key={`h-${sid}`} className="col-span-2 text-sm font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
+                    <p key={`h-${sid}`} className="col-span-2 text-xs font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
                     ...CONSTELLATIONS.filter((cons) => cons.season === sid).map((cons) => (
                     <button
                       key={cons.id}
                       type="button"
                       onClick={() => setView(cons.id)}
-                      className="flex items-center gap-2 rounded-2xl px-2 py-2 text-left text-sm font-bold transition-colors min-w-0"
+                      className="flex items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs font-bold transition-colors min-w-0"
                       style={{ background: view === cons.id ? '#fde9c6' : '#f4f6fb' }}
                     >
                       <ConstellationIcon c={cons} />
