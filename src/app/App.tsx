@@ -245,8 +245,10 @@ export default function App() {
       ...Object.fromEntries(
         PRVOUKA_LANDING_GAMES.map((game) => [
           game.id,
-          game.model === 'hvezdy'
-            ? () => import('./prvouka/PrvoukaStars').then((module) => ({ default: module.PrvoukaStars }))
+          game.model === 'hvezdy' || game.model === 'souhvezdi'
+            ? () => import('./prvouka/PrvoukaStars').then((module) => ({
+              default: (props: { settings?: Record<string, any> }) => <module.PrvoukaStars variant={game.model === 'souhvezdi' ? 'hra' : 'model'} {...props} />,
+            }))
             : game.model
             ? () => import('./prvouka/PrvoukaSpaceModel').then((module) => ({
               default: (props: { settings?: Record<string, any> }) => <module.PrvoukaSpaceModel model={game.model as 'soustava' | 'mesic'} {...props} />,

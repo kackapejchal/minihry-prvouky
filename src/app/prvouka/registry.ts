@@ -11,7 +11,7 @@ const ILLUSTRATIONS = 'https://qypiuvqglsmxdsnyazih.supabase.co/storage/v1/objec
 export type PrvoukaGameType =
   | 'prvoukaZvirata' | 'prvoukaOvoce' | 'prvoukaHodiny' | 'prvoukaRokDen' | 'prvoukaBezpecnost'
   | 'prvoukaVesmir' | 'prvoukaMesic' | 'prvoukaPodminky' | 'prvoukaSymboly' | 'prvoukaZeme'
-  | 'prvoukaModelSoustava' | 'prvoukaModelMesic' | 'prvoukaHvezdy';
+  | 'prvoukaModelSoustava' | 'prvoukaModelMesic' | 'prvoukaHvezdy' | 'prvoukaSouhvezdi';
 
 export interface PrvoukaLandingGame {
   id: PrvoukaGameType;
@@ -36,7 +36,7 @@ export interface PrvoukaLandingGame {
   /** Ročníky, které konfigurátor nabídne (výchozí 1. a 2.). */
   grades?: PrvoukaGrade[];
   /** Interaktivní model místo kvízu (Sluneční soustava, fáze Měsíce). */
-  model?: 'soustava' | 'mesic' | 'hvezdy';
+  model?: 'soustava' | 'mesic' | 'hvezdy' | 'souhvezdi';
 }
 
 const TRETAK = `${import.meta.env.BASE_URL}prvouka/tretak/karty`;
@@ -130,15 +130,28 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
   {
     id: 'prvoukaHvezdy',
     dataId: 'hvezdy',
+    name: 'Model hvězdné oblohy',
+    description: 'souhvězdí na otočné mapě po ročních obdobích.',
+    longDescription: 'Model noční oblohy k promítnutí: 26 souhvězdí s popisem a otočná mapa, která ukáže, co je vidět na jaře, v létě, na podzim a v zimě. Uprostřed Polárka, kolem ní souhvězdí, která vidíme po celý rok.',
+    icon: '🌌',
+    bg: '#D0DBFF',
+    playBg: '#05081a',
+    image: `${import.meta.env.BASE_URL}prvouka/obloha-karta.svg`,
+    grades: [3],
+    model: 'hvezdy',
+  },
+  {
+    id: 'prvoukaSouhvezdi',
+    dataId: 'souhvezdi',
     name: 'Souhvězdí',
-    description: 'spoj hvězdy Velkého vozu a najdi Polárku.',
-    longDescription: 'Model noční oblohy s 26 souhvězdími a otočnou mapou, která ukáže, co je vidět na jaře, v létě, na podzim a v zimě. V části Vyzkoušej si děti spojují hvězdy vybraných souhvězdí podle čísel a podle Velkého vozu najdou Polárku.',
+    description: 'spoj hvězdy podle čísel a najdi Polárku.',
+    longDescription: 'Děti si vyberou souhvězdí nebo celé roční období a spojují hvězdy podle čísel. Po Velkém voze podle jeho zadních hvězd najdou Polárku, která ukazuje sever.',
     icon: '✨',
     bg: '#D0DBFF',
     playBg: '#05081a',
     image: `${import.meta.env.BASE_URL}prvouka/hvezdy-karta.svg`,
     grades: [3],
-    model: 'hvezdy',
+    model: 'souhvezdi',
   },
   {
     id: 'prvoukaVesmir',
@@ -216,7 +229,7 @@ export const PRVOUKA_GAME_GROUPS: Array<{ title: string; games: PrvoukaGameType[
   { title: 'Poznávám přírodu', games: ['prvoukaZvirata', 'prvoukaOvoce'] },
   { title: 'Orientace v čase', games: ['prvoukaHodiny', 'prvoukaRokDen'] },
   { title: 'Bezpečí a zdraví', games: ['prvoukaBezpecnost'] },
-  { title: '3. ročník: Vesmír a Země', games: ['prvoukaModelSoustava', 'prvoukaModelMesic', 'prvoukaHvezdy', 'prvoukaVesmir', 'prvoukaMesic', 'prvoukaPodminky'] },
+  { title: '3. ročník: Vesmír a Země', games: ['prvoukaModelSoustava', 'prvoukaModelMesic', 'prvoukaHvezdy', 'prvoukaVesmir', 'prvoukaMesic', 'prvoukaSouhvezdi', 'prvoukaPodminky'] },
   { title: '3. ročník: Naše republika', games: ['prvoukaSymboly', 'prvoukaZeme'] },
 ];
 
@@ -247,17 +260,21 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
       labels: { name: 'Popisky planet', type: 'boolean' as const, defaultValue: true, description: 'Jména planet u modelu' },
     };
   }
-  if (game.model === 'hvezdy') {
+  if (game.model === 'hvezdy' || game.model === 'souhvezdi') {
     return {
-      mode: {
-        name: 'Začít v režimu',
+      season: {
+        name: game.model === 'hvezdy' ? 'Obloha na začátku' : 'Předvybraná souhvězdí',
         type: 'select' as const,
-        defaultValue: 'prohlizet',
+        defaultValue: 'vse',
         options: [
-          { value: 'prohlizet', label: 'Prohlížet oblohu' },
-          { value: 'hra', label: 'Hra Spoj souhvězdí' },
+          { value: 'vse', label: game.model === 'hvezdy' ? 'Celá obloha' : 'Velký vůz, Kasiopeja, Orion' },
+          { value: 'cely-rok', label: 'Po celý rok (u Polárky)' },
+          { value: 'jaro', label: 'Jaro' },
+          { value: 'leto', label: 'Léto' },
+          { value: 'podzim', label: 'Podzim' },
+          { value: 'zima', label: 'Zima' },
         ],
-        description: 'Hra jde spustit i z oblohy (Vyzkoušej si)',
+        description: game.model === 'hvezdy' ? 'Období jde přepnout i během promítání' : 'Děti si výběr můžou ještě změnit',
       },
     };
   }

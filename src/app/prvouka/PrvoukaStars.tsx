@@ -99,13 +99,17 @@ const seasonRotation = (f: SeasonFilter) => (f === 'vse' || f === 'cely-rok' ? 0
 
 const FAINT = (() => { const r = rng(5); return Array.from({ length: 260 }, () => ({ x: r(), y: r(), s: 0.4 + r() * 1.1, a: 0.2 + r() * 0.5, tw: r() * 6.28 })); })();
 
-export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
+/** model = Model hvězdné oblohy (prohlížení + zkratka do hry), hra = samostatná hra Souhvězdí (výběr a spojovačka). */
+export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Record<string, any>; variant?: 'model' | 'hra' }) {
+  const isGame = variant === 'hra';
+  const startSeason: SeasonFilter = ['cely-rok', 'jaro', 'leto', 'podzim', 'zima'].includes(settings?.season) ? settings!.season : 'vse';
+  const pickFor = (f: SeasonFilter) => (f === 'vse' ? DEFAULT_PICK : CONSTELLATIONS.filter((x) => x.season === f).map((x) => x.id));
   const still = useMemo(prefersReducedMotion, []);
-  const [mode, setMode] = useState<Mode>(settings?.mode === 'hra' ? 'hra' : 'prohlizet');
-  const [picked, setPicked] = useState<string[]>(DEFAULT_PICK);
+  const [mode, setMode] = useState<Mode>(isGame ? 'vyber' : 'prohlizet');
+  const [picked, setPicked] = useState<string[]>(() => pickFor(startSeason));
   const [rounds, setRounds] = useState<Round[]>(() => buildRounds(DEFAULT_PICK));
   const [view, setView] = useState<SceneId>('all');
-  const [season, setSeason] = useState<SeasonFilter>('vse');
+  const [season, setSeason] = useState<SeasonFilter>(isGame ? 'vse' : startSeason);
   const rot = useRef(0);
   const zoom = useRef({ z: 1, x: 0, y: 0 });
   const lastT = useRef(0);
@@ -143,7 +147,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   };
   const restart = () => { setCleanRounds(0); setFinished(false); resetRound(0); };
   const openPicker = () => {
-    setPicked(season === 'vse' ? DEFAULT_PICK : CONSTELLATIONS.filter((x) => x.season === season).map((x) => x.id));
+    setPicked(pickFor(season));
     setMode('vyber');
   };
   const startGame = () => { setRounds(buildRounds(picked)); setCleanRounds(0); setFinished(false); resetRound(0); setMode('hra'); };
@@ -373,15 +377,15 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
       <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto">
         <div className="relative flex-shrink-0 px-5 pt-5 pb-5 text-white" style={{ background: 'linear-gradient(180deg, #121c55 0%, #0b1236 100%)' }}>
           {/* Ve hře a ve výběru je „zpět“ nahoře, stejně jako u Závodu planet ve Sluneční soustavě. */}
-          {mode !== 'prohlizet' ? (
+          {mode === 'hra' || (mode === 'vyber' && !isGame) ? (
             <div className="flex">
               <button
                 type="button"
-                onClick={() => setMode('prohlizet')}
+                onClick={() => setMode(isGame ? 'vyber' : 'prohlizet')}
                 className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-                {mode === 'hra' ? 'Konec hry' : 'Zpět na oblohu'}
+                {mode === 'hra' ? (isGame ? 'Jiná souhvězdí' : 'Konec hry') : 'Zpět na oblohu'}
               </button>
             </div>
           ) : null}
@@ -430,13 +434,13 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                   >
                     {round + 1 < rounds.length ? 'Další kolo →' : 'Hotovo'}
                   </button>
-                  <button
+                  {isGame ? null : <button
                     type="button"
                     onClick={() => showOnSky(r.type === 'polarka' ? 'vuz' : c!.id)}
                     className="self-start h-11 px-5 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] font-bold text-[#4e5871] transition-colors"
                   >
                     ✨ Prohlédnout na obloze
-                  </button>
+                  </button>}
                 </>
               ) : (
                 <>
