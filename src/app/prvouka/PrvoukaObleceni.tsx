@@ -4,7 +4,7 @@ import { PrvoukaFeedbackOverlay, PrvoukaProgress } from './PrvoukaKit';
 
 /**
  * Oblékni se podle počasí (Orientace v čase) – šatník jako v oblékačkách.
- * Uprostřed Sam, dole šatník po částech těla. Věc ze stejné části se vymění (svetr nahradí tričko…).
+ * Uprostřed Sam, dole šatník po částech těla. Věc ze stejné části se vymění (mikina nahradí tričko…).
  * Venku je nějaké počasí; až je dítě hotové, klikne „Jdeme ven!“ a hra řekne, jestli je Sam oblečený
  * dobře – nebo vlídně, co ještě změnit. Volná hra (bez počasí) jde zapnout v nastavení.
  *
@@ -26,8 +26,7 @@ const ITEMS: Item[] = [
   { id: 'sala', name: 'Šála', slot: 'krk', thumb: 'sala', pieces: [{ src: 'sala', box: [44, 152, 136, 246], z: 8 }] },
   { id: 'triko', name: 'Pruhované tričko', slot: 'vrsek', thumb: 'triko', pieces: [{ src: 'triko', box: [24, 150, 156, 250], z: 4 }] },
   { id: 'mikina', name: 'Mikina', slot: 'vrsek', thumb: 'mikina', pieces: [{ src: 'mikina', box: [14, 139, 172, 260], z: 4 }] },
-  { id: 'svetr', name: 'Svetr', slot: 'vrsek', thumb: 'svetr', pieces: [{ src: 'svetr', box: [17, 137, 167, 255], z: 4 }] },
-  { id: 'bunda', name: 'Bunda', slot: 'bunda', thumb: 'bunda', pieces: [{ src: 'bunda', box: [11, 135, 173, 257], z: 6 }] },
+  { id: 'bunda', name: 'Bunda se svetrem', slot: 'bunda', thumb: 'bunda', pieces: [{ src: 'svetr', box: [17, 137, 167, 255], z: 5 }, { src: 'bunda', box: [11, 135, 173, 257], z: 6 }] },
   { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'zimni-bunda', pieces: [{ src: 'zimni-bunda', box: [6, 117, 181, 272], z: 6 }] },
   { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'dziny', pieces: [{ src: 'dziny', box: [30, 244, 156, 345], z: 2 }] },
   { id: 'kalhoty', name: 'Kalhoty', slot: 'dolu', thumb: 'kalhoty', pieces: [{ src: 'kalhoty', box: [30, 245, 156, 344], z: 2 }] },
@@ -52,7 +51,7 @@ type Outfit = Partial<Record<Slot, string>>;
 type WeatherId = 'prsi' | 'snezi' | 'horko' | 'fouka';
 interface Weather { id: WeatherId; label: string; sky: string; temp: string; ask: string; bg: string; done: string; check: (o: Outfit) => string | null }
 
-const warmTop = (o: Outfit) => o.vrsek === 'mikina' || o.vrsek === 'svetr' || Boolean(o.bunda);
+const warmTop = (o: Outfit) => o.vrsek === 'mikina' || Boolean(o.bunda);
 const WEATHER: Record<WeatherId, Weather> = {
   snezi: {
     id: 'snezi', label: '❄️ Sněží', sky: '🌨️', temp: '−5 °C', bg: '#e6eef8', ask: 'Venku sněží a mrzne. Obleč Sama ven!', done: 'Sam je teple oblečený a může stavět sněhuláka.',
@@ -70,15 +69,15 @@ const WEATHER: Record<WeatherId, Weather> = {
       !o.destnik ? 'Když prší, Sam by bez deštníku zmokl.'
       : o.boty !== 'holinky' ? 'Do kaluží se hodí holínky, v jiných botách by měl Sam mokré nohy.'
       : !o.dolu ? 'V kraťasech by Samovi při 12 °C byla zima.'
-      : !warmTop(o) ? 'Při 12 °C je v tričku zima. Dej Samovi mikinu, svetr nebo bundu.'
-      : o.bunda === 'zimni-bunda' ? 'Zimní bunda je na déšť moc teplá. Stačí obyčejná bunda.'
+      : !warmTop(o) ? 'Při 12 °C je v tričku zima. Dej Samovi mikinu nebo bundu.'
+      : o.bunda === 'zimni-bunda' ? 'Zimní bunda je na déšť moc teplá. Stačí bunda se svetrem.'
       : null,
   },
   horko: {
     id: 'horko', label: '☀️ Horko', sky: '☀️', temp: '30 °C', bg: '#fdf0c8', ask: 'Je léto a pořádné horko. Obleč Sama ven!', done: 'Samovi je příjemně. A nezapomeň pít!',
     check: (o) =>
       o.bunda ? 'V bundě by Samovi bylo v horku strašné horko.'
-      : o.vrsek === 'mikina' || o.vrsek === 'svetr' ? 'Mikina nebo svetr jsou na léto moc teplé. Stačí tričko.'
+      : o.vrsek === 'mikina' ? 'Mikina je na léto moc teplá. Stačí tričko.'
       : o.dolu ? 'V dlouhých kalhotách je v horku vedro. Kraťasy jsou lepší.'
       : o.hlava ? 'Zimní čepice v létě nepatří.'
       : o.krk ? 'Šála v horku nepatří, zahřívá.'
@@ -91,7 +90,7 @@ const WEATHER: Record<WeatherId, Weather> = {
     check: (o) =>
       o.destnik ? 'V silném větru by se deštník obrátil naruby.'
       : !o.dolu ? 'Při 10 °C a ve větru by v kraťasech byla zima.'
-      : !warmTop(o) ? 'Ve větru je v tričku zima. Dej Samovi mikinu, svetr nebo bundu.'
+      : !warmTop(o) ? 'Ve větru je v tričku zima. Dej Samovi mikinu nebo bundu.'
       : !o.boty ? 'V sandálech by byla zima na nohy. Vyber pevné boty.'
       : o.bunda === 'zimni-bunda' ? 'Zimní bunda je na podzim moc teplá.'
       : null,
