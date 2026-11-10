@@ -811,10 +811,10 @@ function ConsTile({ c, on, hot = false, check = false, onClick, onHover }: { c: 
  * Obrázek je zrcadlově otočený (Hevelius kreslil jako na globu zvenku) a převedený na světlou linku.
  * Dvě kotvy: pixel hvězdy v obrázku → stejná hvězda v modelu; podle nich se obrázek posune, otočí a zvětší.
  */
-// Postavy ze starého atlasu (Hevelius 1690), zrcadlově otočené, jak je vidíme na obloze.
+// Postavy ze starého atlasu Urania's Mirror (Sidney Hall, 1824), kreslené tak, jak je vidíme na obloze.
 // Obrázek se umístí podle několika hvězd najednou (nejlepší shoda), ať sedí trup i křídla.
 const FIGURES: Record<string, { src: string; anchors: Array<[string, number, number]> }> = {
-  labut: { src: 'labut.png', anchors: [['albireo', 511, 496], ['albireo', 511, 496], ['albireo', 511, 496], ['deneb', 38, 345], ['sadr', 214, 327], ['deneb', 38, 345], ['gienah', 251, 490], ['cyg-delta', 335, 172]] },
+  labut: { src: 'labut.png', anchors: [['deneb', 310, 327], ['sadr', 370, 413], ['gienah', 270, 520], ['albireo', 557, 630], ['cyg-delta', 490, 325]] },
 };
 const figImg: Record<string, HTMLImageElement> = {};
 function drawFigure(ctx: CanvasRenderingContext2D, id: string, by: Record<string, { x: number; y: number }>) {
@@ -845,7 +845,7 @@ function drawFigure(ctx: CanvasRenderingContext2D, id: string, by: Record<string
     X = [a0, -b0, o1.q.x - a0 * o1.p.x + b0 * o1.p.y]; Y = [b0, a0, o1.q.y - b0 * o1.p.x - a0 * o1.p.y];
   }
   ctx.save();
-  ctx.globalAlpha = 0.42;
+  ctx.globalAlpha = 0.32;
   ctx.transform(X[0], Y[0], X[1], Y[1], X[2], Y[2]);
   ctx.drawImage(img, 0, 0);
   ctx.restore();
