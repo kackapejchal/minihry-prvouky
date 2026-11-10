@@ -295,22 +295,30 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
     const scene = sceneRef.current;
     if (!scene) return;
     let cancelled = false;
-    for (const id of ['zeme', ...jumpBodies] as JumpBody[]) {
+    // Snímek z 3D modelu občas vyjde prázdný (černý) – pak to po chvíli zkusí znovu,
+    // a když ani tak nevyjde, zůstane kreslený povrch (JumpStage má zálohu).
+    const grab = (id: JumpBody, tries: number) => {
       const url = scene.thumbnail(id as SolarBodyId, 900);
-      if (!url) continue;
+      if (!url) { if (tries > 0) window.setTimeout(() => !cancelled && grab(id, tries - 1), 400); return; }
       const img = new Image();
       img.onload = () => {
         if (cancelled) return;
         const c = document.createElement('canvas'); c.width = 900; c.height = 300;
         const S = img.width;
-        // U Saturnu a Uranu je koule kvůli prstencům v obrázku menší – výřez se zmenší stejně, ať jsou vidět jen mraky.
         const k = 1 / (RING_FACTOR[id as PlanetKey] ?? 1);
-        c.getContext('2d')!.drawImage(img, S * (0.5 - 0.22 * k), S * (0.5 - 0.08 * k), S * 0.44 * k, S * 0.147 * k, 0, 0, 900, 300);
+        const ctx2 = c.getContext('2d')!;
+        ctx2.drawImage(img, S * (0.5 - 0.22 * k), S * (0.5 - 0.08 * k), S * 0.44 * k, S * 0.147 * k, 0, 0, 900, 300);
+        const px = ctx2.getImageData(0, 0, 900, 300).data;
+        let sum = 0; for (let i = 0; i < px.length; i += 400) sum += px[i] + px[i + 1] + px[i + 2];
+        const bright = sum / (px.length / 400) / 3;
+        if (bright < 18) { if (tries > 0) window.setTimeout(() => !cancelled && grab(id, tries - 1), 400); return; }
         const data = c.toDataURL('image/jpeg', 0.85);
         setJumpSurfaces((m) => ({ ...m, [id]: data }));
       };
       img.src = url;
-    }
+    };
+    setJumpSurfaces({});
+    for (const id of ['zeme', ...jumpBodies] as JumpBody[]) grab(id, 5);
     return () => { cancelled = true; };
   }, [jump, jumpBodies, style]);
   useEffect(() => { if (jump) window.setTimeout(() => jumpPanelRef.current?.scrollIntoView({ block: 'start' }), 80); }, [jump]);
