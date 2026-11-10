@@ -56,7 +56,7 @@ const H_ITEMS: Item[] = [
   { id: 'holinky', name: 'Holínky', slot: 'boty', thumb: 'hanka/f-holinky', pieces: [{ src: 'hanka/f-holinky', box: [52, 390, 192, 492], z: 3 }] },
   { id: 'zimni-boty', name: 'Zimní boty', slot: 'boty', thumb: 'hanka/f-zimni-boty', pieces: [{ src: 'hanka/zimni-boty', box: [48, 394, 188, 486], z: 3 }] },
   { id: 'palcaky', name: 'Palčáky', slot: 'ruce', thumb: 'hanka/f-palcaky', pieces: [{ src: 'hanka/palcaky', box: [17, 299, 220, 371], z: 7 }] },
-  { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'hanka/f-destnik', pieces: [{ src: 'hanka/f-destnik', box: [176, 150, 296, 296], z: 10 }], boxFor: { sam: [150, 138, 262, 273] } },
+  { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'hanka/f-destnik', pieces: [{ src: 'hanka/f-destnik', box: [176, 150, 296, 296], z: 10 }], boxFor: { sam: [122, 186, 196, 284] } },
 ];
 type Who = 'sam' | 'hanka';
 /**
@@ -185,6 +185,8 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const taskSetting: 'oblekni' | 'hadej' | 'oboji' = settings.task === 'oblekni' || settings.task === 'hadej' ? settings.task : 'oboji';
   const kinds: Task[] = rounds.map((_, i) => (taskSetting === 'oboji' ? (i % 2 ? 'hadej' : 'oblekni') : taskSetting));
   const [who, setWho] = useState<Who>('sam');
+  /** poměr výška/šířka každého obrázku – kvůli schování nohavic do vysokých bot */
+  const [nat, setNat] = useState<Record<string, number>>({});
   // Všechny obrázky načíst hned na začátku, ať se oblečení neobjevuje po kouskách.
   useEffect(() => {
     const srcs = new Set<string>();
@@ -193,7 +195,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
       ['', '-dlouhe', '-bezbot', '-dlouhe-bezbot'].forEach((v) => srcs.add(`${c.base}${v}`));
       c.items.forEach((it) => { srcs.add(it.thumb); it.pieces.forEach((p) => srcs.add(p.src)); if (it.srcFor?.sam) srcs.add(it.srcFor.sam); });
     });
-    srcs.forEach((src) => { const im = new Image(); im.src = `${ART}/${src}.png`; });
+    srcs.forEach((src) => { const im = new Image(); im.onload = () => setNat((n) => ({ ...n, [src]: im.naturalHeight / im.naturalWidth })); im.src = `${ART}/${src}.png`; });
   }, []);
   const C = CHARS[who];
   const [ri, setRi] = useState(0);
@@ -248,6 +250,8 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const longPants = Boolean(outfit.dolu) && outfit.dolu !== 'kratasy';
   const baseSrc = (longPants ? (C.longPants.includes(outfit.dolu!) ? `${C.base}-${outfit.dolu}` : `${C.base}-dlouhe`) : C.base) + (noShoes ? '-bezbot' : '');
   const [bx0, by0, bx1, by1] = C.baseBox;
+  // Vysoké boty (holínky, zimní boty): nohavice se schovají do bot, ať nevykukují vedle nich.
+  const tuck = outfit.boty === 'holinky' || outfit.boty === 'zimni-boty' ? (who === 'sam' ? 326 : 412) : 0;
 
   return (
     <div className="w-full min-h-full md:h-[calc(100dvh-104px)] md:min-h-0 md:overflow-hidden flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4" style={{ background: '#e3eefc' }}>
@@ -269,9 +273,11 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
             <img src={`${ART}/${baseSrc}.png`} alt={C.kdo} className="absolute" style={{ left: `${(bx0 / C.w) * 100}%`, top: `${(by0 / C.h) * 100}%`, width: `${((bx1 - bx0) / C.w) * 100}%`, height: `${((by1 - by0) / C.h) * 100}%` }} draggable={false} />
             {worn.flatMap((it) => it.pieces.map((p, i) => {
               const [x0, y0, x1, y1] = (it.owner !== who && it.boxFor?.[who] && it.pieces.length === 1) ? it.boxFor[who]! : mapBox(p.box, it.slot, it.owner, who);
+              // Kalhoty z druhé postavy se natáhnou podle délky nohou (Hanka má delší nohy než Sam).
+              const stretchLegs = it.slot === 'dolu' && it.owner !== who && !it.boxFor?.[who];
               return (
                 <img key={it.id + i} src={`${ART}/${(it.owner !== who && it.srcFor?.[who]) || p.src}.png`} alt="" draggable={false} className="absolute"
-                  style={{ left: `${(x0 / C.w) * 100}%`, ...(it.slot === 'boty' ? { bottom: `${(1 - y1 / C.h) * 100}%` } : { top: `${(y0 / C.h) * 100}%` }), width: `${((x1 - x0) / C.w) * 100}%`, height: 'auto', zIndex: p.z, animation: 'oblIn .3s ease' }} />
+                  style={{ left: `${(x0 / C.w) * 100}%`, ...(it.slot === 'boty' ? { bottom: `${(1 - y1 / C.h) * 100}%` } : { top: `${(y0 / C.h) * 100}%` }), width: `${((x1 - x0) / C.w) * 100}%`, height: stretchLegs ? `${((y1 - y0) / C.h) * 100}%` : 'auto', zIndex: p.z, animation: 'oblIn .3s ease', ...(it.slot === 'dolu' && tuck && (stretchLegs || nat[p.src]) ? (() => { const h = stretchLegs ? y1 - y0 : (x1 - x0) * nat[p.src]; return { clipPath: `inset(0 0 ${Math.max(0, ((y0 + h - tuck) / h) * 100)}% 0)` }; })() : {}) }} />
               );
             }))}
           </div>
