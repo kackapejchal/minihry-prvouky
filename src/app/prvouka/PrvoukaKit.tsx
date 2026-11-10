@@ -129,8 +129,9 @@ export function PrvoukaFeedbackOverlay({ isCorrect, hint, info, onComplete }: { 
         {isCorrect && info ? (
           <>
             <div className="text-white mt-3" style={{ fontSize: 22 * s, fontWeight: 600, lineHeight: 1.35, maxWidth: 640 * s }}>{info}</div>
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 font-bold" style={{ color: '#2e7d32', fontSize: 18 * s }}>
-              Pokračuj – klepni nebo stiskni klávesu →
+            {/* Nenápadná poznámka pod textem, ne tlačítko. */}
+            <div className="mt-5 pt-3 text-white/75" style={{ fontSize: 15 * s, fontWeight: 600, borderTop: '1px solid rgba(255,255,255,.3)' }}>
+              Pokračuj klepnutím nebo libovolnou klávesou
             </div>
           </>
         ) : null}
