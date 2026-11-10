@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SPACE_PLANETS, SYNODIC, drawMoonPhase, drawPlanet, drawSun } from './space-engine';
+import { SPACE_PLANETS, SYNODIC, drawMoonPhase, drawPlanet, label } from './space-engine';
 
 /**
  * Proč není zatmění každý měsíc (Model fází Měsíce → zatmění → „Ukaž mi to“).
@@ -72,8 +72,14 @@ function draw(cv: HTMLCanvasElement, t: number): string {
   const orbitA = w * 0.27, orbitB = h * 0.07; // dráha Měsíce z boku (elipsa)
   const tiltPx = h * 0.13; // zvětšený náklon dráhy
 
-  // Slunce vlevo, napůl za okrajem
-  drawSun(ctx, -R * 1.2, cy, R * 3.2);
+  // Světlo ze Slunce zleva – stejně jako v pohledu shora v modelu fází Měsíce.
+  const fs = Math.round(Math.max(13, Math.min(w, h) / 34));
+  const lg = ctx.createLinearGradient(0, 0, w * 0.35, 0);
+  lg.addColorStop(0, 'rgba(255,200,90,.35)'); lg.addColorStop(1, 'rgba(255,200,90,0)');
+  ctx.fillStyle = lg; ctx.fillRect(0, 0, w * 0.35, h);
+  ctx.strokeStyle = 'rgba(255,210,120,.35)'; ctx.lineWidth = 2;
+  for (let i = 1; i <= 5; i++) { const y = (h * i) / 6; ctx.beginPath(); ctx.moveTo(12, y); ctx.lineTo(48, y); ctx.lineTo(42, y - 5); ctx.moveTo(48, y); ctx.lineTo(42, y + 5); ctx.stroke(); }
+  label(ctx, 'světlo ze Slunce', 80, h / 6 - 12, '#ffd98a', fs - 1);
   // Stín Země doprava (pás, který se zužuje)
   const sg = ctx.createLinearGradient(ex, 0, w, 0);
   sg.addColorStop(0, 'rgba(10,14,40,.95)'); sg.addColorStop(1, 'rgba(10,14,40,0)');
