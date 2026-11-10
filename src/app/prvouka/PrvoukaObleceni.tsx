@@ -221,7 +221,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   return (
     <div className="w-full min-h-full md:h-[calc(100dvh-104px)] md:min-h-0 md:overflow-hidden flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4" style={{ background: '#e3eefc' }}>
       <h2 className="text-xl md:text-2xl font-bold text-center flex-shrink-0" style={{ color: INK }}>{free ? `Obleč ${C.koho}, jak se ti líbí!` : W.ask(C)}</h2>
-      <div className="w-full max-w-6xl flex-1 min-h-0 grid gap-3 md:grid-cols-[minmax(240px,0.8fr)_minmax(420px,1.5fr)] items-stretch">
+      <div className="w-full max-w-6xl flex-1 min-h-0 grid gap-3 md:grid-cols-[minmax(260px,0.75fr)_minmax(480px,1.6fr)] items-stretch">
         {/* Postava a počasí */}
         <div className="relative rounded-3xl overflow-hidden flex flex-col items-center min-h-[420px] md:min-h-0" style={{ background: free ? '#eef3fb' : W.bg, border: `2px solid ${INK}22` }}>
           {!free ? (
@@ -231,7 +231,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
             </div>
           ) : null}
           <div className="flex-1 min-h-0 w-full flex items-center justify-center pt-14 pb-2">
-          <div className="relative h-full max-h-[440px]" style={{ aspectRatio: `${C.w} / ${C.h}` }}>
+          <div className="relative h-full max-h-[620px]" style={{ aspectRatio: `${C.w} / ${C.h}` }}>
             <img src={`${ART}/${baseSrc}.png`} alt={C.kdo} className="absolute" style={{ left: `${(bx0 / C.w) * 100}%`, top: `${(by0 / C.h) * 100}%`, width: `${((bx1 - bx0) / C.w) * 100}%`, height: `${((by1 - by0) / C.h) * 100}%` }} draggable={false} />
             {worn.flatMap((it) => it.pieces.map((p, i) => {
               const [x0, y0, x1, y1] = (it.owner !== who && it.boxFor?.[who] && it.pieces.length === 1) ? it.boxFor[who]! : mapBox(p.box, it.slot, it.owner, who);
@@ -270,10 +270,10 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
                   const on = outfit[it.slot] === it.id;
                   return (
                     <button key={it.id} type="button" onClick={() => toggle(it)} aria-pressed={on}
-                      className="flex flex-col items-center justify-end gap-0.5 rounded-xl bg-white w-[70px] h-[76px] p-1 transition-transform hover:-translate-y-0.5"
+                      className="flex flex-col items-center justify-end gap-0.5 rounded-xl bg-white w-[86px] h-[92px] xl:w-[100px] xl:h-[106px] p-1 transition-transform hover:-translate-y-0.5"
                       style={{ border: `2px solid ${on ? '#4f46e5' : '#d6def0'}`, boxShadow: on ? '0 0 0 3px #c7c4ff' : 'none' }}>
-                      <img src={`${ART}/${it.thumb}.png`} alt="" className="max-h-[44px] max-w-[60px] object-contain" draggable={false} />
-                      <span className="text-[10px] font-bold leading-tight text-center" style={{ color: INK }}>{it.name}</span>
+                      <img src={`${ART}/${it.thumb}.png`} alt="" className="max-h-[54px] max-w-[72px] xl:max-h-[64px] xl:max-w-[84px] object-contain" draggable={false} />
+                      <span className="text-[11px] xl:text-xs font-bold leading-tight text-center" style={{ color: INK }}>{it.name}</span>
                     </button>
                   );
                 })}
