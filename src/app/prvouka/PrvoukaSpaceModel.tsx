@@ -462,10 +462,6 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               surfaces={jumpSurfaces}
               onDone={() => setJumpAction(null)}
             />
-            {/* Stejný přepínač vzhledu jako v liště modelu – převezme i nastavení na začátku. */}
-            <div className="absolute right-4 bottom-4 z-10 rounded-2xl px-2 py-1" style={{ background: 'rgba(8,12,30,.7)', border: '1px solid rgba(255,255,255,.12)' }}>
-              <SpaceSegmented label="Vzhled" value={style} onChange={setStyle} options={[{ value: 'realny', label: 'Opravdový' }, { value: 'kresleny', label: 'Kreslený' }]} />
-            </div>
             <div className="absolute left-4 top-3 z-10">
               <button type="button" onClick={() => { setJump(false); setJumpAction(null); }} className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors">
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
