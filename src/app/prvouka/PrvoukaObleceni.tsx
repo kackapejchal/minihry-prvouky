@@ -46,7 +46,8 @@ const BASE: Partial<Record<Slot, string>> = { vrsek: 'žluté tričko', dolu: 'k
 const SHELVES: Array<{ title: string; slots: Slot[] }> = [
   { title: 'Na hlavu a krk', slots: ['hlava', 'krk'] },
   { title: 'Nahoru', slots: ['vrsek', 'bunda'] },
-  { title: 'Dolů a na nohy', slots: ['dolu', 'boty'] },
+  { title: 'Dolů', slots: ['dolu'] },
+  { title: 'Na nohy', slots: ['boty'] },
   { title: 'Na ruce a do ruky', slots: ['ruce', 'destnik'] },
 ];
 
