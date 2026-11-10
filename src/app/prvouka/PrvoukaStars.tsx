@@ -300,7 +300,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         ctx.beginPath(); ctx.arc(pole.x, pole.y, R * 0.5, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
       }
       // Postava souhvězdí ze starého atlasu (Hevelius 1690, volné dílo) – napasovaná na dvě hvězdy.
-      if (!all) drawFigure(ctx, st.view, by);
+      
       for (const cons of list) {
         const l = lvl(cons);
         for (const [a, b] of cons.edges) {
@@ -811,42 +811,4 @@ function ConsTile({ c, on, hot = false, check = false, onClick, onHover }: { c: 
  * Obrázek je zrcadlově otočený (Hevelius kreslil jako na globu zvenku) a převedený na světlou linku.
  * Dvě kotvy: pixel hvězdy v obrázku → stejná hvězda v modelu; podle nich se obrázek posune, otočí a zvětší.
  */
-// Postavy ze starého atlasu Urania's Mirror (Sidney Hall, 1824), kreslené tak, jak je vidíme na obloze.
-// Obrázek se umístí podle několika hvězd najednou (nejlepší shoda), ať sedí trup i křídla.
-const FIGURES: Record<string, { src: string; anchors: Array<[string, number, number]> }> = {
-  labut: { src: 'labut.png', anchors: [['deneb', 310, 327], ['sadr', 370, 413], ['gienah', 270, 520], ['albireo', 557, 630], ['cyg-delta', 490, 325]] },
-};
-const figImg: Record<string, HTMLImageElement> = {};
-function drawFigure(ctx: CanvasRenderingContext2D, id: string, by: Record<string, { x: number; y: number }>) {
-  const f = FIGURES[id];
-  if (!f) return;
-  let img = figImg[id];
-  if (!img) { img = new Image(); img.src = `${import.meta.env.BASE_URL}prvouka/souhvezdi/${f.src}`; figImg[id] = img; }
-  if (!img.complete || !img.naturalWidth) return;
-  const pts = f.anchors.filter((an) => by[an[0]]).map((an) => ({ p: { x: an[1], y: an[2] }, q: by[an[0]] }));
-  if (pts.length < 2) return;
-  // Afinní shoda (může se mírně natáhnout), ať krk dosáhne až na Albireo a křídla sednou na příčku.
-  const solve3 = (m: number[][], v: number[]) => {
-    const det = (A: number[][]) => A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) - A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0]) + A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
-    const D = det(m);
-    return [0, 1, 2].map((c) => det(m.map((row, r) => row.map((x, k) => (k === c ? v[r] : x)))) / D);
-  };
-  const M = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], vx = [0, 0, 0], vy = [0, 0, 0];
-  for (const o of pts) {
-    const r = [o.p.x, o.p.y, 1];
-    for (let u = 0; u < 3; u++) { for (let k = 0; k < 3; k++) M[u][k] += r[u] * r[k]; vx[u] += r[u] * o.q.x; vy[u] += r[u] * o.q.y; }
-  }
-  let X: number[], Y: number[];
-  if (pts.length >= 3) { X = solve3(M, vx); Y = solve3(M, vy); }
-  else {
-    const [o1, o2] = pts; const s0 = Math.hypot(o2.q.x - o1.q.x, o2.q.y - o1.q.y) / Math.hypot(o2.p.x - o1.p.x, o2.p.y - o1.p.y);
-    const rot = Math.atan2(o2.q.y - o1.q.y, o2.q.x - o1.q.x) - Math.atan2(o2.p.y - o1.p.y, o2.p.x - o1.p.x);
-    const a0 = s0 * Math.cos(rot), b0 = s0 * Math.sin(rot);
-    X = [a0, -b0, o1.q.x - a0 * o1.p.x + b0 * o1.p.y]; Y = [b0, a0, o1.q.y - b0 * o1.p.x - a0 * o1.p.y];
-  }
-  ctx.save();
-  ctx.globalAlpha = 0.32;
-  ctx.transform(X[0], Y[0], X[1], Y[1], X[2], Y[2]);
-  ctx.drawImage(img, 0, 0);
-  ctx.restore();
-}
+
