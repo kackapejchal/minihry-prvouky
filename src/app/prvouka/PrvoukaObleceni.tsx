@@ -169,11 +169,21 @@ function wardrobe(who: Who): Worn[] {
   return [...mine, ...theirs].sort((a, b) => order.indexOf(a.slot) - order.indexOf(b.slot));
 }
 const ALL: WeatherId[] = ['prsi', 'snezi', 'horko', 'fouka'];
+/** Opačný úkol: postava je už oblečená a dítě hádá, jaké je venku počasí. */
+const PRESET: Record<WeatherId, Record<Who, Outfit>> = {
+  snezi: { sam: { hlava: 'cepice', krk: 'sala', vrsek: 'zimni-bunda', dolu: 'zimni-kalhoty', boty: 'zimni-boty', ruce: 'palcaky' }, hanka: { hlava: 'cepice', krk: 'sala', vrsek: 'zimni-bunda', dolu: 'zimni-kalhoty', boty: 'zimni-boty', ruce: 'palcaky' } },
+  prsi: { sam: { vrsek: 'bunda', dolu: 'dziny', boty: 'holinky', destnik: 'destnik' }, hanka: { vrsek: 'plastenka', dolu: 'leginy', boty: 'holinky', destnik: 'destnik' } },
+  horko: { sam: {}, hanka: { vrsek: 'saty', boty: 'sandaly' } },
+  fouka: { sam: { vrsek: 'mikina', dolu: 'kalhoty', boty: 'boty' }, hanka: { vrsek: 'mikina', dolu: 'kalhoty', boty: 'boty' } },
+};
+type Task = 'oblekni' | 'hadej';
 
 export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, any> }) {
   const free = false; // jen podle počasí (volná hra se v nastavení nenabízí)
   const chosen: WeatherId[] = (Array.isArray(settings.weather) && settings.weather.length ? settings.weather : ALL).filter((x: string) => (ALL as string[]).includes(x));
   const rounds = useMemo(() => (chosen.length ? chosen : ALL), [chosen.join()]);
+  const taskSetting: 'oblekni' | 'hadej' | 'oboji' = settings.task === 'oblekni' || settings.task === 'hadej' ? settings.task : 'oboji';
+  const kinds: Task[] = rounds.map((_, i) => (taskSetting === 'oboji' ? (i % 2 ? 'hadej' : 'oblekni') : taskSetting));
   const [who, setWho] = useState<Who>('sam');
   // Všechny obrázky načíst hned na začátku, ať se oblečení neobjevuje po kouskách.
   useEffect(() => {
@@ -193,6 +203,24 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const [mistakes, setMistakes] = useState(0);
   const [clean, setClean] = useState(0);
   const W = WEATHER[rounds[ri] ?? 'prsi'];
+  const kind: Task = kinds[ri] ?? 'oblekni';
+  const guess = kind === 'hadej';
+  // Hádací kolo: postava (střídavě Sam a Hanka) je rovnou oblečená podle počasí.
+  useEffect(() => {
+    if (kinds[ri] !== 'hadej') return;
+    const w: Who = ri % 4 === 1 ? 'hanka' : 'sam';
+    setWho(w); setOutfit(PRESET[rounds[ri]][w]);
+  }, [ri]);
+  const pickWeather = (id: WeatherId) => {
+    if (feedback) return;
+    if (id === W.id) {
+      if (mistakes === 0) setClean((c) => c + 1);
+      setFeedback({ isCorrect: true, info: `Ano! ${W.label.replace(/^\S+\s/, '')} – ${W.temp}.` });
+    } else {
+      setMistakes((m) => m + 1);
+      setFeedback({ isCorrect: false, hint: WEATHER[id].check(norm(outfit, who), C) ?? 'Podívej se, co má na sobě.' });
+    }
+  };
 
   // Základní věc (tričko, kraťasy, sandály…) nejde „svléknout“ – kliknutí na ni jen vrátí základ.
   const toggle = (it: Item) => setOutfit((o) => ({ ...o, [it.slot]: o[it.slot] === it.id || WEARS[who][it.slot] === it.id ? undefined : it.id }));
@@ -223,11 +251,11 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
 
   return (
     <div className="w-full min-h-full md:h-[calc(100dvh-104px)] md:min-h-0 md:overflow-hidden flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4" style={{ background: '#e3eefc' }}>
-      <h2 className="text-xl md:text-2xl font-bold text-center flex-shrink-0" style={{ color: INK }}>{free ? `Obleč ${C.koho}, jak se ti líbí!` : W.ask(C)}</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-center flex-shrink-0" style={{ color: INK }}>{guess ? `${C.kdo} se oblékl${who === 'hanka' ? 'a' : ''} ven. Jaké je venku počasí?` : W.ask(C)}</h2>
       <div className="w-full max-w-6xl flex-1 min-h-0 grid gap-3 md:grid-cols-[minmax(260px,0.75fr)_minmax(480px,1.6fr)] items-stretch">
         {/* Postava a počasí */}
-        <div className="relative rounded-3xl overflow-hidden flex flex-col items-center min-h-[420px] md:min-h-0" style={{ background: free ? '#eef3fb' : W.bg, border: `2px solid ${INK}22` }}>
-          {!free ? (
+        <div className="relative rounded-3xl overflow-hidden flex flex-col items-center min-h-[420px] md:min-h-0" style={{ background: guess ? '#eef3fb' : W.bg, border: `2px solid ${INK}22` }}>
+          {!guess ? (
             <div className="absolute left-4 top-3 flex items-center gap-2 rounded-2xl bg-white/85 px-3 py-1.5" style={{ color: INK }}>
               <span className="text-3xl leading-none">{W.sky}</span>
               <span className="text-base md:text-lg font-bold">{W.temp}</span>
@@ -249,12 +277,24 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
           </div>
           </div>
           <div className="flex gap-2 pb-3 flex-shrink-0">
-            {!free ? (
+            {!guess ? (
               <button type="button" onClick={goOut} className="h-11 px-6 rounded-full text-base font-bold text-white shadow" style={{ background: '#4f46e5' }}>Jdeme ven! →</button>
             ) : null}
           </div>
         </div>
-        {/* Šatník */}
+        {guess ? (
+          <div className="grid grid-cols-2 gap-3 content-center">
+            {ALL.filter((id) => rounds.includes(id) || true).map((id) => (
+              <button key={id} type="button" onClick={() => pickWeather(id)}
+                className="rounded-3xl p-4 flex flex-col items-center justify-center gap-2 transition-transform hover:-translate-y-0.5"
+                style={{ background: WEATHER[id].bg, border: `3px solid ${INK}22`, minHeight: 'clamp(120px, 24vh, 220px)' }}>
+                <span className="leading-none" style={{ fontSize: 'clamp(40px, 8vh, 80px)' }}>{WEATHER[id].sky}</span>
+                <span className="text-lg md:text-xl font-bold" style={{ color: INK }}>{WEATHER[id].label.replace(/^\S+\s/, '')}</span>
+                <span className="text-sm font-bold" style={{ color: '#56628a' }}>{WEATHER[id].temp}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
         <div className="flex flex-col gap-2 min-h-0">
           <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
             <span className="text-sm font-bold" style={{ color: '#56628a' }}>Koho oblékáš?</span>
@@ -288,6 +328,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
           ))}
           </div>
         </div>
+        )}
       </div>
       <style>{'@keyframes oblIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}'}</style>
       {feedback ? <PrvoukaFeedbackOverlay isCorrect={feedback.isCorrect} hint={feedback.hint} info={feedback.info} onComplete={afterFeedback} /> : null}

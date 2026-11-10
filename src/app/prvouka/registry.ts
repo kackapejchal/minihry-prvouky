@@ -330,6 +330,17 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
         ],
         description: 'Každé počasí je jedna úloha',
       },
+      task: {
+        name: 'Jaké úlohy',
+        type: 'select' as const,
+        defaultValue: 'oboji',
+        options: [
+          { value: 'oboji', label: 'Střídavě: oblékni a hádej počasí' },
+          { value: 'oblekni', label: 'Oblékni podle počasí' },
+          { value: 'hadej', label: 'Hádej počasí podle oblečení' },
+        ],
+        description: 'U hádání je postava už oblečená a děti vybírají, jaké je venku počasí',
+      },
     };
   }
   // Model hvězdné oblohy nic nenastavuje – roční období se přepínají přímo v modelu.
