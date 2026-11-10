@@ -696,8 +696,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               <button
                 type="button"
                 onClick={() => { setCompare(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-[#0f1d4d] hover:-translate-y-0.5 transition-transform"
-                style={{ background: '#bfe4fb' }}
+                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                style={{ background: 'linear-gradient(90deg, #2a3fd6 0%, #5b72f0 55%, #b9c6ff 100%)' }}
               >
                 <span className="absolute right-5 top-1"><Kid x={0} y={0} size={40} inline /></span>
                 <span className="absolute left-3 bottom-2.5">
@@ -730,8 +730,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               <button
                 type="button"
                 onClick={() => { setCompare(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-[#0f1d4d] hover:-translate-y-0.5 transition-transform"
-                style={{ background: '#bfe4fb' }}
+                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                style={{ background: 'linear-gradient(90deg, #2a3fd6 0%, #5b72f0 55%, #b9c6ff 100%)' }}
               >
                 <span className="absolute right-5 top-1"><Kid x={0} y={0} size={40} inline /></span>
                 <span className="absolute left-3 bottom-2.5">
