@@ -19,6 +19,7 @@ import {
 } from './space-engine';
 import { SolarScene3D, yearsPerSecond, type DayPart, type SolarBodyId, type SolarStyle } from './solar-3d';
 import { MoonBirth } from './MoonBirth';
+import { TempStage, TEMPS, type TempBody } from './PlanetTemp';
 import { EarthBirth } from './EarthBirth';
 import { EclipseWhy } from './EclipseWhy';
 import { Kid, JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
@@ -277,6 +278,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [race, setRace] = useState(false);
   // Skákání na planetách: Země + dvě vybraná tělesa vedle sebe – skok, pád míčku a váha.
   const [jump, setJump] = useState(false);
+  // Jaká je tu teplota: teploměr Země vedle vybraného tělesa.
+  const [temp, setTemp] = useState(false);
   const [jumpBodies, setJumpBodies] = useState<JumpBody[]>(['mesic', 'jupiter']);
   const [weight, setWeight] = useState(30);
   const [jumpAction, setJumpAction] = useState<{ kind: 'skok' | 'micek'; t0: number } | null>(null);
@@ -407,6 +410,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   };
   const overview = () => {
     setJump(false);
+    setTemp(false);
     setDayNight(false);
     setCompare(false);
     setFocused(false);
@@ -468,6 +472,19 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             thumbs={compareThumbs}
             onClose={() => setCompare(false)}
           />
+        ) : null}
+        {temp && (selected as string) in TEMPS ? (
+          <div className="absolute inset-0 z-30 text-white" style={{ background: 'radial-gradient(circle at 50% 30%, #16205a 0%, #060a1c 80%)' }}>
+            {COMPARE_STARS.map((st, i) => <span key={i} className="absolute rounded-full bg-white pointer-events-none" style={{ left: `${st.x}%`, top: `${st.y}%`, width: st.s, height: st.s, opacity: st.o }} />)}
+            <TempStage body={selected as TempBody} names={Object.fromEntries((['zeme', 'mesic', ...SPACE_PLANETS.map((p) => p.id)] as SolarBodyId[]).map((id) => [id, bodyName(id)]))} thumbs={thumbs} />
+            <div className="absolute left-4 top-3 z-10">
+              <button type="button" onClick={() => setTemp(false)} className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors">
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+                Zpět
+              </button>
+            </div>
+            <p className="absolute left-0 right-0 bottom-6 px-8 text-center text-base md:text-xl font-bold leading-snug" style={{ textShadow: '0 2px 10px rgba(0,0,0,.8)' }}>{TEMPS[selected as TempBody].text}</p>
+          </div>
         ) : null}
         {jump ? (
           <div className="absolute inset-0 z-30 text-white" style={{ background: 'radial-gradient(circle at 50% 30%, #16205a 0%, #060a1c 80%)' }}>
@@ -704,7 +721,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               </button>
               <button
                 type="button"
-                onClick={() => { setCompare(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
+                onClick={() => { setCompare(false); setTemp(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(90deg, #2a3fd6 0%, #5b72f0 55%, #b9c6ff 100%)' }}
               >
@@ -712,6 +729,23 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 <span className="absolute left-3 bottom-2.5">
                   <span className="block text-xl font-bold leading-tight">Skoč si tady</span>
                   <span className="block text-xs opacity-90">Jak vysoko a kolik vážíš? →</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setJump(false); setCompare(false); setTemp(true); }}
+                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                style={{ background: 'linear-gradient(90deg, #e2573a 0%, #8a5ad6 55%, #4aa0e6 100%)' }}
+              >
+                {/* malý teploměr */}
+                <svg viewBox="0 0 24 60" className="absolute right-6 top-3 h-16" aria-hidden="true">
+                  <rect x="8" y="2" width="8" height="42" rx="4" fill="rgba(255,255,255,.25)" stroke="#fff" strokeWidth="2" />
+                  <rect x="10" y="18" width="4" height="28" rx="2" fill="#ffde00" />
+                  <circle cx="12" cy="50" r="8" fill="#ffde00" stroke="#fff" strokeWidth="2" />
+                </svg>
+                <span className="absolute left-3 bottom-2.5">
+                  <span className="block text-xl font-bold leading-tight">Jaká je tu teplota?</span>
+                  <span className="block text-xs opacity-90">Teploměr vedle Země →</span>
                 </span>
               </button>
               </div>
@@ -738,7 +772,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               </button>
               <button
                 type="button"
-                onClick={() => { setCompare(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
+                onClick={() => { setCompare(false); setTemp(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(90deg, #2a3fd6 0%, #5b72f0 55%, #b9c6ff 100%)' }}
               >
@@ -746,6 +780,23 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 <span className="absolute left-3 bottom-2.5">
                   <span className="block text-xl font-bold leading-tight">Skoč si tady</span>
                   <span className="block text-xs opacity-90">Jak vysoko a kolik vážíš? →</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setJump(false); setCompare(false); setTemp(true); }}
+                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                style={{ background: 'linear-gradient(90deg, #e2573a 0%, #8a5ad6 55%, #4aa0e6 100%)' }}
+              >
+                {/* malý teploměr */}
+                <svg viewBox="0 0 24 60" className="absolute right-6 top-3 h-16" aria-hidden="true">
+                  <rect x="8" y="2" width="8" height="42" rx="4" fill="rgba(255,255,255,.25)" stroke="#fff" strokeWidth="2" />
+                  <rect x="10" y="18" width="4" height="28" rx="2" fill="#ffde00" />
+                  <circle cx="12" cy="50" r="8" fill="#ffde00" stroke="#fff" strokeWidth="2" />
+                </svg>
+                <span className="absolute left-3 bottom-2.5">
+                  <span className="block text-xl font-bold leading-tight">Jaká je tu teplota?</span>
+                  <span className="block text-xs opacity-90">Teploměr vedle Země →</span>
                 </span>
               </button>
               </div>

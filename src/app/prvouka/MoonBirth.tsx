@@ -36,7 +36,7 @@ export function MoonBirth({ onClose, next }: { onClose: () => void; next?: { que
   // Po dohrání se chvíli ukáže hotový Měsíc a pak se vrátí pohled s fázemi Měsíce.
   const closeRef = useRef(onClose); closeRef.current = onClose;
   const ref = useRef<HTMLCanvasElement | null>(null);
-  const [t0] = useState(() => performance.now());
+  const [t0, setT0] = useState(() => performance.now());
   const [step, setStep] = useState(0);
   // Po dohrání nabídne navazující animaci (Země → Měsíc, Měsíc → Země) nebo návrat na fáze.
   const [done, setDone] = useState(false);
@@ -87,8 +87,19 @@ export function MoonBirth({ onClose, next }: { onClose: () => void; next?: { que
       </div>
       <div className="absolute left-0 right-0 bottom-6 z-10 flex flex-col items-center gap-3 px-6 text-center">
         <p key={step} className="text-lg md:text-2xl font-bold leading-snug max-w-2xl" style={{ textShadow: '0 2px 10px rgba(0,0,0,.8)', animation: 'fadeIn .6s ease' }}>{BIRTH_STEPS[step].text}</p>
-        <div className="flex items-center gap-1.5" aria-hidden="true">
-          {BIRTH_STEPS.map((_, i) => <span key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === step ? 22 : 8, background: i <= step ? '#f0a12c' : 'rgba(255,255,255,.3)' }} />)}
+        <div className="flex items-center gap-1.5">
+          {/* Klikací tečky: skok na danou část videa (dopředu i zpátky). */}
+          {BIRTH_STEPS.map((st, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Část ${i + 1}`}
+              onClick={() => { setDone(false); setT0(performance.now() - st.at * 1000); }}
+              className="h-4 flex items-center"
+            >
+              <span className="h-1.5 rounded-full transition-all block" style={{ width: i === step ? 22 : 10, background: i <= step ? '#f0a12c' : 'rgba(255,255,255,.3)' }} />
+            </button>
+          ))}
         </div>
       </div>
       <style>{'@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'}</style>
