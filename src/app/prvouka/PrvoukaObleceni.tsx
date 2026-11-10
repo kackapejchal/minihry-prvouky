@@ -27,8 +27,8 @@ const ITEMS: Item[] = [
   { id: 'sala', name: 'Šála', slot: 'krk', thumb: 'sala', pieces: [{ src: 'sala', box: [59, 162, 151, 256], z: 8 }] },
   { id: 'zlute-triko', name: 'Žluté tričko', slot: 'vrsek', thumb: 'zlute-triko', pieces: [] },
   { id: 'mikina', name: 'Mikina', slot: 'vrsek', thumb: 'mikina', pieces: [{ src: 'nas-mikina', box: [21, 157, 190, 298], z: 4 }] },
-  { id: 'bunda', name: 'Bunda se svetrem', slot: 'bunda', thumb: 'bunda', pieces: [{ src: 'nas-bunda', box: [17, 147, 195, 303], z: 6 }] },
-  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'zimni-bunda', pieces: [{ src: 'nas-zimni-bunda', box: [16, 127, 197, 313], z: 6 }] },
+  { id: 'bunda', name: 'Bunda se svetrem', slot: 'vrsek', thumb: 'bunda', pieces: [{ src: 'nas-bunda', box: [17, 147, 195, 303], z: 6 }] },
+  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'vrsek', thumb: 'zimni-bunda', pieces: [{ src: 'nas-zimni-bunda', box: [16, 127, 197, 313], z: 6 }] },
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'kratasy', pieces: [] },
   { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'dziny', pieces: [{ src: 'nas-dziny', box: [36, 258, 173, 375], z: 2 }] },
   { id: 'kalhoty', name: 'Kalhoty', slot: 'dolu', thumb: 'kalhoty', pieces: [{ src: 'nas-kalhoty', box: [23, 258, 189, 368], z: 2 }] },
@@ -47,11 +47,10 @@ const H_ITEMS: Item[] = [
   { id: 'klobouk', name: 'Klobouk', slot: 'hlava', thumb: 'hanka/f-klobouk', pieces: [{ src: 'hanka/klobouk-hlava', box: [0, 22, 240, 238], z: 9 }], boxFor: { sam: [-4, -6, 208, 92] }, srcFor: { sam: 'hanka/f-klobouk' } },
   { id: 'cervene-triko', name: 'Červené tričko', slot: 'vrsek', thumb: 'hanka/f-triko', pieces: [] },
   { id: 'saty', name: 'Šaty', slot: 'vrsek', thumb: 'hanka/f-saty', pieces: [{ src: 'hanka/f-saty', box: [50, 196, 190, 398], z: 4 }], boxFor: { sam: [30, 148, 180, 350] } },
-  { id: 'plastenka', name: 'Pláštěnka', slot: 'bunda', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }] },
-  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/f-zimni-bunda', box: [20, 166, 218, 360], z: 6 }] },
+  { id: 'plastenka', name: 'Pláštěnka', slot: 'vrsek', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }] },
+  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'vrsek', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/f-zimni-bunda', box: [20, 166, 218, 360], z: 6 }] },
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'hanka/f-kratasy', pieces: [] },
   { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [56, 318, 184, 428], z: 2 }], boxFor: { sam: [40, 256, 168, 366] } },
-  { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'hanka/dziny', pieces: [{ src: 'hanka/dziny', box: [39, 344, 201, 421], z: 2 }] },
   { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'hanka/f-tenisky', pieces: [] },
   { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'hanka/f-sandaly', pieces: [{ src: 'hanka/sandaly', box: [47, 424, 191, 478], z: 3 }] },
   { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'hanka/boty', pieces: [{ src: 'hanka/boty', box: [45, 409, 196, 495], z: 3 }] },
@@ -105,7 +104,9 @@ interface Names { kdo: string; komu: string; koho: string }
 interface Weather { id: WeatherId; label: string; sky: string; temp: string; ask: (n: Names) => string; bg: string; done: (n: Names) => string; check: (o: Outfit, n: Names) => string | null; tip?: (o: Outfit, n: Names) => string | null }
 
 // Co má postava na sobě vždycky (Sam žluté tričko, kraťasy, sandály) – vybrat to je totéž jako nic.
-const norm = (o: Outfit, who: Who): Outfit => { const b = CHARS[who].baseIds; const r: Outfit = { ...o }; (Object.keys(b) as Slot[]).forEach((k) => { if (r[k] === b[k]) r[k] = undefined; }); if (who === 'hanka' && !r.boty) r.boty = 'tenisky'; return r; };
+/** Bundy a pláštěnka jsou ve stejné části jako trička (nahoru se vybírá jen jedna věc), kontrola je ale bere jako bundu. */
+const JACKETS = ['bunda', 'zimni-bunda', 'plastenka'];
+const norm = (o: Outfit, who: Who): Outfit => { const b = CHARS[who].baseIds; const r: Outfit = { ...o }; (Object.keys(b) as Slot[]).forEach((k) => { if (r[k] === b[k]) r[k] = undefined; }); if (who === 'hanka' && !r.boty) r.boty = 'tenisky'; if (r.vrsek && JACKETS.includes(r.vrsek)) { r.bunda = r.vrsek; r.vrsek = undefined; } return r; };
 const warmTop = (o: Outfit) => o.vrsek === 'mikina' || Boolean(o.bunda);
 const WEATHER: Record<WeatherId, Weather> = {
   snezi: {
