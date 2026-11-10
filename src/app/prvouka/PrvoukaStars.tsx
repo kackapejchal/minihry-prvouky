@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { GameResultScreen } from '../components/GameResultScreen';
+import { PrvoukaFeedbackOverlay } from './PrvoukaKit';
 import { rng, prefersReducedMotion } from './space-engine';
 import { CONSTELLATIONS, POLARKA_TEXT, SEASONS, constellation, projectScene, projectSky, sceneStars, type Constellation, type SceneId, type Season, type SkyStar } from './stars-data';
 
@@ -99,6 +100,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   const [cleanRounds, setCleanRounds] = useState(0);
   const [roundDone, setRoundDone] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [feedback, setFeedback] = useState<{ isCorrect: boolean; hint?: string } | null>(null);
   const flash = useRef<{ x: number; y: number; t: number; ok: boolean } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [box, setBox] = useState({ w: 800, h: 600 });
@@ -306,7 +308,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   }
 
   const onTap = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (mode !== 'hra' || roundDone) return;
+    if (mode !== 'hra' || roundDone || feedback) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left, y = e.clientY - rect.top;
     let hit: Placed | null = null, best = 30;
@@ -316,15 +318,16 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
     if (r.type === 'polarka') {
       const ok = hit.id === 'polarka';
       flash.current = { x: hit.x, y: hit.y, t: now, ok };
-      if (ok) { setRoundDone(true); if (mistakes === 0) setCleanRounds((n) => n + 1); } else setMistakes((m) => m + 1);
+      if (ok) { setRoundDone(true); setFeedback({ isCorrect: true }); if (mistakes === 0) setCleanRounds((n) => n + 1); }
+      else { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: 'Prodluž čáru od dvou modře označených hvězd asi pětkrát.' }); }
       return;
     }
     const ord = c!.order!;
     const ok = hit.id === ord[step];
     flash.current = { x: hit.x, y: hit.y, t: now, ok };
-    if (!ok) { setMistakes((m) => m + 1); return; }
+    if (!ok) { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: `Hledej hvězdu s číslem ${step + 1}.` }); return; }
     setStep(step + 1);
-    if (step + 1 === ord.length) { setRoundDone(true); if (mistakes === 0) setCleanRounds((n) => n + 1); }
+    if (step + 1 === ord.length) { setRoundDone(true); setFeedback({ isCorrect: true }); if (mistakes === 0) setCleanRounds((n) => n + 1); }
   };
 
   const next = () => { if (round + 1 < ROUNDS.length) resetRound(round + 1); else setFinished(true); };
@@ -388,7 +391,6 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
               ) : (
                 <>
                   <p className="text-base leading-relaxed text-[#4e5871]">{task}</p>
-                  {mistakes > 0 ? <p className="text-sm font-bold text-[#c2410c]">Tahle to nebyla, zkus jinou.</p> : null}
                 </>
               )}
             </>
@@ -451,6 +453,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
         </div>
       </aside>
 
+      {feedback ? <PrvoukaFeedbackOverlay isCorrect={feedback.isCorrect} hint={feedback.hint} onComplete={() => setFeedback(null)} /> : null}
       {finished ? (
         <GameResultScreen
           isSuccess
