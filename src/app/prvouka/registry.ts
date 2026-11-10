@@ -165,6 +165,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     bg: '#E3EEFC',
     playBg: '#e3eefc',
     image: `${import.meta.env.BASE_URL}prvouka/ill/obleceni/karta.jpg`,
+    iconImage: `${import.meta.env.BASE_URL}prvouka/ill/obleceni/ikona.jpg`,
     grades: [1, 2],
     model: 'obleceni',
   },
