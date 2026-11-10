@@ -103,31 +103,36 @@ const SHELVES: Array<{ title: string; slots: Slot[] }> = [
 type Outfit = Partial<Record<Slot, string>>;
 type WeatherId = 'prsi' | 'snezi' | 'horko' | 'fouka';
 interface Names { kdo: string; komu: string; koho: string }
-interface Weather { id: WeatherId; label: string; sky: string; temp: string; ask: (n: Names) => string; bg: string; done: (n: Names) => string; check: (o: Outfit, n: Names) => string | null }
+interface Weather { id: WeatherId; label: string; sky: string; temp: string; ask: (n: Names) => string; bg: string; done: (n: Names) => string; check: (o: Outfit, n: Names) => string | null; tip?: (o: Outfit, n: Names) => string | null }
 
 // Co má postava na sobě vždycky (Sam žluté tričko, kraťasy, sandály) – vybrat to je totéž jako nic.
-const norm = (o: Outfit, who: Who): Outfit => { const b = CHARS[who].baseIds; const r: Outfit = { ...o }; (Object.keys(b) as Slot[]).forEach((k) => { if (r[k] === b[k]) r[k] = undefined; }); return r; };
+const norm = (o: Outfit, who: Who): Outfit => { const b = CHARS[who].baseIds; const r: Outfit = { ...o }; (Object.keys(b) as Slot[]).forEach((k) => { if (r[k] === b[k]) r[k] = undefined; }); if (who === 'hanka' && !r.boty) r.boty = 'tenisky'; return r; };
 const warmTop = (o: Outfit) => o.vrsek === 'mikina' || Boolean(o.bunda);
 const WEATHER: Record<WeatherId, Weather> = {
   snezi: {
-    id: 'snezi', label: '❄️ Sněží', sky: '🌨️', temp: '−5 °C', bg: '#e6eef8', ask: (n) => `Venku sněží a mrzne. Obleč ${n.koho} ven!`, done: (n) => `${n.kdo} je ${n.kdo === 'Hanka' ? 'teple oblečená' : 'teple oblečený'} a může stavět sněhuláka.`,
+    id: 'snezi', label: '❄️ Sněží', sky: '🌨️', temp: '−5 °C', bg: '#e6eef8', ask: (n) => `Venku sněží a mrzne. Obleč ${n.koho} ven!`, done: (n) => `${n.kdo} je ${n.kdo === 'Hanka' ? 'teple oblečená' : 'teple oblečený'} a může ven do sněhu.`,
     check: (o, n) =>
       o.bunda !== 'zimni-bunda' ? `V mrazu potřebuje ${n.kdo} zimní bundu.`
       : !o.dolu ? `Bez dlouhých kalhot by ${n.komu} byla v mrazu zima. Vyber dlouhé kalhoty.`
       : o.boty !== 'zimni-boty' ? `Do sněhu se hodí zimní boty, v jiných by ${n.komu} byla zima na nohy.`
       : o.hlava !== 'cepice' ? `Bez zimní čepice by ${n.komu} byla zima na uši.`
-      : !o.ruce ? `Bez palčáků by ${n.komu} zmrzly ruce.`
       : null,
+    // Palčáky nejsou chyba – jen rada na příště.
+    tip: (o) => (!o.ruce ? 'Příště si vezmi i palčáky. V nich můžeš stavět sněhuláka a nebude ti zima na ruce.' : null),
   },
   prsi: {
-    id: 'prsi', label: '🌧️ Prší', sky: '🌧️', temp: '12 °C', bg: '#cfdcea', ask: (n) => `Venku prší. Obleč ${n.koho} ven!`, done: (n) => `${n.kdo} v dešti nezmokne.`,
+    id: 'prsi', label: '🌧️ Prší', sky: '🌧️', temp: '12 °C', bg: '#cfdcea', ask: (n) => `Venku prší. Obleč ${n.koho} ven!`, done: () => `Můžeš vyrazit ven do deště!`,
     check: (o, n) =>
-      !o.destnik ? `Když prší, ${n.kdo} by bez deštníku zmokl.`
-      : o.boty !== 'holinky' ? `Do kaluží se hodí holínky, v jiných botách by ${n.kdo === 'Hanka' ? 'měla' : 'měl'} ${n.kdo} mokré nohy.`
+      !o.boty || o.boty === 'sandaly' ? `V sandálech by ${n.komu} v dešti zmokly nohy. Vyber boty.`
       : !o.dolu ? `Bez dlouhých kalhot by ${n.komu} při 12 °C byla zima.`
       : !warmTop(o) ? `Při 12 °C je v tričku zima. Dej ${n.komu} mikinu nebo bundu.`
       : o.bunda === 'zimni-bunda' ? `Zimní bunda je na déšť moc teplá. Stačí obyčejná bunda nebo pláštěnka.`
       : null,
+    // Deštník není chyba – jen rada na příště.
+    tip: (o) => {
+      const miss = [!o.destnik ? 'deštník' : null, o.boty !== 'holinky' ? 'holínky' : null].filter(Boolean);
+      return miss.length ? `Příště si vezmi i ${miss.join(' a ')}, ať nezmokneš.` : null;
+    },
   },
   horko: {
     id: 'horko', label: '☀️ Horko', sky: '☀️', temp: '30 °C', bg: '#fdf0c8', ask: (n) => `Je léto a pořádné horko. Obleč ${n.koho} ven!`, done: (n) => `${n.komu} je příjemně. A nezapomeň pít!`,
@@ -164,7 +169,7 @@ function wardrobe(who: Who): Worn[] {
 const ALL: WeatherId[] = ['prsi', 'snezi', 'horko', 'fouka'];
 
 export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, any> }) {
-  const free = settings.mode === 'volne';
+  const free = false; // jen podle počasí (volná hra se v nastavení nenabízí)
   const chosen: WeatherId[] = (Array.isArray(settings.weather) && settings.weather.length ? settings.weather : ALL).filter((x: string) => (ALL as string[]).includes(x));
   const rounds = useMemo(() => (chosen.length ? chosen : ALL), [chosen.join()]);
   const [who, setWho] = useState<Who>('sam');
@@ -182,7 +187,8 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
     const problem = W.check(norm(outfit, who), C);
     if (problem) { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: problem }); return; }
     if (mistakes === 0) setClean((c) => c + 1);
-    setFeedback({ isCorrect: true, info: W.done(C) });
+    const tip = W.tip?.(norm(outfit, who), C);
+    setFeedback({ isCorrect: true, info: tip ? `${W.done(C)} ${tip}` : W.done(C) });
   };
   const afterFeedback = () => {
     const ok = feedback?.isCorrect;
