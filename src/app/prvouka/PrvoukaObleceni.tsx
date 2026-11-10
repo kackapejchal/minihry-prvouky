@@ -15,7 +15,6 @@ import { PrvoukaFeedbackOverlay, PrvoukaProgress } from './PrvoukaKit';
 
 const INK = '#2a3a8c';
 const ART = `${import.meta.env.BASE_URL}prvouka/ill/obleceni`;
-const SAM_W = 204, SAM_H = 392;
 
 type Slot = 'hlava' | 'krk' | 'vrsek' | 'bunda' | 'dolu' | 'boty' | 'ruce' | 'destnik';
 interface Piece { src: string; box: [number, number, number, number]; z: number }
@@ -43,7 +42,32 @@ const ITEMS: Item[] = [
   { id: 'palcaky', name: 'Palčáky', slot: 'ruce', thumb: 'palcak-l', pieces: [{ src: 'nas-palcaky', box: [9, 257, 204, 313], z: 7 }] },
   { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'destnik', pieces: [{ src: 'destnik', box: [161, 118, 277, 282], z: 10 }] },
 ];
-const BY_ID = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
+// Hanka: rámeček 240 × 495 px, obrázky v hanka/ („f-…“ jsou ploché kusy jen na náhled v šatníku).
+const H_ITEMS: Item[] = [
+  { id: 'cepice', name: 'Čepice', slot: 'hlava', thumb: 'hanka/cepice', pieces: [{ src: 'hanka/cepice', box: [45, 5, 213, 126], z: 9 }] },
+  { id: 'klobouk', name: 'Klobouk', slot: 'hlava', thumb: 'hanka/f-klobouk', pieces: [{ src: 'hanka/klobouk', box: [0, 31, 240, 151], z: 9 }] },
+  { id: 'sala', name: 'Šála', slot: 'krk', thumb: 'hanka/f-sala', pieces: [{ src: 'hanka/sala', box: [39, 159, 201, 266], z: 8 }] },
+  { id: 'cervene-triko', name: 'Červené tričko', slot: 'vrsek', thumb: 'hanka/f-triko', pieces: [] },
+  { id: 'saty', name: 'Šaty', slot: 'vrsek', thumb: 'hanka/f-saty', pieces: [{ src: 'hanka/saty', box: [23, 184, 216, 396], z: 4 }] },
+  { id: 'plastenka', name: 'Pláštěnka', slot: 'bunda', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }] },
+  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/zimni-bunda', box: [17, 149, 220, 361], z: 6 }] },
+  { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'hanka/f-kratasy', pieces: [] },
+  { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [53, 364, 181, 426], z: 2 }] },
+  { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'hanka/dziny', pieces: [{ src: 'hanka/dziny', box: [39, 344, 201, 421], z: 2 }] },
+  { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'hanka/f-tenisky', pieces: [] },
+  { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'hanka/f-sandaly', pieces: [{ src: 'hanka/sandaly', box: [47, 424, 191, 478], z: 3 }] },
+  { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'hanka/boty', pieces: [{ src: 'hanka/boty', box: [45, 409, 196, 495], z: 3 }] },
+  { id: 'holinky', name: 'Holínky', slot: 'boty', thumb: 'hanka/f-holinky', pieces: [{ src: 'hanka/f-holinky', box: [52, 390, 192, 492], z: 3 }] },
+  { id: 'zimni-boty', name: 'Zimní boty', slot: 'boty', thumb: 'hanka/f-zimni-boty', pieces: [{ src: 'hanka/zimni-boty', box: [48, 394, 188, 486], z: 3 }] },
+  { id: 'palcaky', name: 'Palčáky', slot: 'ruce', thumb: 'hanka/f-palcaky', pieces: [{ src: 'hanka/palcaky', box: [17, 299, 220, 371], z: 7 }] },
+  { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'hanka/f-destnik', pieces: [{ src: 'hanka/f-destnik', box: [176, 150, 296, 296], z: 10 }] },
+];
+type Who = 'sam' | 'hanka';
+/** Postavy: rámeček, základní obrázek (a jeho varianty bez kraťasů pod dlouhými kalhotami), šatník a co má na sobě vždycky. */
+const CHARS: Record<Who, { kdo: string; komu: string; koho: string; w: number; h: number; base: string; baseBox: [number, number, number, number]; longPants: string[]; items: Item[]; baseIds: Partial<Record<Slot, string>> }> = {
+  sam: { kdo: 'Sam', komu: 'Samovi', koho: 'Sama', w: 204, h: 392, base: 'sam', baseBox: [15, 10, 189, 392], longPants: ['dziny', 'kalhoty', 'zimni-kalhoty'], items: ITEMS, baseIds: { vrsek: 'zlute-triko', dolu: 'kratasy', boty: 'sandaly' } },
+  hanka: { kdo: 'Hanka', komu: 'Hance', koho: 'Hanku', w: 240, h: 495, base: 'hanka/hanka', baseBox: [3, 35, 236, 481], longPants: ['leginy', 'dziny'], items: H_ITEMS, baseIds: { vrsek: 'cervene-triko', dolu: 'kratasy' } },
+};
 const SHELVES: Array<{ title: string; slots: Slot[] }> = [
   { title: 'Na hlavu a krk', slots: ['hlava', 'krk'] },
   { title: 'Nahoru', slots: ['vrsek', 'bunda'] },
@@ -54,52 +78,53 @@ const SHELVES: Array<{ title: string; slots: Slot[] }> = [
 
 type Outfit = Partial<Record<Slot, string>>;
 type WeatherId = 'prsi' | 'snezi' | 'horko' | 'fouka';
-interface Weather { id: WeatherId; label: string; sky: string; temp: string; ask: string; bg: string; done: string; check: (o: Outfit) => string | null }
+interface Names { kdo: string; komu: string; koho: string }
+interface Weather { id: WeatherId; label: string; sky: string; temp: string; ask: (n: Names) => string; bg: string; done: (n: Names) => string; check: (o: Outfit, n: Names) => string | null }
 
-// Žluté tričko, kraťasy a sandály má Sam na sobě vždycky – vybrat je je totéž jako nic.
-const norm = (o: Outfit): Outfit => ({ ...o, vrsek: o.vrsek === 'zlute-triko' ? undefined : o.vrsek, dolu: o.dolu === 'kratasy' ? undefined : o.dolu, boty: o.boty === 'sandaly' ? undefined : o.boty });
+// Co má postava na sobě vždycky (Sam žluté tričko, kraťasy, sandály) – vybrat to je totéž jako nic.
+const norm = (o: Outfit, who: Who): Outfit => { const b = CHARS[who].baseIds; const r: Outfit = { ...o }; (Object.keys(b) as Slot[]).forEach((k) => { if (r[k] === b[k]) r[k] = undefined; }); return r; };
 const warmTop = (o: Outfit) => o.vrsek === 'mikina' || Boolean(o.bunda);
 const WEATHER: Record<WeatherId, Weather> = {
   snezi: {
-    id: 'snezi', label: '❄️ Sněží', sky: '🌨️', temp: '−5 °C', bg: '#e6eef8', ask: 'Venku sněží a mrzne. Obleč Sama ven!', done: 'Sam je teple oblečený a může stavět sněhuláka.',
-    check: (o) =>
-      o.bunda !== 'zimni-bunda' ? 'V mrazu potřebuje Sam zimní bundu.'
-      : !o.dolu ? 'V kraťasech by Samovi byla v mrazu zima. Dej mu dlouhé kalhoty.'
-      : o.boty !== 'zimni-boty' ? 'Do sněhu se hodí zimní boty, v jiných by Samovi byla zima na nohy.'
-      : !o.hlava ? 'Bez čepice by Samovi byla zima na uši.'
-      : !o.ruce ? 'Bez palčáků by Samovi zmrzly ruce.'
+    id: 'snezi', label: '❄️ Sněží', sky: '🌨️', temp: '−5 °C', bg: '#e6eef8', ask: (n) => `Venku sněží a mrzne. Obleč ${n.koho} ven!`, done: (n) => `${n.kdo} je ${n.kdo === 'Hanka' ? 'teple oblečená' : 'teple oblečený'} a může stavět sněhuláka.`,
+    check: (o, n) =>
+      o.bunda !== 'zimni-bunda' ? `V mrazu potřebuje ${n.kdo} zimní bundu.`
+      : !o.dolu ? `Bez dlouhých kalhot by ${n.komu} byla v mrazu zima. Vyber dlouhé kalhoty.`
+      : o.boty !== 'zimni-boty' ? `Do sněhu se hodí zimní boty, v jiných by ${n.komu} byla zima na nohy.`
+      : o.hlava !== 'cepice' ? `Bez zimní čepice by ${n.komu} byla zima na uši.`
+      : !o.ruce ? `Bez palčáků by ${n.komu} zmrzly ruce.`
       : null,
   },
   prsi: {
-    id: 'prsi', label: '🌧️ Prší', sky: '🌧️', temp: '12 °C', bg: '#cfdcea', ask: 'Venku prší. Obleč Sama ven!', done: 'Sam v dešti nezmokne.',
-    check: (o) =>
-      !o.destnik ? 'Když prší, Sam by bez deštníku zmokl.'
-      : o.boty !== 'holinky' ? 'Do kaluží se hodí holínky, v jiných botách by měl Sam mokré nohy.'
-      : !o.dolu ? 'V kraťasech by Samovi při 12 °C byla zima.'
-      : !warmTop(o) ? 'Při 12 °C je v tričku zima. Dej Samovi mikinu nebo bundu.'
-      : o.bunda === 'zimni-bunda' ? 'Zimní bunda je na déšť moc teplá. Stačí bunda se svetrem.'
+    id: 'prsi', label: '🌧️ Prší', sky: '🌧️', temp: '12 °C', bg: '#cfdcea', ask: (n) => `Venku prší. Obleč ${n.koho} ven!`, done: (n) => `${n.kdo} v dešti nezmokne.`,
+    check: (o, n) =>
+      !o.destnik ? `Když prší, ${n.kdo} by bez deštníku zmokl.`
+      : o.boty !== 'holinky' ? `Do kaluží se hodí holínky, v jiných botách by ${n.kdo === 'Hanka' ? 'měla' : 'měl'} ${n.kdo} mokré nohy.`
+      : !o.dolu ? `Bez dlouhých kalhot by ${n.komu} při 12 °C byla zima.`
+      : !warmTop(o) ? `Při 12 °C je v tričku zima. Dej ${n.komu} mikinu nebo bundu.`
+      : o.bunda === 'zimni-bunda' ? `Zimní bunda je na déšť moc teplá. Stačí obyčejná bunda nebo pláštěnka.`
       : null,
   },
   horko: {
-    id: 'horko', label: '☀️ Horko', sky: '☀️', temp: '30 °C', bg: '#fdf0c8', ask: 'Je léto a pořádné horko. Obleč Sama ven!', done: 'Samovi je příjemně. A nezapomeň pít!',
-    check: (o) =>
-      o.bunda ? 'V bundě by Samovi bylo v horku strašné horko.'
-      : o.vrsek === 'mikina' ? 'Mikina je na léto moc teplá. Stačí tričko.'
-      : o.dolu ? 'V dlouhých kalhotách je v horku vedro. Kraťasy jsou lepší.'
-      : o.hlava ? 'Zimní čepice v létě nepatří.'
-      : o.krk ? 'Šála v horku nepatří, zahřívá.'
-      : o.ruce ? 'Palčáky v létě nepotřebuješ.'
-      : o.boty === 'zimni-boty' || o.boty === 'holinky' ? 'V takových botách by se nohy v horku zapotily. Sandály jsou lepší.'
+    id: 'horko', label: '☀️ Horko', sky: '☀️', temp: '30 °C', bg: '#fdf0c8', ask: (n) => `Je léto a pořádné horko. Obleč ${n.koho} ven!`, done: (n) => `${n.komu} je příjemně. A nezapomeň pít!`,
+    check: (o, n) =>
+      o.bunda ? `V bundě by ${n.komu} bylo v horku strašné horko.`
+      : o.vrsek === 'mikina' ? `Mikina je na léto moc teplá. Stačí tričko.`
+      : o.dolu ? `V dlouhých kalhotách je v horku vedro. Kraťasy jsou lepší.`
+      : o.hlava === 'cepice' ? `Zimní čepice v létě nepatří. Na slunce je lepší klobouk.`
+      : o.krk ? `Šála v horku nepatří, zahřívá.`
+      : o.ruce ? `Palčáky v létě nepotřebuješ.`
+      : o.boty === 'zimni-boty' || o.boty === 'holinky' ? `V takových botách by se nohy v horku zapotily. Sandály jsou lepší.`
       : null,
   },
   fouka: {
-    id: 'fouka', label: '🌬️ Fouká', sky: '🌬️', temp: '10 °C', bg: '#dbe8ee', ask: 'Je podzim a hodně fouká. Obleč Sama ven!', done: 'Vítr teď Samovi nevadí.',
-    check: (o) =>
-      o.destnik ? 'V silném větru by se deštník obrátil naruby.'
-      : !o.dolu ? 'Při 10 °C a ve větru by v kraťasech byla zima.'
-      : !warmTop(o) ? 'Ve větru je v tričku zima. Dej Samovi mikinu nebo bundu.'
-      : !o.boty ? 'V sandálech by byla zima na nohy. Vyber pevné boty.'
-      : o.bunda === 'zimni-bunda' ? 'Zimní bunda je na podzim moc teplá.'
+    id: 'fouka', label: '🌬️ Fouká', sky: '🌬️', temp: '10 °C', bg: '#dbe8ee', ask: (n) => `Je podzim a hodně fouká. Obleč ${n.koho} ven!`, done: (n) => `Vítr teď ${n.komu} nevadí.`,
+    check: (o, n) =>
+      o.destnik ? `V silném větru by se deštník obrátil naruby.`
+      : !o.dolu ? `Při 10 °C a ve větru je bez dlouhých kalhot zima.`
+      : !warmTop(o) ? `Ve větru je v tričku zima. Dej ${n.komu} mikinu nebo bundu.`
+      : !o.boty || o.boty === 'sandaly' ? `V sandálech by byla zima na nohy. Vyber pevné boty.`
+      : o.bunda === 'zimni-bunda' ? `Zimní bunda je na podzim moc teplá.`
       : null,
   },
 };
@@ -109,6 +134,8 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const free = settings.mode === 'volne';
   const chosen: WeatherId[] = (Array.isArray(settings.weather) && settings.weather.length ? settings.weather : ALL).filter((x: string) => (ALL as string[]).includes(x));
   const rounds = useMemo(() => (chosen.length ? chosen : ALL), [chosen.join()]);
+  const [who, setWho] = useState<Who>('sam');
+  const C = CHARS[who];
   const [ri, setRi] = useState(0);
   const [outfit, setOutfit] = useState<Outfit>({});
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; hint?: string; info?: string } | null>(null);
@@ -119,10 +146,10 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
 
   const toggle = (it: Item) => setOutfit((o) => ({ ...o, [it.slot]: o[it.slot] === it.id ? undefined : it.id }));
   const goOut = () => {
-    const problem = W.check(norm(outfit));
+    const problem = W.check(norm(outfit, who), C);
     if (problem) { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: problem }); return; }
     if (mistakes === 0) setClean((c) => c + 1);
-    setFeedback({ isCorrect: true, info: W.done });
+    setFeedback({ isCorrect: true, info: W.done(C) });
   };
   const afterFeedback = () => {
     const ok = feedback?.isCorrect;
@@ -133,13 +160,18 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   };
   const restart = () => { setFinished(false); setClean(0); setRi(0); setOutfit({}); setMistakes(0); };
 
-  const worn = (Object.values(outfit).filter(Boolean) as string[]).map((id) => BY_ID[id]);
+  const byId = Object.fromEntries(C.items.map((i) => [i.id, i]));
+  const worn = (Object.values(outfit).filter(Boolean) as string[]).map((id) => byId[id]).filter(Boolean);
+  // Hanka má na základním obrázku tenisky – když si obuje jiné boty, tenisky pod nimi zmizí.
+  const noShoes = who === 'hanka' && Boolean(outfit.boty) && outfit.boty !== 'tenisky';
+  const baseSrc = (outfit.dolu && C.longPants.includes(outfit.dolu) ? `${C.base}-${outfit.dolu}` : C.base) + (noShoes ? '-bezbot' : '');
+  const [bx0, by0, bx1, by1] = C.baseBox;
 
   return (
     <div className="w-full min-h-full flex flex-col items-center gap-3 p-3 md:p-5" style={{ background: '#e3eefc' }}>
-      <h2 className="text-xl md:text-3xl font-bold text-center" style={{ color: INK }}>{free ? 'Obleč Sama, jak se ti líbí!' : W.ask}</h2>
+      <h2 className="text-xl md:text-3xl font-bold text-center" style={{ color: INK }}>{free ? `Obleč ${C.koho}, jak se ti líbí!` : W.ask(C)}</h2>
       <div className="w-full max-w-6xl flex-1 grid gap-4 md:grid-cols-[minmax(260px,1fr)_minmax(320px,1.4fr)] items-start">
-        {/* Sam a počasí */}
+        {/* Postava a počasí */}
         <div className="relative rounded-3xl overflow-hidden flex flex-col items-center" style={{ background: free ? '#eef3fb' : W.bg, border: `2px solid ${INK}22` }}>
           {!free ? (
             <div className="absolute left-4 top-3 flex items-center gap-2 rounded-2xl bg-white/85 px-3 py-1.5" style={{ color: INK }}>
@@ -147,18 +179,17 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
               <span className="text-base md:text-lg font-bold">{W.temp}</span>
             </div>
           ) : null}
-          <div className="relative mt-16 mb-4" style={{ width: 'min(52%, 210px)', aspectRatio: `${SAM_W} / ${SAM_H}` }}>
-            <img src={`${ART}/${outfit.dolu && outfit.dolu !== 'kratasy' ? `sam-${outfit.dolu}` : 'sam'}.png`} alt="Sam" className="absolute" style={{ left: `${(15 / SAM_W) * 100}%`, top: `${(10 / SAM_H) * 100}%`, width: `${(174 / SAM_W) * 100}%`, height: `${(382 / SAM_H) * 100}%` }} draggable={false} />
+          <div className="relative mt-16 mb-4" style={{ width: who === 'hanka' ? 'min(48%, 194px)' : 'min(52%, 210px)', aspectRatio: `${C.w} / ${C.h}` }}>
+            <img src={`${ART}/${baseSrc}.png`} alt={C.kdo} className="absolute" style={{ left: `${(bx0 / C.w) * 100}%`, top: `${(by0 / C.h) * 100}%`, width: `${((bx1 - bx0) / C.w) * 100}%`, height: `${((by1 - by0) / C.h) * 100}%` }} draggable={false} />
             {worn.flatMap((it) => it.pieces.map((p, i) => {
               const [x0, y0, x1, y1] = p.box;
               return (
                 <img key={it.id + i} src={`${ART}/${p.src}.png`} alt="" draggable={false} className="absolute"
-                  style={{ left: `${(x0 / SAM_W) * 100}%`, top: `${(y0 / SAM_H) * 100}%`, width: `${((x1 - x0) / SAM_W) * 100}%`, height: `${((y1 - y0) / SAM_H) * 100}%`, zIndex: p.z, animation: 'oblIn .3s ease' }} />
+                  style={{ left: `${(x0 / C.w) * 100}%`, top: `${(y0 / C.h) * 100}%`, width: `${((x1 - x0) / C.w) * 100}%`, height: `${((y1 - y0) / C.h) * 100}%`, zIndex: p.z, animation: 'oblIn .3s ease' }} />
               );
             }))}
           </div>
           <div className="flex gap-2 pb-4">
-            <button type="button" onClick={() => setOutfit({})} className="h-11 px-4 rounded-full bg-white text-sm font-bold" style={{ color: INK, border: `2px solid ${INK}` }}>Svléknout</button>
             {!free ? (
               <button type="button" onClick={goOut} className="h-11 px-6 rounded-full text-base font-bold text-white shadow" style={{ background: '#4f46e5' }}>Jdeme ven! →</button>
             ) : null}
@@ -166,11 +197,22 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
         </div>
         {/* Šatník */}
         <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-bold" style={{ color: '#56628a' }}>Koho oblékáš?</span>
+            {(['sam', 'hanka'] as Who[]).map((k) => (
+              <button key={k} type="button" aria-pressed={who === k} onClick={() => { if (k !== who) { setWho(k); setOutfit({}); } }}
+                className="h-10 pl-1.5 pr-4 rounded-full text-sm font-bold flex items-center gap-2 transition-colors"
+                style={{ background: who === k ? '#4f46e5' : '#ffffff', color: who === k ? '#ffffff' : INK, border: `2px solid ${who === k ? '#4f46e5' : '#d6def0'}` }}>
+                <span className="w-7 h-7 rounded-full overflow-hidden bg-white flex items-start justify-center"><img src={`${ART}/${CHARS[k].base}.png`} alt="" className="w-[140%] max-w-none -mt-0.5" /></span>
+                {CHARS[k].kdo}
+              </button>
+            ))}
+          </div>
           {SHELVES.map((sh) => (
             <div key={sh.title} className="rounded-2xl bg-white/70 p-2.5" style={{ border: `2px solid ${INK}1a` }}>
               <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: '#56628a' }}>{sh.title}</p>
               <div className="flex flex-wrap gap-2">
-                {ITEMS.filter((it) => sh.slots.includes(it.slot)).map((it) => {
+                {C.items.filter((it) => sh.slots.includes(it.slot)).map((it) => {
                   const on = outfit[it.slot] === it.id;
                   return (
                     <button key={it.id} type="button" onClick={() => toggle(it)} aria-pressed={on}
