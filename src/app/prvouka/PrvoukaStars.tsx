@@ -299,8 +299,6 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         ctx.setLineDash([3, 6]); ctx.strokeStyle = 'rgba(170,190,255,.14)';
         ctx.beginPath(); ctx.arc(pole.x, pole.y, R * 0.5, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
       }
-      // Postava souhvězdí (vzorek: Labuť) – jemný obrys za hvězdami, ať je vidět, proč se tak jmenuje.
-      if (!all && st.view === 'labut') drawSwan(ctx, by);
       for (const cons of list) {
         const l = lvl(cons);
         for (const [a, b] of cons.edges) {
@@ -805,56 +803,3 @@ function ConsTile({ c, on, hot = false, check = false, onClick, onHover }: { c: 
   );
 }
 
-/** Obrys labutě přes hvězdy: Albireo = hlava, Sadr = hruď, Deneb = ocas, δ a Gienah = konce křídel. */
-function drawSwan(ctx: CanvasRenderingContext2D, by: Record<string, { x: number; y: number }>) {
-  const A = by.albireo, S = by.sadr, D = by.deneb, L = by['cyg-delta'], R = by.gienah;
-  if (!A || !S || !D || !L || !R) return;
-  const sub = (p: { x: number; y: number }, q: { x: number; y: number }) => ({ x: p.x - q.x, y: p.y - q.y });
-  const len = (v: { x: number; y: number }) => Math.hypot(v.x, v.y);
-  const nrm = (v: { x: number; y: number }) => { const l = len(v) || 1; return { x: v.x / l, y: v.y / l }; };
-  const perp = (v: { x: number; y: number }) => ({ x: -v.y, y: v.x });
-  const at = (p: { x: number; y: number }, v: { x: number; y: number }, k: number) => ({ x: p.x + v.x * k, y: p.y + v.y * k });
-  ctx.save();
-  ctx.strokeStyle = 'rgba(220,232,255,.42)'; ctx.fillStyle = 'rgba(220,232,255,.05)';
-  ctx.lineWidth = 2.4; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  // tělo: kapka od hrudi (Sadr) k ocasu (Deneb)
-  const body = sub(D, S), bl = len(body), bu = nrm(body), bp = perp(bu);
-  const w = bl * 0.36;
-  const chest = at(S, bu, -bl * 0.12);
-  ctx.beginPath();
-  ctx.moveTo(chest.x, chest.y);
-  const c1 = at(at(S, bu, bl * 0.35), bp, w), c2 = at(at(S, bu, bl * 0.35), bp, -w);
-  ctx.quadraticCurveTo(c1.x, c1.y, D.x, D.y);
-  ctx.quadraticCurveTo(c2.x, c2.y, chest.x, chest.y);
-  ctx.closePath(); ctx.fill(); ctx.stroke();
-  // ocasní pera
-  for (const k of [-1, 0, 1]) { const t = at(at(D, bu, bl * 0.16), bp, k * bl * 0.08); ctx.beginPath(); ctx.moveTo(D.x, D.y); ctx.lineTo(t.x, t.y); ctx.stroke(); }
-  // krk a hlava (k Albireu), krk mírně prohnutý
-  const neck = sub(A, chest), nl = len(neck), np = perp(nrm(neck));
-  const nc = at(at(chest, neck, 0.5), np, nl * 0.08);
-  ctx.lineWidth = 3.4;
-  ctx.beginPath(); ctx.moveTo(chest.x, chest.y); ctx.quadraticCurveTo(nc.x, nc.y, A.x, A.y); ctx.stroke();
-  ctx.lineWidth = 2.4;
-  const hr = Math.max(6, bl * 0.06);
-  ctx.beginPath(); ctx.arc(A.x, A.y, hr, 0, 6.283); ctx.fill(); ctx.stroke();
-  const nu = nrm(neck), beak = at(A, nu, hr * 2.2);
-  ctx.beginPath(); ctx.moveTo(at(at(A, nu, hr), np, hr * 0.45).x, at(at(A, nu, hr), np, hr * 0.45).y); ctx.lineTo(beak.x, beak.y); ctx.lineTo(at(at(A, nu, hr), np, -hr * 0.45).x, at(at(A, nu, hr), np, -hr * 0.45).y); ctx.stroke();
-  // křídla: od hrudi ke konci (δ a Gienah), horní okraj oblouk, spodní zubaté peří
-  for (const tip of [L, R]) {
-    const v = sub(tip, S), vl = len(v), vu = nrm(v);
-    let vp = perp(vu);
-    // vydout křídlo směrem od ocasu
-    if (vp.x * bu.x + vp.y * bu.y > 0) vp = { x: -vp.x, y: -vp.y };
-    const top = at(at(S, v, 0.5), vp, vl * 0.28);
-    ctx.beginPath(); ctx.moveTo(S.x, S.y); ctx.quadraticCurveTo(top.x, top.y, tip.x, tip.y);
-    // peří zpátky k tělu
-    const n = 4;
-    for (let i = 1; i <= n; i++) {
-      const base = at(tip, sub(at(S, bu, bl * 0.15), tip), i / n);
-      const out = at(base, vp, -vl * 0.07);
-      ctx.quadraticCurveTo(out.x, out.y, base.x, base.y);
-    }
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-  }
-  ctx.restore();
-}
