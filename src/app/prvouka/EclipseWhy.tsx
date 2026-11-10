@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SPACE_PLANETS, SYNODIC, drawMoonPhase, drawPlanet, label } from './space-engine';
+import { SPACE_PLANETS, SYNODIC, drawMoonPhase, drawPlanet, drawSun } from './space-engine';
 
 /**
  * Proč není zatmění každý měsíc (Model fází Měsíce → zatmění → „Ukaž mi to“).
@@ -68,28 +68,31 @@ function draw(cv: HTMLCanvasElement, t: number): string {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = '#04060f'; ctx.fillRect(0, 0, w, h);
 
-  const cy = h * 0.45, ex = w * 0.42, R = Math.min(w, h) * 0.07;
-  const orbitA = w * 0.27, orbitB = h * 0.07; // dráha Měsíce z boku (elipsa)
-  const tiltPx = h * 0.13; // zvětšený náklon dráhy
+  // Na úzkém (telefonu) se scéna řídí šířkou, ať nejsou Země a Měsíc drobné uprostřed prázdna.
+  const narrow = w < h;
+  const cy = h * (narrow ? 0.44 : 0.45), ex = w * (narrow ? 0.52 : 0.42);
+  const R = narrow ? w * 0.095 : Math.min(w, h) * 0.07;
+  const orbitA = narrow ? w * 0.3 : w * 0.27, orbitB = narrow ? R * 0.9 : h * 0.07; // dráha Měsíce z boku (elipsa)
+  const tiltPx = narrow ? R * 2.2 : h * 0.13; // zvětšený náklon dráhy
 
-  // Světlo ze Slunce zleva – stejně jako v pohledu shora v modelu fází Měsíce.
+  // Slunce: kousek jeho okraje vlevo (jako v ostatních modelech) a pár jemných paprsků k Zemi.
   const fs = Math.round(Math.max(13, Math.min(w, h) / 34));
-  const lg = ctx.createLinearGradient(0, 0, w * 0.35, 0);
-  lg.addColorStop(0, 'rgba(255,200,90,.35)'); lg.addColorStop(1, 'rgba(255,200,90,0)');
-  ctx.fillStyle = lg; ctx.fillRect(0, 0, w * 0.35, h);
-  ctx.strokeStyle = 'rgba(255,210,120,.35)'; ctx.lineWidth = 2;
-  for (let i = 1; i <= 5; i++) { const y = (h * i) / 6; ctx.beginPath(); ctx.moveTo(12, y); ctx.lineTo(48, y); ctx.lineTo(42, y - 5); ctx.moveTo(48, y); ctx.lineTo(42, y + 5); ctx.stroke(); }
-  label(ctx, 'světlo ze Slunce', 80, h / 6 - 12, '#ffd98a', fs - 1);
-  // Stín Země doprava (pás, který se zužuje)
-  const sg = ctx.createLinearGradient(ex, 0, w, 0);
-  sg.addColorStop(0, 'rgba(10,14,40,.95)'); sg.addColorStop(1, 'rgba(10,14,40,0)');
-  ctx.fillStyle = sg;
+  const sunR = narrow ? w * 0.32 : Math.min(w, h) * 0.38;
+  const sunX = -sunR * 0.72;
+  ctx.strokeStyle = 'rgba(255,214,130,.18)'; ctx.lineWidth = 1.5;
+  for (let i = -2; i <= 2; i++) { const y = cy + i * R * 0.6; ctx.beginPath(); ctx.moveTo(sunX + sunR, y); ctx.lineTo(ex - R * 1.1, cy + i * R * 0.42); ctx.stroke(); }
+  drawSun(ctx, sunX, cy, sunR);
+  ctx.font = `700 ${fs - 1}px VisbyRound, system-ui, sans-serif`;
+  ctx.textAlign = 'left'; ctx.fillStyle = '#ffd98a';
+  ctx.fillText('Slunce', 14, cy + sunR * 0.75 + fs + 6);
+  // Stín Země doprava – světlý průhledný kužel s obrysem, ať je dobře vidět.
+  ctx.fillStyle = 'rgba(127,170,255,.13)';
   ctx.beginPath(); ctx.moveTo(ex, cy - R); ctx.lineTo(w, cy - R * 0.55); ctx.lineTo(w, cy + R * 0.55); ctx.lineTo(ex, cy + R); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = 'rgba(127,211,255,.25)'; ctx.setLineDash([5, 7]); ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(127,211,255,.55)'; ctx.setLineDash([5, 6]); ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(ex, cy - R); ctx.lineTo(w, cy - R * 0.55); ctx.moveTo(ex, cy + R); ctx.lineTo(w, cy + R * 0.55); ctx.stroke(); ctx.setLineDash([]);
-  ctx.font = `700 ${Math.max(12, R * 0.3)}px VisbyRound, system-ui, sans-serif`;
+  ctx.font = `700 ${Math.max(13, R * 0.3)}px VisbyRound, system-ui, sans-serif`;
   ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(127,211,255,.75)';
-  ctx.fillText('stín Země', ex + orbitA + R * 0.9, cy - R * 0.75);
+  ctx.textAlign = 'right'; ctx.fillText('stín Země', w - 12, cy - R * 0.75);
 
   // Který měsíc a kde v oběhu: úplněk (Měsíc vpravo za Zemí) je v půlce každého měsíce.
   const intro = 5;
