@@ -19,6 +19,7 @@ import {
 } from './space-engine';
 import { SolarScene3D, yearsPerSecond, type DayPart, type SolarBodyId, type SolarStyle } from './solar-3d';
 import { MoonBirth } from './MoonBirth';
+import { EarthBirth } from './EarthBirth';
 import { EclipseWhy } from './EclipseWhy';
 import { Kid, JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
 
@@ -695,8 +696,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               <button
                 type="button"
                 onClick={() => { setCompare(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #8fd3f8 0%, #4aa0e6 100%)' }}
+                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-[#0f1d4d] hover:-translate-y-0.5 transition-transform"
+                style={{ background: '#bfe4fb' }}
               >
                 <span className="absolute right-5 top-1"><Kid x={0} y={0} size={40} inline /></span>
                 <span className="absolute left-3 bottom-2.5">
@@ -729,8 +730,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               <button
                 type="button"
                 onClick={() => { setCompare(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #8fd3f8 0%, #4aa0e6 100%)' }}
+                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-[#0f1d4d] hover:-translate-y-0.5 transition-transform"
+                style={{ background: '#bfe4fb' }}
               >
                 <span className="absolute right-5 top-1"><Kid x={0} y={0} size={40} inline /></span>
                 <span className="absolute left-3 bottom-2.5">
@@ -1011,6 +1012,10 @@ function CompareWithEarth({ other, name, ratio, text: textOverride, thumbs, onCl
   );
   return (
     <div className="absolute inset-0 z-30 flex flex-col text-white" style={{ background: 'radial-gradient(circle at 50% 40%, #16205a 0%, #060a1c 75%)' }}>
+      {/* Decentní drobné hvězdy v pozadí. */}
+      {COMPARE_STARS.map((st, i) => (
+        <span key={i} className="absolute rounded-full bg-white pointer-events-none" style={{ left: `${st.x}%`, top: `${st.y}%`, width: st.s, height: st.s, opacity: st.o }} />
+      ))}
       <div className="flex items-center justify-between gap-3 px-4 pt-3">
         <button
           type="button"
@@ -1065,6 +1070,7 @@ const ECLIPSE_WHY = 'Dráha Měsíce je trochu nakloněná. Při novu a úplňku
 const MOON_EARTH_RATIO = 1737 / 6371;
 const JUMP_TEXT = 'Na každé planetě vyskočíš jinak vysoko. Čím víc tě planeta přitahuje, tím níž vyskočíš a tím rychleji padá míček. Na Měsíci skáčeš jako klokan, na Jupiteru se skoro neodlepíš od země.';
 const BIRTH_NOTE = 'Měsíc tu nebyl odjakživa. Vědci si myslí, že vznikl z kousků, které se rozletěly, když do mladé Země narazila menší planeta.';
+const COMPARE_STARS = (() => { let v = 7; const r = () => { v = (v * 1664525 + 1013904223) >>> 0; return v / 4294967296; }; return Array.from({ length: 70 }, () => ({ x: r() * 100, y: r() * 100, s: 0.8 + r() * 1.1, o: 0.15 + r() * 0.35 })); })();
 const RACE_TEXT = 'Všechny planety vyrazily ze startovní čáry najednou. Čím dál je planeta od Slunce, tím delší cestu má a tím déle jí trvá jeden oběh. Jeden oběh kolem Slunce je pro planetu jeden její rok.';
 const DAY_NIGHT_TEXT = 'Země se pořád otáčí kolem své osy. Jedna celá otočka trvá jeden den. Polovina Země, která je zrovna otočená ke Slunci, má den. Druhá polovina je ve stínu a má noc.';
 const DAY_PART_TEXT: Record<DayPart, string> = { den: 'U nás je den', noc: 'U nás je noc', rano: 'U nás vychází Slunce', vecer: 'U nás zapadá Slunce' };
@@ -1126,6 +1132,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   const [eclipse, setEclipse] = useState<Eclipse>(null);
   // Jak vznikl Měsíc: animace přes celý pohled shora.
   const [birth, setBirth] = useState(false);
+  const [earthBirth, setEarthBirth] = useState(false);
   // Proč není zatmění každý měsíc: animace z boku.
   const [why, setWhy] = useState(false);
   const eclipseRef = useRef<Eclipse>(null);
@@ -1159,7 +1166,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
 
   const idx = phaseIndex(day);
   const phase = MOON_PHASE_INFO[idx];
-  const jump = (d: number) => { setPlaying(false); setToday(null); setEclipse(null); setBirth(false); setWhy(false); setDay(d); };
+  const jump = (d: number) => { setPlaying(false); setToday(null); setEclipse(null); setBirth(false); setEarthBirth(false); setWhy(false); setDay(d); };
   const showEclipse = (e: Exclude<Eclipse, null>) => {
     setBirth(false);
     const d = e === 'slunce' ? 0 : SYNODIC / 2;
@@ -1210,6 +1217,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           aria-label="Pohled shora: Slunce, Země a Měsíc na oběžné dráze. Měsícem jde táhnout po dráze."
         />
         {birth ? <MoonBirth onClose={() => setBirth(false)} /> : null}
+        {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} /> : null}
         {why ? <EclipseWhy onClose={() => setWhy(false)} /> : null}
         <div className="group absolute top-3 right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
           <div className="flex items-center gap-2">
@@ -1341,8 +1349,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
               <button
                 type="button"
                 aria-pressed={birth}
-                onClick={() => { setEclipse(null); setPlaying(false); setBirth((v) => !v); }}
-                className="col-span-2 relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                onClick={() => { setEclipse(null); setEarthBirth(false); setPlaying(false); setBirth((v) => !v); }}
+                className="relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(135deg, #b8461a 0%, #2a1840 70%, #0b0f24 100%)', outline: birth ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
               >
                 {/* Horká Země a malý Měsíc vedle ní. */}
@@ -1351,6 +1359,19 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
                 <span className="absolute left-3 bottom-2.5">
                   <span className="block text-base font-bold leading-tight">Jak vznikl Měsíc</span>
                   <span className="block text-xs opacity-90">{birth ? 'zpět na fáze ←' : 'krátká animace →'}</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                aria-pressed={earthBirth}
+                onClick={() => { setEclipse(null); setBirth(false); setPlaying(false); setEarthBirth((v) => !v); }}
+                className="relative overflow-hidden rounded-2xl h-20 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                style={{ background: 'linear-gradient(135deg, #2f6fd1 0%, #1b2350 100%)', outline: earthBirth ? '3px solid #f0a12c' : 'none', outlineOffset: 2 }}
+              >
+                <span className="absolute right-3 top-3 w-10 h-10 rounded-full" style={{ background: 'radial-gradient(circle at 35% 35%, #9fd0ff, #2f6fd1 60%, #123a7a)', boxShadow: '0 0 0 3px rgba(79,138,60,.0)' }} />
+                <span className="absolute left-3 bottom-2.5">
+                  <span className="block text-base font-bold leading-tight">Jak vznikla Země</span>
+                  <span className="block text-xs opacity-90">{earthBirth ? 'zpět na fáze ←' : 'krátká animace →'}</span>
                 </span>
               </button>
             </div>
