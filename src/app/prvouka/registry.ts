@@ -165,7 +165,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     bg: '#E3EEFC',
     playBg: '#e3eefc',
     image: `${import.meta.env.BASE_URL}prvouka/ill/obleceni/karta.jpg`,
-    grades: [1, 2, 3],
+    grades: [1, 2],
     model: 'obleceni',
   },
   {
@@ -317,7 +317,6 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
   }
   if (game.model === 'obleceni') {
     return {
-      grade: { name: 'Ročník', type: 'select' as const, defaultValue: 1, options: [{ value: 1, label: '1. ročník' }, { value: 2, label: '2. ročník' }, { value: 3, label: '3. ročník' }], description: 'Počasí a oblékání' },
       weather: {
         name: 'Jaké počasí',
         type: 'multiselect' as const,
