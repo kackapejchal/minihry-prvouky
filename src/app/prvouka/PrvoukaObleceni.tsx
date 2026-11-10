@@ -10,32 +10,35 @@ import { PrvoukaFeedbackOverlay, PrvoukaProgress } from './PrvoukaKit';
  *
  * Ilustrace: Sam a oblečení z obrázků od autorky (public/prvouka/ill/obleceni). Sam je letní
  * (žluté tričko, kraťasy, sandály) – to je jeho základ, když v dané části nic jiného nemá.
- * Pozice věcí jsou v pixelech obrázku sam.png (174 × 382).
+ * sam.png leží v rámečku 204 × 392 na pozici 15,10 (174 × 382).
  */
 
 const INK = '#2a3a8c';
 const ART = `${import.meta.env.BASE_URL}prvouka/ill/obleceni`;
-const SAM_W = 174, SAM_H = 382;
+const SAM_W = 204, SAM_H = 392;
 
 type Slot = 'hlava' | 'krk' | 'vrsek' | 'bunda' | 'dolu' | 'boty' | 'ruce' | 'destnik';
 interface Piece { src: string; box: [number, number, number, number]; z: number }
 interface Item { id: string; name: string; slot: Slot; pieces: Piece[]; thumb: string }
 
+// Pozice v rámečku 204 × 392 px (výřez z obrázku s oblečenými postavami). „nas-…“ jsou věci vystřižené
+// přímo z oblečeného Sama, takže sedí přesně; ostatní (tričko, šála, holínky, deštník) jsou ploché kusy.
 const ITEMS: Item[] = [
-  { id: 'cepice', name: 'Čepice', slot: 'hlava', thumb: 'cepice', pieces: [{ src: 'cepice', box: [29, -13, 149, 87], z: 9 }] },
-  { id: 'sala', name: 'Šála', slot: 'krk', thumb: 'sala', pieces: [{ src: 'sala', box: [44, 152, 136, 246], z: 8 }] },
-  { id: 'triko', name: 'Pruhované tričko', slot: 'vrsek', thumb: 'triko', pieces: [{ src: 'triko', box: [24, 150, 156, 250], z: 4 }] },
-  { id: 'mikina', name: 'Mikina', slot: 'vrsek', thumb: 'mikina', pieces: [{ src: 'mikina', box: [14, 139, 172, 260], z: 4 }] },
-  { id: 'bunda', name: 'Bunda se svetrem', slot: 'bunda', thumb: 'bunda', pieces: [{ src: 'svetr', box: [17, 137, 167, 255], z: 5 }, { src: 'bunda', box: [11, 135, 173, 257], z: 6 }] },
-  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'zimni-bunda', pieces: [{ src: 'zimni-bunda', box: [6, 117, 181, 272], z: 6 }] },
-  { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'dziny', pieces: [{ src: 'dziny', box: [30, 244, 156, 345], z: 2 }] },
-  { id: 'kalhoty', name: 'Kalhoty', slot: 'dolu', thumb: 'kalhoty', pieces: [{ src: 'kalhoty', box: [30, 245, 156, 344], z: 2 }] },
-  { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'tenisky', pieces: [{ src: 'tenisky', box: [18, 334, 168, 375], z: 3 }] },
-  { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'boty', pieces: [{ src: 'boty', box: [25, 329, 161, 369], z: 3 }] },
-  { id: 'holinky', name: 'Holínky', slot: 'boty', thumb: 'holinky', pieces: [{ src: 'holinky', box: [26, 278, 158, 369], z: 3 }] },
-  { id: 'zimni-boty', name: 'Zimní boty', slot: 'boty', thumb: 'zimni-boty', pieces: [{ src: 'zimni-boty', box: [19, 289, 166, 369], z: 3 }] },
-  { id: 'palcaky', name: 'Palčáky', slot: 'ruce', thumb: 'palcak-l', pieces: [{ src: 'palcak-l', box: [1, 242, 36, 275], z: 7 }, { src: 'palcak-p', box: [151, 242, 186, 275], z: 7 }] },
-  { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'destnik', pieces: [{ src: 'destnik', box: [146, 108, 262, 272], z: 10 }] },
+  { id: 'cepice', name: 'Čepice', slot: 'hlava', thumb: 'cepice', pieces: [{ src: 'nas-cepice', box: [13, 0, 185, 105], z: 9 }] },
+  { id: 'sala', name: 'Šála', slot: 'krk', thumb: 'sala', pieces: [{ src: 'sala', box: [59, 162, 151, 256], z: 8 }] },
+  { id: 'triko', name: 'Pruhované tričko', slot: 'vrsek', thumb: 'triko', pieces: [{ src: 'triko', box: [39, 160, 171, 260], z: 4 }] },
+  { id: 'mikina', name: 'Mikina', slot: 'vrsek', thumb: 'mikina', pieces: [{ src: 'nas-mikina', box: [21, 157, 190, 298], z: 4 }] },
+  { id: 'bunda', name: 'Bunda se svetrem', slot: 'bunda', thumb: 'bunda', pieces: [{ src: 'nas-bunda', box: [17, 147, 195, 303], z: 6 }] },
+  { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'zimni-bunda', pieces: [{ src: 'nas-zimni-bunda', box: [16, 127, 197, 313], z: 6 }] },
+  { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'dziny', pieces: [{ src: 'nas-dziny', box: [36, 269, 173, 375], z: 2 }] },
+  { id: 'kalhoty', name: 'Kalhoty', slot: 'dolu', thumb: 'kalhoty', pieces: [{ src: 'nas-kalhoty', box: [23, 269, 189, 368], z: 2 }] },
+  { id: 'zimni-kalhoty', name: 'Zimní kalhoty', slot: 'dolu', thumb: 'nas-zimni-kalhoty', pieces: [{ src: 'nas-zimni-kalhoty', box: [47, 292, 167, 363], z: 2 }] },
+  { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'tenisky', pieces: [{ src: 'nas-tenisky', box: [36, 357, 173, 389], z: 3 }] },
+  { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'boty', pieces: [{ src: 'nas-boty', box: [29, 352, 190, 392], z: 3 }] },
+  { id: 'holinky', name: 'Holínky', slot: 'boty', thumb: 'holinky', pieces: [{ src: 'holinky', box: [41, 288, 173, 379], z: 3 }] },
+  { id: 'zimni-boty', name: 'Zimní boty', slot: 'boty', thumb: 'zimni-boty', pieces: [{ src: 'nas-zimni-boty', box: [20, 307, 186, 392], z: 3 }] },
+  { id: 'palcaky', name: 'Palčáky', slot: 'ruce', thumb: 'palcak-l', pieces: [{ src: 'nas-palcaky', box: [9, 257, 204, 313], z: 7 }] },
+  { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'destnik', pieces: [{ src: 'destnik', box: [161, 118, 277, 282], z: 10 }] },
 ];
 const BY_ID = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
 /** Co má Sam na sobě, když v dané části nic nevybral. */
@@ -141,7 +144,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
             </div>
           ) : null}
           <div className="relative mt-16 mb-4" style={{ width: 'min(52%, 210px)', aspectRatio: `${SAM_W} / ${SAM_H}` }}>
-            <img src={`${ART}/sam.png`} alt="Sam" className="absolute inset-0 w-full h-full" draggable={false} />
+            <img src={`${ART}/sam.png`} alt="Sam" className="absolute" style={{ left: `${(15 / SAM_W) * 100}%`, top: `${(10 / SAM_H) * 100}%`, width: `${(174 / SAM_W) * 100}%`, height: `${(382 / SAM_H) * 100}%` }} draggable={false} />
             {worn.flatMap((it) => it.pieces.map((p, i) => {
               const [x0, y0, x1, y1] = p.box;
               return (
