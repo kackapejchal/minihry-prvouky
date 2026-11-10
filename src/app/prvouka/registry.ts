@@ -132,7 +132,7 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     dataId: 'hvezdy',
     name: 'Souhvězdí',
     description: 'spoj hvězdy Velkého vozu a najdi Polárku.',
-    longDescription: 'Na noční obloze děti spojují hvězdy Velkého vozu, Kasiopeji a Oriona a podle vozu najdou Polárku, která ukazuje sever. V režimu Prohlížet je přes 20 souhvězdí s popisem a otočná mapa oblohy, která ukáže, co je vidět na jaře, v létě, na podzim a v zimě.',
+    longDescription: 'Model noční oblohy s 26 souhvězdími a otočnou mapou, která ukáže, co je vidět na jaře, v létě, na podzim a v zimě. V části Vyzkoušej si děti spojují hvězdy vybraných souhvězdí podle čísel a podle Velkého vozu najdou Polárku.',
     icon: '✨',
     bg: '#D0DBFF',
     playBg: '#05081a',
@@ -252,12 +252,12 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
       mode: {
         name: 'Začít v režimu',
         type: 'select' as const,
-        defaultValue: 'hra',
+        defaultValue: 'prohlizet',
         options: [
-          { value: 'hra', label: 'Hra' },
-          { value: 'prohlizet', label: 'Prohlížet' },
+          { value: 'prohlizet', label: 'Prohlížet oblohu' },
+          { value: 'hra', label: 'Hra Spoj souhvězdí' },
         ],
-        description: 'Přepnout jde i během hraní',
+        description: 'Hra jde spustit i z oblohy (Vyzkoušej si)',
       },
     };
   }

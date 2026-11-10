@@ -15,9 +15,23 @@ import { CONSTELLATIONS, POLARKA_TEXT, SEASONS, constellation, projectScene, pro
 // panel vpravo jde až dolů. Na mobilu (pod sebou) uhne celá stránka.
 const NAV_SPACE = 'pb-20 lg:pb-5';
 const NAV_LEFT = 'lg:mb-16';
-type Mode = 'hra' | 'prohlizet';
+// prohlizet = model oblohy, vyber = výběr souhvězdí do hry, hra = spojovačka
+type Mode = 'prohlizet' | 'vyber' | 'hra';
 type Round = { type: 'connect'; c: string } | { type: 'polarka' };
-const ROUNDS: Round[] = [{ type: 'connect', c: 'vuz' }, { type: 'polarka' }, { type: 'connect', c: 'kasiopeja' }, { type: 'connect', c: 'orion' }];
+const DEFAULT_PICK = ['vuz', 'kasiopeja', 'orion'];
+/** Kola hry z vybraných souhvězdí (v pořadí seznamu); po Velkém voze ještě „Najdi Polárku“. */
+function buildRounds(ids: string[]): Round[] {
+  const out: Round[] = [];
+  for (const c of CONSTELLATIONS) if (ids.includes(c.id)) { out.push({ type: 'connect', c: c.id }); if (c.id === 'vuz') out.push({ type: 'polarka' }); }
+  return out;
+}
+/** Hvězdy v pořadí spojování (bez zvednutí tužky) a čísla kroků, kterými začíná nová čára. */
+const stepsOf = (id: string) => constellation(id).order!.filter((x) => x !== '-');
+function breaksOf(id: string) {
+  const out = new Set<number>(); let i = 0;
+  for (const x of constellation(id).order!) { if (x === '-') out.add(i); else i++; }
+  return out;
+}
 const sceneOf = (r: Round): string => (r.type === 'polarka' ? 'vuz' : r.c);
 const GOLD = '#ffd98a';
 
@@ -86,7 +100,9 @@ const FAINT = (() => { const r = rng(5); return Array.from({ length: 260 }, () =
 
 export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   const still = useMemo(prefersReducedMotion, []);
-  const [mode, setMode] = useState<Mode>(settings?.mode === 'prohlizet' ? 'prohlizet' : 'hra');
+  const [mode, setMode] = useState<Mode>(settings?.mode === 'hra' ? 'hra' : 'prohlizet');
+  const [picked, setPicked] = useState<string[]>(DEFAULT_PICK);
+  const [rounds, setRounds] = useState<Round[]>(() => buildRounds(DEFAULT_PICK));
   const [view, setView] = useState<SceneId>('vuz');
   const [season, setSeason] = useState<SeasonFilter>('vse');
   const rot = useRef(0);
@@ -105,12 +121,12 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [box, setBox] = useState({ w: 800, h: 600 });
 
-  const sceneId: SceneId = mode === 'prohlizet' ? view : sceneOf(ROUNDS[round]);
+  const sceneId: SceneId = mode !== 'hra' ? view : sceneOf(rounds[round]);
   // Ve hře je Polárka jen v kole „Najdi Polárku“ – v prvním kole je vůz přes celou oblohu.
-  const withPolarka = mode === 'prohlizet' ? view === 'vuz' || view === 'all' : ROUNDS[round].type === 'polarka';
+  const withPolarka = mode !== 'hra' ? view === 'vuz' || view === 'all' : rounds[round].type === 'polarka';
   const { placed, center } = useMemo(() => layoutScene(sceneId, box.w, box.h, withPolarka), [sceneId, box.w, box.h, withPolarka]);
   const byId = useMemo(() => Object.fromEntries(placed.map((p) => [p.id, p])), [placed]);
-  const r = ROUNDS[round];
+  const r = rounds[round];
   const c = r.type === 'connect' ? constellation(r.c) : null;
 
   useEffect(() => {
@@ -125,10 +141,16 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
     setRound(i); setStep(0); setMistakes(0); setRoundDone(false);
   };
   const restart = () => { setCleanRounds(0); setFinished(false); resetRound(0); };
+  const openPicker = () => {
+    setPicked(season === 'vse' ? DEFAULT_PICK : CONSTELLATIONS.filter((x) => x.season === season).map((x) => x.id));
+    setMode('vyber');
+  };
+  const startGame = () => { setRounds(buildRounds(picked)); setCleanRounds(0); setFinished(false); resetRound(0); setMode('hra'); };
+  const showOnSky = (id: string) => { setView(id); setMode('prohlizet'); };
 
   // Kreslení: každé snímek (třpyt hvězd, blikání hvězdy, kde se začíná).
-  const stateRef = useRef({ mode, placed, byId, center, step, round, roundDone, view, mistakes, season });
-  stateRef.current = { mode, placed, byId, center, step, round, roundDone, view, mistakes, season };
+  const stateRef = useRef({ mode, placed, byId, center, step, round, roundDone, view, mistakes, season, rounds });
+  stateRef.current = { mode, placed, byId, center, step, round, roundDone, view, mistakes, season, rounds };
   useEffect(() => {
     let raf = 0;
     const frame = (now: number) => {
@@ -190,7 +212,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
       }
     };
 
-    if (st.mode === 'prohlizet') {
+    if (st.mode !== 'hra') {
       const all = st.view === 'all';
       // 2 = vybrané období, 1 = vidět po celý rok (k vybranému období), 0 = jindy
       const lvl = (cons: Constellation) => (!all || st.season === 'vse' || cons.season === st.season ? 2 : cons.season === 'cely-rok' ? 1 : 0);
@@ -249,13 +271,13 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
       return;
     }
 
-    const rr = ROUNDS[st.round];
+    const rr = st.rounds[st.round];
     if (rr.type === 'polarka' || (rr.type === 'connect' && rr.c === 'vuz' && st.roundDone)) {
       for (const [a, b] of constellation('vuz').edges) line(st.byId[a], st.byId[b], rr.type === 'polarka' ? 0.6 : 0.9);
     }
     if (rr.type === 'connect') {
-      const ord = constellation(rr.c).order!;
-      for (let i = 1; i < st.step; i++) line(st.byId[ord[i - 1]], st.byId[ord[i]]);
+      const ord = stepsOf(rr.c), brk = breaksOf(rr.c);
+      for (let i = 1; i < st.step; i++) if (!brk.has(i)) line(st.byId[ord[i - 1]], st.byId[ord[i]]);
     }
     if (rr.type === 'polarka') {
       polarkaGuide(st.roundDone);
@@ -268,7 +290,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
     for (const p of st.placed) drawStar(ctx, p, p.id === 'polarka' ? 1.5 : 1);
     // Čísla u hvězd (spojovačka). Hvězda, přes kterou se jde dvakrát, má dvě čísla vedle sebe.
     if (rr.type === 'connect' && !st.roundDone) {
-      const ord = constellation(rr.c).order!;
+      const ord = stepsOf(rr.c);
       const nums: Record<string, number[]> = {};
       ord.forEach((id, i) => { (nums[id] ??= []).push(i); });
       const br = Math.max(11, fs * 0.62);
@@ -289,7 +311,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
       }
     }
     // Další hvězda, na kterou se má klepnout: pulzující kroužek.
-    const pulseAt = rr.type === 'connect' && !st.roundDone ? st.byId[constellation(rr.c).order![st.step]] : null;
+    const pulseAt = rr.type === 'connect' && !st.roundDone ? st.byId[stepsOf(rr.c)[st.step]] : null;
     if (pulseAt) {
       const k = still ? 0.5 : (Math.sin(t * 4) + 1) / 2;
       ctx.strokeStyle = `rgba(240,161,44,${0.55 + 0.4 * k})`; ctx.lineWidth = 3;
@@ -322,7 +344,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
       else { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: 'Prodluž čáru od dvou modře označených hvězd asi pětkrát.' }); }
       return;
     }
-    const ord = c!.order!;
+    const ord = stepsOf(c!.id);
     const ok = hit.id === ord[step];
     flash.current = { x: hit.x, y: hit.y, t: now, ok };
     if (!ok) { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: `Hledej hvězdu s číslem ${step + 1}.` }); return; }
@@ -330,13 +352,15 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
     if (step + 1 === ord.length) { setRoundDone(true); setFeedback({ isCorrect: true }); if (mistakes === 0) setCleanRounds((n) => n + 1); }
   };
 
-  const next = () => { if (round + 1 < ROUNDS.length) resetRound(round + 1); else setFinished(true); };
+  const next = () => { if (round + 1 < rounds.length) resetRound(round + 1); else setFinished(true); };
 
   const task = r.type === 'polarka'
     ? 'Najdi Polárku. Dvě modře označené hvězdy vozu ukazují k ní – jejich vzdálenost prodluž asi pětkrát a klepni na hvězdu, kterou tam najdeš.'
     : step === 0
       ? `Spoj hvězdy souhvězdí ${c!.name} podle čísel. Začni hvězdou s číslem 1.`
-      : `Teď klepni na hvězdu s číslem ${step + 1}.`;
+      : breaksOf(c!.id).has(step)
+        ? `Tahle čára je hotová. Novou čáru začni u hvězdy s číslem ${step + 1}.`
+        : `Teď klepni na hvězdu s číslem ${step + 1}.`;
   const doneText = r.type === 'polarka' ? POLARKA_TEXT : c!.text;
 
   return (
@@ -347,28 +371,26 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
 
       <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto">
         <div className="relative flex-shrink-0 px-5 pt-4 pb-5 text-white" style={{ background: 'linear-gradient(180deg, #121c55 0%, #0b1236 100%)' }}>
-          {/* Hra / Prohlížet – spojené tlačítko jako u ostatních modelů. */}
-          <div className="inline-flex rounded-full p-1" style={{ background: 'rgba(255,255,255,.12)' }}>
-            {(['hra', 'prohlizet'] as Mode[]).map((m) => (
+          {/* Ve hře a ve výběru je „zpět“ nahoře, stejně jako u Závodu planet ve Sluneční soustavě. */}
+          {mode !== 'prohlizet' ? (
+            <div className="flex">
               <button
-                key={m}
                 type="button"
-                onClick={() => setMode(m)}
-                aria-pressed={mode === m}
-                className="h-9 px-4 rounded-full text-sm font-bold transition-colors"
-                style={mode === m ? { background: '#f0a12c', color: '#2a1700' } : { color: '#e7ecff' }}
+                onClick={() => setMode('prohlizet')}
+                className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors"
               >
-                {m === 'hra' ? 'Hra' : 'Prohlížet'}
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+                {mode === 'hra' ? 'Konec hry' : 'Zpět na oblohu'}
               </button>
-            ))}
-          </div>
-          <h2 className="text-3xl font-bold mt-3">{mode === 'prohlizet' ? (view === 'all' ? (season === 'vse' ? 'Celá obloha' : `Obloha ${seasonOf(season).on}`) : constellation(view).name) : r.type === 'polarka' ? 'Polárka' : c!.name}</h2>
+            </div>
+          ) : null}
+          <h2 className={`text-3xl font-bold ${mode === 'prohlizet' ? 'mt-1' : 'mt-3'}`}>{mode === 'prohlizet' ? (view === 'all' ? (season === 'vse' ? 'Celá obloha' : `Obloha ${seasonOf(season).on}`) : constellation(view).name) : mode === 'vyber' ? 'Spoj souhvězdí' : r.type === 'polarka' ? 'Polárka' : c!.name}</h2>
           {mode === 'hra' ? (
-            <div className="flex items-center gap-1.5 mt-2" aria-label={`Kolo ${round + 1} z ${ROUNDS.length}`}>
-              {ROUNDS.map((_, i) => (
+            <div className="flex items-center gap-1.5 mt-2" aria-label={`Kolo ${round + 1} z ${rounds.length}`}>
+              {rounds.map((_, i) => (
                 <span key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === round ? 26 : 12, background: i < round || (i === round && roundDone) ? '#f0a12c' : i === round ? '#fff' : 'rgba(255,255,255,.3)' }} />
               ))}
-              <span className="ml-2 text-xs font-bold text-[#9aa6d1]">Kolo {round + 1} z {ROUNDS.length}</span>
+              <span className="ml-2 text-xs font-bold text-[#9aa6d1]">Kolo {round + 1} z {rounds.length}</span>
             </div>
           ) : null}
         </div>
@@ -385,7 +407,14 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                     onClick={next}
                     className="self-start mt-1 h-11 px-5 rounded-full bg-white border-2 border-[#4e5871] shadow-[0_3px_0_#4e5871] font-bold text-[#0f1d4d] active:translate-y-[2px] active:shadow-[0_1px_0_#4e5871] transition"
                   >
-                    {round + 1 < ROUNDS.length ? 'Další kolo →' : 'Hotovo'}
+                    {round + 1 < rounds.length ? 'Další kolo →' : 'Hotovo'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => showOnSky(r.type === 'polarka' ? 'vuz' : c!.id)}
+                    className="self-start h-11 px-5 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] font-bold text-[#4e5871] transition-colors"
+                  >
+                    ✨ Prohlédnout na obloze
                   </button>
                 </>
               ) : (
@@ -393,6 +422,62 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                   <p className="text-base leading-relaxed text-[#4e5871]">{task}</p>
                 </>
               )}
+            </>
+          ) : mode === 'vyber' ? (
+            <>
+              <p className="text-base leading-relaxed text-[#4e5871]">Vyber souhvězdí, která budeš spojovat podle čísel. Rychle vybereš i celé roční období.</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as Season[]).map((f) => {
+                  const ids = CONSTELLATIONS.filter((x) => x.season === f).map((x) => x.id);
+                  const on = ids.length === picked.length && ids.every((id) => picked.includes(id));
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setPicked(ids)}
+                      aria-pressed={on}
+                      className="h-9 px-3 rounded-full text-sm font-bold transition-colors"
+                      style={on ? { background: '#f0a12c', color: '#2a1700' } : { background: '#f4f6fb', color: '#0f1d4d' }}
+                    >
+                      {seasonOf(f).icon} {seasonOf(f).name}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {(['cely-rok', 'jaro', 'leto', 'podzim', 'zima'] as Season[]).map((sid) => [
+                  <p key={`h-${sid}`} className="col-span-2 text-xs font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
+                  ...CONSTELLATIONS.filter((cons) => cons.season === sid).map((cons) => {
+                    const on = picked.includes(cons.id);
+                    return (
+                      <button
+                        key={cons.id}
+                        type="button"
+                        onClick={() => setPicked((p) => (on ? p.filter((x) => x !== cons.id) : [...p, cons.id]))}
+                        aria-pressed={on}
+                        className="relative flex items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs font-bold transition-colors min-w-0"
+                        style={{ background: on ? '#fde9c6' : '#f4f6fb', boxShadow: on ? 'inset 0 0 0 2px #f0a12c' : 'none' }}
+                      >
+                        <ConstellationIcon c={cons} />
+                        <span className="min-w-0 leading-tight flex-1">{cons.name}</span>
+                        <span className="w-5 h-5 flex-shrink-0 rounded-full flex items-center justify-center text-[11px]" style={on ? { background: '#f0a12c', color: '#2a1700' } : { border: '2px solid #c9d0e4' }} aria-hidden="true">{on ? '✓' : ''}</span>
+                      </button>
+                    );
+                  }),
+                ])}
+              </div>
+              {/* Tlačítko zůstává vidět dole i u dlouhého seznamu. */}
+              <div className="sticky bottom-0 -mx-5 px-5 pt-3 pb-1 bg-white">
+              <button
+                type="button"
+                disabled={picked.length === 0}
+                onClick={startGame}
+                className="w-full h-12 rounded-full font-bold text-[#2a1700] transition disabled:opacity-40"
+                style={{ background: '#f0a12c', boxShadow: '0 3px 0 #b8741a' }}
+              >
+                {picked.length === 0 ? 'Vyber aspoň jedno souhvězdí' : `Začít hru (${picked.length}) →`}
+              </button>
+              </div>
             </>
           ) : (
             <>
@@ -448,6 +533,26 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
                   ])}
                 </div>
               </div>
+              <div className="pt-1">
+                <p className="text-xs font-bold text-[#56628a] mb-2">Vyzkoušej si</p>
+                <button
+                  type="button"
+                  onClick={openPicker}
+                  className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
+                  style={{ background: 'linear-gradient(90deg, #4a43e8 0%, #0b1236 100%)' }}
+                >
+                  {/* Malý Velký vůz s čísly jako ve hře. */}
+                  <svg viewBox="0 0 120 60" className="absolute right-2 top-2 w-28 h-14" aria-hidden="true">
+                    <polyline points="8,48 30,34 50,32 70,34 82,44 104,38 104,16 70,34" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinejoin="round" />
+                    {[[8, 48], [30, 34], [50, 32], [70, 34], [82, 44], [104, 38], [104, 16]].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="3" fill="#fff" />)}
+                    <circle cx="16" cy="40" r="6" fill="#f0a12c" /><text x="16" y="43" textAnchor="middle" fontSize="8" fontWeight="700" fill="#2a1700">1</text>
+                  </svg>
+                  <span className="absolute left-3 bottom-2.5">
+                    <span className="block text-xl font-bold leading-tight">Spoj souhvězdí</span>
+                    <span className="block text-xs opacity-90">Spojuj hvězdy podle čísel →</span>
+                  </span>
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -461,7 +566,7 @@ export function PrvoukaStars({ settings }: { settings?: Record<string, any> }) {
           successText="Hvězdář! ⭐"
           showContinueButton
           displayType="gameComplete"
-          score={{ correct: cleanRounds, total: ROUNDS.length }}
+          score={{ correct: cleanRounds, total: rounds.length }}
         />
       ) : null}
     </div>

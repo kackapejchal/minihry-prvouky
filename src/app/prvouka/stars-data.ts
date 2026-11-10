@@ -21,7 +21,7 @@ export interface Constellation {
   season: Season;
   stars: SkyStar[];
   edges: Array<[string, string]>;
-  /** Pořadí ve hře (spojovačka podle čísel), jen u souhvězdí, která jsou ve hře. Hvězda může mít dvě čísla. */
+  /** Pořadí ve hře (spojovačka podle čísel). Hvězda může mít víc čísel. '-' = zvednout tužku (další číslo začíná novou čáru). */
   order?: string[];
   /** Krátký text do panelu (ověřená fakta). */
   text: string;
@@ -63,6 +63,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'umi-eta', name: 'η', ra: 16.292, dec: 75.76, mag: 5.0 },
     ],
     edges: [['polarka', 'yildun'], ['yildun', 'umi-eps'], ['umi-eps', 'umi-zeta'], ['umi-zeta', 'kochab'], ['kochab', 'pherkad'], ['pherkad', 'umi-eta'], ['umi-eta', 'umi-zeta']],
+    order: ['polarka', 'yildun', 'umi-eps', 'umi-zeta', 'kochab', 'pherkad', 'umi-eta', 'umi-zeta'],
     text: 'Menší vůz, jehož oj končí Polárkou. Většina jeho hvězd svítí slabě, takže ve městě ho často nevidíme celý. Na obloze je po celý rok.',
     named: ['polarka'],
   },
@@ -93,6 +94,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'cyg-delta', name: 'δ', ra: 19.750, dec: 45.13, mag: 2.9 },
     ],
     edges: [['deneb', 'sadr'], ['sadr', 'albireo'], ['cyg-delta', 'sadr'], ['sadr', 'gienah']],
+    order: ['deneb', 'sadr', 'albireo', '-', 'cyg-delta', 'sadr', 'gienah'],
     text: 'Velký kříž z hvězd, proto se mu říká i Severní kříž. Nejjasnější hvězda je Deneb. Nejlépe ho uvidíme v létě.',
     named: ['deneb'],
   },
@@ -108,6 +110,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'sheliak', name: 'Sheliak', ra: 18.835, dec: 33.36, mag: 3.5 },
     ],
     edges: [['vega', 'lyr-zeta'], ['lyr-zeta', 'lyr-delta'], ['lyr-delta', 'sulafat'], ['sulafat', 'sheliak'], ['sheliak', 'lyr-zeta']],
+    order: ['vega', 'lyr-zeta', 'lyr-delta', 'sulafat', 'sheliak', 'lyr-zeta'],
     text: 'Malé souhvězdí, ale s jednou z nejjasnějších hvězd na obloze – Vegou. V létě večer svítí vysoko nad hlavou.',
     named: ['vega'],
   },
@@ -127,6 +130,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'denebola', name: 'Denebola', ra: 11.818, dec: 14.57, mag: 2.1 },
     ],
     edges: [['regulus', 'leo-eta'], ['leo-eta', 'algieba'], ['algieba', 'leo-zeta'], ['leo-zeta', 'leo-mu'], ['leo-mu', 'leo-eps'], ['algieba', 'zosma'], ['zosma', 'denebola'], ['denebola', 'chertan'], ['chertan', 'regulus'], ['chertan', 'zosma']],
+    order: ['leo-eps', 'leo-mu', 'leo-zeta', 'algieba', 'leo-eta', 'regulus', 'chertan', 'denebola', 'zosma', 'algieba', '-', 'chertan', 'zosma'],
     text: 'Jarní souhvězdí. Hlavu lva tvoří hvězdy ve tvaru obráceného otazníku, nejjasnější z nich je Regulus.',
     named: ['regulus'],
   },
@@ -161,6 +165,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'alhena', name: 'Alhena', ra: 6.629, dec: 16.40, mag: 1.9 },
     ],
     edges: [['kastor', 'pollux'], ['kastor', 'mebsuta'], ['mebsuta', 'tejat'], ['pollux', 'wasat'], ['wasat', 'alhena']],
+    order: ['tejat', 'mebsuta', 'kastor', 'pollux', 'wasat', 'alhena'],
     text: 'Dvě jasné hvězdy vedle sebe, Kastor a Pollux, jsou jako dvojčata. Nejlépe je uvidíme v zimě.',
     named: ['kastor', 'pollux'],
   },
@@ -182,6 +187,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'dra-nu', name: 'ν', ra: 17.537, dec: 55.18, mag: 4.9 },
     ],
     edges: [['giausar', 'dra-kappa'], ['dra-kappa', 'thuban'], ['thuban', 'edasich'], ['edasich', 'dra-theta'], ['dra-theta', 'dra-eta'], ['dra-eta', 'dra-zeta'], ['dra-zeta', 'altais'], ['altais', 'grumium'], ['grumium', 'eltanin'], ['eltanin', 'rastaban'], ['rastaban', 'dra-nu'], ['dra-nu', 'grumium']],
+    order: ['giausar', 'dra-kappa', 'thuban', 'edasich', 'dra-theta', 'dra-eta', 'dra-zeta', 'altais', 'grumium', 'eltanin', 'rastaban', 'dra-nu', 'grumium'],
     text: 'Dlouhé souhvězdí, které se jako had vine mezi Velkým a Malým vozem. Hlavu mu tvoří čtyři hvězdy. Je blízko Polárky, a proto ho vidíme po celý rok.',
   },
   {
@@ -194,6 +200,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'cep-zeta', name: 'ζ', ra: 22.181, dec: 58.20, mag: 3.4 },
     ],
     edges: [['alderamin', 'alfirk'], ['alfirk', 'errai'], ['errai', 'cep-iota'], ['cep-iota', 'alfirk'], ['cep-iota', 'cep-zeta'], ['cep-zeta', 'alderamin']],
+    order: ['alfirk', 'errai', 'cep-iota', 'alfirk', 'alderamin', 'cep-zeta', 'cep-iota'],
     text: 'Pět hvězd ve tvaru domečku se špičatou střechou. Leží vedle Kasiopeji blízko Polárky a na obloze je po celý rok.',
   },
   // ——— Jaro ———
@@ -209,6 +216,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'muphrid', name: 'Muphrid', ra: 13.911, dec: 18.40, mag: 2.7 },
     ],
     edges: [['arktur', 'izar'], ['izar', 'boo-delta'], ['boo-delta', 'nekkar'], ['nekkar', 'seginus'], ['seginus', 'boo-rho'], ['boo-rho', 'arktur'], ['arktur', 'muphrid']],
+    order: ['muphrid', 'arktur', 'izar', 'boo-delta', 'nekkar', 'seginus', 'boo-rho', 'arktur'],
     text: 'Hvězdy ve tvaru papírového draka nebo kornoutu. Na jeho špičce svítí oranžový Arktur, jedna z nejjasnějších hvězd. Najdeš ho, když prodloužíš oblouk oje Velkého vozu.',
     named: ['arktur'],
   },
@@ -223,6 +231,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'crb-eps', name: 'ε', ra: 15.960, dec: 26.88, mag: 4.2 },
     ],
     edges: [['crb-theta', 'crb-beta'], ['crb-beta', 'alphecca'], ['alphecca', 'crb-gamma'], ['crb-gamma', 'crb-delta'], ['crb-delta', 'crb-eps']],
+    order: ['crb-theta', 'crb-beta', 'alphecca', 'crb-gamma', 'crb-delta', 'crb-eps'],
     text: 'Malý oblouk hvězd jako koruna nebo podkova. Leží hned vedle Pastýře. Nejlépe ji uvidíme koncem jara a v létě.',
   },
   {
@@ -237,6 +246,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'zavijava', name: 'Zavijava', ra: 11.845, dec: 1.76, mag: 3.6 },
     ],
     edges: [['zavijava', 'zaniah'], ['zaniah', 'porrima'], ['porrima', 'vir-delta'], ['vir-delta', 'vindemiatrix'], ['porrima', 'spika'], ['spika', 'vir-zeta'], ['vir-zeta', 'vir-delta']],
+    order: ['zavijava', 'zaniah', 'porrima', 'spika', 'vir-zeta', 'vir-delta', 'vindemiatrix', '-', 'porrima', 'vir-delta'],
     text: 'Velké jarní souhvězdí. Nejjasnější hvězda je modrobílá Spika. Najdeš ji, když oblouk oje Velkého vozu prodloužíš přes Arktur ještě dál.',
     named: ['spika'],
   },
@@ -253,6 +263,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'aql-lambda', name: 'λ', ra: 19.104, dec: -4.88, mag: 3.4 },
     ],
     edges: [['tarazed', 'altair'], ['altair', 'alshain'], ['alshain', 'aql-theta'], ['altair', 'aql-delta'], ['aql-delta', 'aql-lambda'], ['aql-delta', 'aql-zeta']],
+    order: ['aql-theta', 'alshain', 'altair', 'tarazed', '-', 'altair', 'aql-delta', 'aql-zeta', '-', 'aql-delta', 'aql-lambda'],
     text: 'Letní souhvězdí s jasnou hvězdou Altair. Altair, Vega z Lyry a Deneb z Labutě tvoří na letní obloze velký Letní trojúhelník.',
     named: ['altair'],
   },
@@ -270,6 +281,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'her-sigma', name: 'σ', ra: 16.568, dec: 42.44, mag: 4.2 },
     ],
     edges: [['her-zeta', 'her-eta'], ['her-eta', 'her-pi'], ['her-pi', 'her-eps'], ['her-eps', 'her-zeta'], ['her-zeta', 'kornephoros'], ['her-eps', 'her-delta'], ['her-pi', 'her-theta'], ['her-theta', 'her-iota'], ['her-eta', 'her-sigma']],
+    order: ['kornephoros', 'her-zeta', 'her-eta', 'her-pi', 'her-eps', 'her-zeta', '-', 'her-eps', 'her-delta', '-', 'her-pi', 'her-theta', 'her-iota', '-', 'her-eta', 'her-sigma'],
     text: 'Souhvězdí hrdiny Herkula. Poznáš ho podle čtyř hvězd do lichoběžníku uprostřed. Svítí slabě, ale v létě je vysoko na obloze.',
   },
   {
@@ -292,6 +304,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'lesath', name: 'Lesath', ra: 17.513, dec: -37.30, mag: 2.7 },
     ],
     edges: [['acrab', 'dschubba'], ['dschubba', 'sco-pi'], ['dschubba', 'sco-sigma'], ['sco-sigma', 'antares'], ['antares', 'sco-tau'], ['sco-tau', 'sco-eps'], ['sco-eps', 'sco-mu'], ['sco-mu', 'sco-zeta'], ['sco-zeta', 'sco-eta'], ['sco-eta', 'sargas'], ['sargas', 'sco-iota'], ['sco-iota', 'sco-kappa'], ['sco-kappa', 'shaula'], ['shaula', 'lesath']],
+    order: ['acrab', 'dschubba', 'sco-sigma', 'antares', 'sco-tau', 'sco-eps', 'sco-mu', 'sco-zeta', 'sco-eta', 'sargas', 'sco-iota', 'sco-kappa', 'shaula', 'lesath', '-', 'dschubba', 'sco-pi'],
     text: 'Hvězdy ve tvaru háčku se zakrouceným ocasem. Uprostřed svítí červený Antares. U nás je v létě jen nízko nad jižním obzorem, takže konec ocasu často schová obzor.',
     named: ['antares'],
   },
@@ -308,6 +321,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'ascella', name: 'Ascella', ra: 19.044, dec: -29.88, mag: 2.6 },
     ],
     edges: [['alnasl', 'kaus-media'], ['alnasl', 'kaus-australis'], ['kaus-media', 'kaus-australis'], ['kaus-media', 'kaus-borealis'], ['kaus-borealis', 'sgr-phi'], ['kaus-media', 'sgr-phi'], ['sgr-phi', 'nunki'], ['nunki', 'sgr-tau'], ['sgr-tau', 'ascella'], ['ascella', 'sgr-phi'], ['ascella', 'kaus-australis']],
+    order: ['kaus-australis', 'alnasl', 'kaus-media', 'kaus-australis', 'ascella', 'sgr-phi', 'kaus-media', 'kaus-borealis', 'sgr-phi', 'nunki', 'sgr-tau', 'ascella'],
     text: 'Jeho nejjasnější hvězdy vypadají jako čajová konvice. Nad ní je nejhustší a nejjasnější část Mléčné dráhy. U nás je v létě nízko nad jihem.',
   },
   // ——— Podzim ———
@@ -324,6 +338,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'matar', name: 'Matar', ra: 22.717, dec: 30.22, mag: 2.9 },
     ],
     edges: [['markab', 'scheat'], ['scheat', 'alpheratz'], ['alpheratz', 'algenib'], ['algenib', 'markab'], ['markab', 'homam'], ['homam', 'biham'], ['biham', 'enif'], ['scheat', 'matar']],
+    order: ['enif', 'biham', 'homam', 'markab', 'scheat', 'matar', '-', 'markab', 'algenib', 'alpheratz', 'scheat'],
     text: 'Okřídlený kůň. Poznáš ho podle velkého čtverce ze čtyř hvězd, kterému se říká Podzimní čtverec. Jeho levá horní hvězda už patří Andromedě.',
   },
   {
@@ -337,6 +352,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'and-nu', name: 'ν', ra: 0.830, dec: 41.08, mag: 4.5 },
     ],
     edges: [['alpheratz', 'and-delta'], ['and-delta', 'mirach'], ['mirach', 'almach'], ['mirach', 'and-mu'], ['and-mu', 'and-nu']],
+    order: ['alpheratz', 'and-delta', 'mirach', 'almach', '-', 'mirach', 'and-mu', 'and-nu'],
     text: 'Řada hvězd, která vychází z rohu Pegasova čtverce. Kousek vedle je slabý obláček – galaxie v Andromedě. Je to nejvzdálenější věc, kterou uvidíme pouhým okem.',
   },
   {
@@ -351,6 +367,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'algol', name: 'Algol', ra: 3.136, dec: 40.96, mag: 2.1 },
     ],
     edges: [['per-eta', 'per-gamma'], ['per-gamma', 'mirfak'], ['mirfak', 'per-delta'], ['per-delta', 'per-eps'], ['per-eps', 'per-zeta'], ['mirfak', 'algol']],
+    order: ['per-eta', 'per-gamma', 'mirfak', 'per-delta', 'per-eps', 'per-zeta', '-', 'mirfak', 'algol'],
     text: 'Souhvězdí hrdiny Persea. Je v něm zvláštní hvězda Algol, která každé necelé tři dny na pár hodin zeslábne. Vidíme ho na podzim a v zimě.',
     named: ['algol'],
   },
@@ -363,6 +380,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'mesarthim', name: 'Mesarthim', ra: 1.892, dec: 19.29, mag: 3.9 },
     ],
     edges: [['ari-41', 'hamal'], ['hamal', 'sheratan'], ['sheratan', 'mesarthim']],
+    order: ['ari-41', 'hamal', 'sheratan', 'mesarthim'],
     text: 'Malé podzimní souhvězdí – jen pár hvězd v krátké lomené čáře. Nejjasnější z nich je Hamal.',
     named: ['hamal'],
   },
@@ -381,6 +399,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'plejady', name: 'Plejády', ra: 3.791, dec: 24.11, mag: 2.9, color: '#cfe0ff' },
     ],
     edges: [['tau-lambda', 'tau-gamma'], ['tau-gamma', 'tau-delta'], ['tau-delta', 'tau-eps'], ['tau-eps', 'elnath'], ['tau-gamma', 'tau-theta'], ['tau-theta', 'aldebaran'], ['aldebaran', 'tau-zeta']],
+    order: ['elnath', 'tau-eps', 'tau-delta', 'tau-gamma', 'tau-theta', 'aldebaran', 'tau-zeta', '-', 'tau-gamma', 'tau-lambda'],
     text: 'Hlavu býka tvoří hvězdy do písmene V. Oranžový Aldebaran je jeho oko. Kousek vedle svítí hvězdokupa Plejády, které se lidově říká Kuřátka.',
     named: ['aldebaran', 'plejady'],
   },
@@ -394,6 +413,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'hassaleh', name: 'Hassaleh', ra: 4.950, dec: 33.17, mag: 2.7 },
     ],
     edges: [['capella', 'menkalinan'], ['menkalinan', 'aur-theta'], ['aur-theta', 'elnath'], ['elnath', 'hassaleh'], ['hassaleh', 'capella']],
+    order: ['capella', 'menkalinan', 'aur-theta', 'elnath', 'hassaleh', 'capella'],
     text: 'Pět hvězd do pětiúhelníku. Svítí v něm žlutá Capella, jedna z nejjasnějších hvězd zimní oblohy. Spodní hvězdu pětiúhelníku si Vozka půjčuje od Býka.',
     named: ['capella'],
   },
@@ -409,6 +429,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'furud', name: 'Furud', ra: 6.339, dec: -30.06, mag: 3.0 },
     ],
     edges: [['mirzam', 'sirius'], ['sirius', 'muliphein'], ['sirius', 'wezen'], ['wezen', 'adhara'], ['adhara', 'furud'], ['wezen', 'aludra']],
+    order: ['mirzam', 'sirius', 'wezen', 'adhara', 'furud', '-', 'sirius', 'muliphein', '-', 'wezen', 'aludra'],
     text: 'Svítí v něm Sírius – nejjasnější hvězda noční oblohy. Najdeš ho, když prodloužíš Orionův pás doleva dolů.',
     named: ['sirius'],
   },
@@ -419,6 +440,7 @@ export const CONSTELLATIONS: Constellation[] = [
       { id: 'gomeisa', name: 'Gomeisa', ra: 7.453, dec: 8.29, mag: 2.9 },
     ],
     edges: [['prokyon', 'gomeisa']],
+    order: ['gomeisa', 'prokyon'],
     text: 'Jen dvě hvězdy, ale jedna z nich, Prokyon, patří k nejjasnějším. Prokyon, Sírius a Betelgeuze tvoří velký Zimní trojúhelník.',
     named: ['prokyon'],
   },
