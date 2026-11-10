@@ -90,7 +90,7 @@ function Landscape({ season }: { season: Season }) {
       {/* cesta Slunce po obloze od rána do večera */}
       <path d={`M 40 ${gy} Q ${W / 2} ${2 * top - gy} ${W - 40} ${gy}`} fill="none" stroke="rgba(255,255,255,.75)" strokeWidth="2.5" strokeDasharray="6 7" />
       <circle cx={W / 2} cy={top} r="24" fill="#ffd54a" stroke="#fff3b0" strokeWidth="4" />
-      <text x={W / 2 + 34} y={top + 6} fontSize="18" fontWeight="700" fill="#fff" style={FONT}>v poledne {sun.word}</text>
+      <text x={W / 2} y={top - 36} fontSize="18" fontWeight="700" fill="#fff" textAnchor="middle" style={FONT}>v poledne {sun.word}</text>
       <text x="40" y={gy - 12} fontSize="15" fontWeight="700" fill="#fff" style={FONT}>ráno</text>
       <text x={W - 40} y={gy - 12} fontSize="15" fontWeight="700" fill="#fff" textAnchor="end" style={FONT}>večer</text>
       {/* zem, strom, domeček */}
