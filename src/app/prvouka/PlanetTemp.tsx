@@ -49,8 +49,8 @@ export function TempStage({ body, names, thumbs }: { body: TempBody; names: Reco
                   <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">{b === 'zeme' ? 'průměrně' : 've dne i v noci'}</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.den) }}>{fmt(t.den)}</span></span>
                 ) : (
                   <>
-                    <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">ve dne</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.den) }}>{fmt(t.den)}</span></span>
-                    <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">v noci</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.noc) }}>{fmt(t.noc)}</span></span>
+                    <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">ve dne až</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.den) }}>{fmt(t.den)}</span></span>
+                    <span className="flex flex-col items-center"><span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#9aa6d1]">v noci až</span><span className="text-2xl md:text-4xl font-bold tabular-nums leading-none mt-1" style={{ color: tColor(t.noc) }}>{fmt(t.noc)}</span></span>
                   </>
                 )}
               </div>
