@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { GameResultScreen } from '../components/GameResultScreen';
-import { PrvoukaFeedbackOverlay, PrvoukaProgress } from './PrvoukaKit';
+import { PrvoukaFeedbackOverlay } from './PrvoukaKit';
 
 /**
  * Oblékni se podle počasí (Orientace v čase) – šatník jako v oblékačkách.
@@ -68,10 +68,10 @@ type Lin = { sx: number; cx: number; hx: number; sy: number; cy: number; hy: num
 const GROUP: Record<Slot, Lin> = {
   hlava: { sx: 1.05, cx: 102, hx: 120, sy: 1.05, cy: 128, hy: 145 },
   krk: { sx: 1.05, cx: 102, hx: 120, sy: 1.05, cy: 128, hy: 145 },
-  vrsek: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
-  bunda: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
-  ruce: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
-  destnik: { sx: 1.06, cx: 105, hx: 120, sy: 1.23, cy: 163, hy: 207 },
+  vrsek: { sx: 1.2, cx: 105, hx: 120, sy: 1.2, cy: 163, hy: 207 },
+  bunda: { sx: 1.2, cx: 105, hx: 120, sy: 1.2, cy: 163, hy: 207 },
+  ruce: { sx: 1.2, cx: 105, hx: 120, sy: 1.2, cy: 163, hy: 207 },
+  destnik: { sx: 1.2, cx: 105, hx: 120, sy: 1.2, cy: 163, hy: 207 },
   dolu: { sx: 1.06, cx: 104, hx: 120, sy: 1.06, cy: 262, hy: 322 },
   boty: { sx: 1.06, cx: 104, hx: 120, sy: 1.06, cy: 392, hy: 481 },
 };
@@ -105,6 +105,8 @@ interface Weather { id: WeatherId; label: string; sky: string; temp: string; ask
 
 // Co má postava na sobě vždycky (Sam žluté tričko, kraťasy, sandály) – vybrat to je totéž jako nic.
 /** Bundy a pláštěnka jsou ve stejné části jako trička (nahoru se vybírá jen jedna věc), kontrola je ale bere jako bundu. */
+/** Co má postava na sobě od začátku – v šatníku je to rovnou označené. */
+const WEARS: Record<'sam' | 'hanka', Partial<Record<Slot, string>>> = { sam: { vrsek: 'zlute-triko', dolu: 'kratasy', boty: 'sandaly' }, hanka: { vrsek: 'cervene-triko', dolu: 'kratasy', boty: 'tenisky' } };
 const JACKETS = ['bunda', 'zimni-bunda', 'plastenka'];
 const norm = (o: Outfit, who: Who): Outfit => { const b = CHARS[who].baseIds; const r: Outfit = { ...o }; (Object.keys(b) as Slot[]).forEach((k) => { if (r[k] === b[k]) r[k] = undefined; }); if (who === 'hanka' && !r.boty) r.boty = 'tenisky'; if (r.vrsek && JACKETS.includes(r.vrsek)) { r.bunda = r.vrsek; r.vrsek = undefined; } return r; };
 const warmTop = (o: Outfit) => o.vrsek === 'mikina' || Boolean(o.bunda);
@@ -192,7 +194,8 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
   const [clean, setClean] = useState(0);
   const W = WEATHER[rounds[ri] ?? 'prsi'];
 
-  const toggle = (it: Item) => setOutfit((o) => ({ ...o, [it.slot]: o[it.slot] === it.id ? undefined : it.id }));
+  // Základní věc (tričko, kraťasy, sandály…) nejde „svléknout“ – kliknutí na ni jen vrátí základ.
+  const toggle = (it: Item) => setOutfit((o) => ({ ...o, [it.slot]: o[it.slot] === it.id || WEARS[who][it.slot] === it.id ? undefined : it.id }));
   const goOut = () => {
     const problem = W.check(norm(outfit, who), C);
     if (problem) { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: problem }); return; }
@@ -230,6 +233,9 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
               <span className="text-base md:text-lg font-bold">{W.temp}</span>
             </div>
           ) : null}
+          {!free && rounds.length > 1 ? (
+            <div className="absolute right-4 top-3 rounded-full bg-white/85 px-3 py-1.5 text-sm font-bold tabular-nums" style={{ color: INK }}>{ri + 1} / {rounds.length}</div>
+          ) : null}
           <div className="flex-1 min-h-0 w-full flex items-center justify-center pt-14 pb-2">
           <div className="relative h-full max-h-[620px]" style={{ aspectRatio: `${C.w} / ${C.h}` }}>
             <img src={`${ART}/${baseSrc}.png`} alt={C.kdo} className="absolute" style={{ left: `${(bx0 / C.w) * 100}%`, top: `${(by0 / C.h) * 100}%`, width: `${((bx1 - bx0) / C.w) * 100}%`, height: `${((by1 - by0) / C.h) * 100}%` }} draggable={false} />
@@ -237,7 +243,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
               const [x0, y0, x1, y1] = (it.owner !== who && it.boxFor?.[who] && it.pieces.length === 1) ? it.boxFor[who]! : mapBox(p.box, it.slot, it.owner, who);
               return (
                 <img key={it.id + i} src={`${ART}/${(it.owner !== who && it.srcFor?.[who]) || p.src}.png`} alt="" draggable={false} className="absolute"
-                  style={{ left: `${(x0 / C.w) * 100}%`, top: `${(y0 / C.h) * 100}%`, width: `${((x1 - x0) / C.w) * 100}%`, height: `${((y1 - y0) / C.h) * 100}%`, zIndex: p.z, animation: 'oblIn .3s ease' }} />
+                  style={{ left: `${(x0 / C.w) * 100}%`, ...(it.slot === 'boty' ? { bottom: `${(1 - y1 / C.h) * 100}%` } : { top: `${(y0 / C.h) * 100}%` }), width: `${((x1 - x0) / C.w) * 100}%`, height: 'auto', zIndex: p.z, animation: 'oblIn .3s ease' }} />
               );
             }))}
           </div>
@@ -261,19 +267,19 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 content-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 content-start min-h-0 md:overflow-y-auto">
           {SHELVES.map((sh) => (
             <div key={sh.title} className={`rounded-2xl bg-white/70 p-2 ${sh.wide ? 'sm:col-span-2' : ''}`} style={{ border: `2px solid ${INK}1a` }}>
               <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: '#56628a' }}>{sh.title}</p>
               <div className="flex flex-wrap gap-1.5">
                 {items.filter((it) => sh.slots.includes(it.slot)).map((it) => {
-                  const on = outfit[it.slot] === it.id;
+                  const on = outfit[it.slot] === it.id || (!outfit[it.slot] && WEARS[who][it.slot] === it.id);
                   return (
                     <button key={it.id} type="button" onClick={() => toggle(it)} aria-pressed={on}
-                      className="flex flex-col items-center justify-end gap-0.5 rounded-xl bg-white w-[86px] h-[92px] xl:w-[100px] xl:h-[106px] p-1 transition-transform hover:-translate-y-0.5"
-                      style={{ border: `2px solid ${on ? '#4f46e5' : '#d6def0'}`, boxShadow: on ? '0 0 0 3px #c7c4ff' : 'none' }}>
-                      <img src={`${ART}/${it.thumb}.png`} alt="" className="max-h-[54px] max-w-[72px] xl:max-h-[64px] xl:max-w-[84px] object-contain" draggable={false} />
-                      <span className="text-[11px] xl:text-xs font-bold leading-tight text-center" style={{ color: INK }}>{it.name}</span>
+                      className="flex flex-col items-center justify-end gap-0.5 rounded-xl bg-white p-1 transition-transform hover:-translate-y-0.5"
+                      style={{ width: 'clamp(60px, 9.4vh, 100px)', height: 'clamp(64px, 10vh, 106px)', border: `2px solid ${on ? '#4f46e5' : '#d6def0'}`, boxShadow: on ? '0 0 0 3px #c7c4ff' : 'none' }}>
+                      <img src={`${ART}/${it.thumb}.png`} alt="" className="object-contain" style={{ maxHeight: 'clamp(36px, 6vh, 64px)', maxWidth: '85%' }} draggable={false} />
+                      <span className="text-[10px] xl:text-[11px] font-bold leading-tight text-center" style={{ color: INK }}>{it.name}</span>
                     </button>
                   );
                 })}
@@ -283,7 +289,6 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
           </div>
         </div>
       </div>
-      {!free ? <PrvoukaProgress current={ri} total={rounds.length} lives={0} maxLives={0} /> : null}
       <style>{'@keyframes oblIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}'}</style>
       {feedback ? <PrvoukaFeedbackOverlay isCorrect={feedback.isCorrect} hint={feedback.hint} info={feedback.info} onComplete={afterFeedback} /> : null}
       {finished ? <GameResultScreen isSuccess onContinue={restart} successText="Výborně!" showContinueButton displayType="gameComplete" score={{ correct: clean, total: rounds.length }} /> : null}
