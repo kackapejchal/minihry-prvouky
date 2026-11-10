@@ -26,13 +26,16 @@ interface Item { id: string; name: string; slot: Slot; pieces: Piece[]; thumb: s
 const ITEMS: Item[] = [
   { id: 'cepice', name: 'Čepice', slot: 'hlava', thumb: 'cepice', pieces: [{ src: 'nas-cepice', box: [13, 0, 185, 105], z: 9 }] },
   { id: 'sala', name: 'Šála', slot: 'krk', thumb: 'sala', pieces: [{ src: 'sala', box: [59, 162, 151, 256], z: 8 }] },
-  { id: 'triko', name: 'Pruhované tričko', slot: 'vrsek', thumb: 'triko', pieces: [{ src: 'triko', box: [39, 160, 171, 260], z: 4 }] },
+  { id: 'zlute-triko', name: 'Žluté tričko', slot: 'vrsek', thumb: 'zlute-triko', pieces: [] },
+  { id: 'triko', name: 'Pruhované tričko', slot: 'vrsek', thumb: 'triko', pieces: [{ src: 'triko', box: [31, 156, 179, 263], z: 4 }] },
   { id: 'mikina', name: 'Mikina', slot: 'vrsek', thumb: 'mikina', pieces: [{ src: 'nas-mikina', box: [21, 157, 190, 298], z: 4 }] },
   { id: 'bunda', name: 'Bunda se svetrem', slot: 'bunda', thumb: 'bunda', pieces: [{ src: 'nas-bunda', box: [17, 147, 195, 303], z: 6 }] },
   { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'zimni-bunda', pieces: [{ src: 'nas-zimni-bunda', box: [16, 127, 197, 313], z: 6 }] },
+  { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'kratasy', pieces: [] },
   { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'dziny', pieces: [{ src: 'nas-dziny', box: [36, 269, 173, 375], z: 2 }] },
   { id: 'kalhoty', name: 'Kalhoty', slot: 'dolu', thumb: 'kalhoty', pieces: [{ src: 'nas-kalhoty', box: [23, 269, 189, 368], z: 2 }] },
   { id: 'zimni-kalhoty', name: 'Zimní kalhoty', slot: 'dolu', thumb: 'nas-zimni-kalhoty', pieces: [{ src: 'nas-zimni-kalhoty', box: [47, 292, 167, 363], z: 2 }] },
+  { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'sandaly', pieces: [] },
   { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'tenisky', pieces: [{ src: 'nas-tenisky', box: [36, 357, 173, 389], z: 3 }] },
   { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'boty', pieces: [{ src: 'nas-boty', box: [29, 352, 190, 392], z: 3 }] },
   { id: 'holinky', name: 'Holínky', slot: 'boty', thumb: 'holinky', pieces: [{ src: 'holinky', box: [41, 288, 173, 379], z: 3 }] },
@@ -41,8 +44,6 @@ const ITEMS: Item[] = [
   { id: 'destnik', name: 'Deštník', slot: 'destnik', thumb: 'destnik', pieces: [{ src: 'destnik', box: [161, 118, 277, 282], z: 10 }] },
 ];
 const BY_ID = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
-/** Co má Sam na sobě, když v dané části nic nevybral. */
-const BASE: Partial<Record<Slot, string>> = { vrsek: 'žluté tričko', dolu: 'kraťasy', boty: 'sandály' };
 const SHELVES: Array<{ title: string; slots: Slot[] }> = [
   { title: 'Na hlavu a krk', slots: ['hlava', 'krk'] },
   { title: 'Nahoru', slots: ['vrsek', 'bunda'] },
@@ -55,6 +56,8 @@ type Outfit = Partial<Record<Slot, string>>;
 type WeatherId = 'prsi' | 'snezi' | 'horko' | 'fouka';
 interface Weather { id: WeatherId; label: string; sky: string; temp: string; ask: string; bg: string; done: string; check: (o: Outfit) => string | null }
 
+// Žluté tričko, kraťasy a sandály má Sam na sobě vždycky – vybrat je je totéž jako nic.
+const norm = (o: Outfit): Outfit => ({ ...o, vrsek: o.vrsek === 'zlute-triko' ? undefined : o.vrsek, dolu: o.dolu === 'kratasy' ? undefined : o.dolu, boty: o.boty === 'sandaly' ? undefined : o.boty });
 const warmTop = (o: Outfit) => o.vrsek === 'mikina' || Boolean(o.bunda);
 const WEATHER: Record<WeatherId, Weather> = {
   snezi: {
@@ -116,7 +119,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
 
   const toggle = (it: Item) => setOutfit((o) => ({ ...o, [it.slot]: o[it.slot] === it.id ? undefined : it.id }));
   const goOut = () => {
-    const problem = W.check(outfit);
+    const problem = W.check(norm(outfit));
     if (problem) { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: problem }); return; }
     if (mistakes === 0) setClean((c) => c + 1);
     setFeedback({ isCorrect: true, info: W.done });
@@ -181,9 +184,6 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
               </div>
             </div>
           ))}
-          <p className="text-xs leading-snug" style={{ color: '#56628a' }}>
-            Když v nějaké části nic nevybereš, má Sam svoje {Object.values(BASE).join(', ')}.
-          </p>
         </div>
       </div>
       {!free ? <PrvoukaProgress current={ri} total={rounds.length} lives={0} maxLives={0} /> : null}
