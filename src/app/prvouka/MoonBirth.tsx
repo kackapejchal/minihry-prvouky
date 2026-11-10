@@ -122,11 +122,12 @@ function draw(cv: HTMLCanvasElement, t: number) {
   drawPlanet(ctx, ZEME, cx, cy, R, LIGHT);
   // Mladá Země je horká: přes skutečnou Zemi oranžová žhavá vrstva, která pomalu zmizí.
   if (cool < 1) {
-    const hg = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R);
+    const hg = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R * 1.08);
     hg.addColorStop(0, `rgba(255,190,110,${0.95 * (1 - cool)})`);
     hg.addColorStop(0.6, `rgba(214,92,36,${0.95 * (1 - cool)})`);
     hg.addColorStop(1, `rgba(110,34,16,${0.95 * (1 - cool)})`);
-    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.fill();
+    // o kousek větší než Země, ať zakryje i modrý obrys atmosféry (mladá horká Země ji ještě neměla)
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(cx, cy, R * 1.08, 0, 6.283); ctx.fill();
   }
 
   // Jemné bliknutí při dotyku (žádný výbuch).
