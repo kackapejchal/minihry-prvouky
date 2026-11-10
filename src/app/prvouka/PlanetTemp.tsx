@@ -16,7 +16,7 @@ export const TEMPS: Record<TempBody, { den: number; noc: number; text: string; a
   merkur: { den: 430, noc: -180, text: 'Merkur je blízko Slunce: ve dne by tě upeklo. Nemá ale vzduch, a tak v noci mrzne víc než kdekoli na Zemi.' },
   venuse: { den: 465, noc: 465, text: 'Nejteplejší planeta. Hustá oblaka drží teplo jako peřina, takže je tam horko ve dne i v noci – víc než v troubě.' },
   mars: { den: 20, noc: -100, text: 'Ve dne bývá na Marsu někde jako u nás na jaře, ale v noci mrzne mnohem víc než na našich pólech.' },
-  jupiter: { den: -110, noc: -110, text: 'Jupiter je daleko od Slunce. Nahoře v jeho mracích je ledová zima – bez skafandru by to nešlo.' },
+  jupiter: { den: -110, noc: -110, text: 'Jupiter je daleko od Slunce. Nahoře v jeho mracích je ledová zima, mnohem větší než v nejmrazivější zimě na Zemi.' },
   saturn: { den: -140, noc: -140, text: 'Saturn je ještě dál od Slunce než Jupiter, a tak je v jeho mracích ještě větší zima.' },
   uran: { den: -195, noc: -195, text: 'Uran patří k nejstudenějším planetám. Taková zima na Zemi nikde není.' },
   neptun: { den: -200, noc: -200, text: 'Neptun je nejdál od Slunce. Je to ledový svět, kam teplo ze Slunce skoro nedolétne.' },
