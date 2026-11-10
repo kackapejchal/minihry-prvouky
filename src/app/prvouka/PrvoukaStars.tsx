@@ -814,7 +814,7 @@ function ConsTile({ c, on, hot = false, check = false, onClick, onHover }: { c: 
 // Postavy ze starého atlasu (Hevelius 1690), zrcadlově otočené, jak je vidíme na obloze.
 // Obrázek se umístí podle několika hvězd najednou (nejlepší shoda), ať sedí trup i křídla.
 const FIGURES: Record<string, { src: string; anchors: Array<[string, number, number]> }> = {
-  labut: { src: 'labut.png', anchors: [['albireo', 511, 496], ['sadr', 214, 327], ['deneb', 38, 345], ['gienah', 251, 490], ['cyg-delta', 335, 172]] },
+  labut: { src: 'labut.png', anchors: [['albireo', 511, 496], ['albireo', 511, 496], ['albireo', 511, 496], ['deneb', 38, 345], ['sadr', 214, 327], ['deneb', 38, 345], ['gienah', 251, 490], ['cyg-delta', 335, 172]] },
 };
 const figImg: Record<string, HTMLImageElement> = {};
 function drawFigure(ctx: CanvasRenderingContext2D, id: string, by: Record<string, { x: number; y: number }>) {
@@ -825,18 +825,28 @@ function drawFigure(ctx: CanvasRenderingContext2D, id: string, by: Record<string
   if (!img.complete || !img.naturalWidth) return;
   const pts = f.anchors.filter((an) => by[an[0]]).map((an) => ({ p: { x: an[1], y: an[2] }, q: by[an[0]] }));
   if (pts.length < 2) return;
-  const n = pts.length;
-  const cp = { x: pts.reduce((s, o) => s + o.p.x, 0) / n, y: pts.reduce((s, o) => s + o.p.y, 0) / n };
-  const cq = { x: pts.reduce((s, o) => s + o.q.x, 0) / n, y: pts.reduce((s, o) => s + o.q.y, 0) / n };
-  let sa = 0, sb = 0, sp = 0;
+  // Afinní shoda (může se mírně natáhnout), ať krk dosáhne až na Albireo a křídla sednou na příčku.
+  const solve3 = (m: number[][], v: number[]) => {
+    const det = (A: number[][]) => A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) - A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0]) + A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
+    const D = det(m);
+    return [0, 1, 2].map((c) => det(m.map((row, r) => row.map((x, k) => (k === c ? v[r] : x)))) / D);
+  };
+  const M = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], vx = [0, 0, 0], vy = [0, 0, 0];
   for (const o of pts) {
-    const px = o.p.x - cp.x, py = o.p.y - cp.y, qx = o.q.x - cq.x, qy = o.q.y - cq.y;
-    sa += px * qx + py * qy; sb += px * qy - py * qx; sp += px * px + py * py;
+    const r = [o.p.x, o.p.y, 1];
+    for (let u = 0; u < 3; u++) { for (let k = 0; k < 3; k++) M[u][k] += r[u] * r[k]; vx[u] += r[u] * o.q.x; vy[u] += r[u] * o.q.y; }
   }
-  const a = sa / sp, b = sb / sp;
+  let X: number[], Y: number[];
+  if (pts.length >= 3) { X = solve3(M, vx); Y = solve3(M, vy); }
+  else {
+    const [o1, o2] = pts; const s0 = Math.hypot(o2.q.x - o1.q.x, o2.q.y - o1.q.y) / Math.hypot(o2.p.x - o1.p.x, o2.p.y - o1.p.y);
+    const rot = Math.atan2(o2.q.y - o1.q.y, o2.q.x - o1.q.x) - Math.atan2(o2.p.y - o1.p.y, o2.p.x - o1.p.x);
+    const a0 = s0 * Math.cos(rot), b0 = s0 * Math.sin(rot);
+    X = [a0, -b0, o1.q.x - a0 * o1.p.x + b0 * o1.p.y]; Y = [b0, a0, o1.q.y - b0 * o1.p.x - a0 * o1.p.y];
+  }
   ctx.save();
   ctx.globalAlpha = 0.42;
-  ctx.transform(a, b, -b, a, cq.x - (a * cp.x - b * cp.y), cq.y - (b * cp.x + a * cp.y));
+  ctx.transform(X[0], Y[0], X[1], Y[1], X[2], Y[2]);
   ctx.drawImage(img, 0, 0);
   ctx.restore();
 }
