@@ -735,7 +735,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 type="button"
                 onClick={() => { setJump(false); setCompare(false); setTemp(true); }}
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #e2573a 0%, #8a5ad6 55%, #4aa0e6 100%)' }}
+                style={{ background: 'linear-gradient(90deg, #c73a24 0%, #e8692f 55%, #f0a12c 100%)' }}
               >
                 {/* malý teploměr */}
                 <svg viewBox="0 0 24 60" className="absolute right-6 top-3 h-16" aria-hidden="true">
@@ -786,7 +786,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 type="button"
                 onClick={() => { setJump(false); setCompare(false); setTemp(true); }}
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #e2573a 0%, #8a5ad6 55%, #4aa0e6 100%)' }}
+                style={{ background: 'linear-gradient(90deg, #c73a24 0%, #e8692f 55%, #f0a12c 100%)' }}
               >
                 {/* malý teploměr */}
                 <svg viewBox="0 0 24 60" className="absolute right-6 top-3 h-16" aria-hidden="true">
