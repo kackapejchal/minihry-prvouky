@@ -1384,7 +1384,26 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           ) : (
             <p className="text-sm font-bold leading-snug text-[#2f8fc4]">Vidíme jen půlku Měsíce otočenou k nám – v pohledu shora je obarvená modře.</p>
           )}
-          {/* Zatmění nad fázemi, ať jsou karty vidět i když je rozbalené vysvětlení. */}
+          {/* Fáze hned nahoře, ať je není potřeba hledat posouváním dolů. */}
+          <div className="pt-1">
+            <p className="text-sm font-bold text-[#56628a] mb-2">Fáze Měsíce</p>
+            <div className="grid grid-cols-4 gap-2">
+              {MOON_PHASE_INFO.map((p, i) => (
+                <button
+                  key={p.name}
+                  type="button"
+                  aria-current={!eclipse && i === idx}
+                  title={p.book ? 'Tuhle fázi žáci lepí do knížky v učebnici' : undefined}
+                  onClick={() => jump(p.at)}
+                  className="flex flex-col items-center gap-1 rounded-2xl py-2 px-1 text-xs leading-tight text-center transition-colors"
+                  style={{ background: !eclipse && i === idx ? '#fde9c6' : '#f4f6fb', fontWeight: p.book ? 700 : 500, color: p.book ? '#0f1d4d' : '#7a84a3' }}
+                >
+                  <img src={thumbs[i]} alt="" className="w-11 h-11" />
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="pt-1">
             <p className="text-sm font-bold text-[#56628a] mb-2">Vyzkoušej si</p>
             <div className="grid grid-cols-2 gap-3">
@@ -1436,25 +1455,6 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
                   <span className="block text-xs opacity-90">{earthBirth ? 'zpět na fáze ←' : 'krátká animace →'}</span>
                 </span>
               </button>
-            </div>
-          </div>
-          <div className="pt-1">
-            <p className="text-sm font-bold text-[#56628a] mb-2">Fáze Měsíce</p>
-            <div className="grid grid-cols-4 gap-2">
-              {MOON_PHASE_INFO.map((p, i) => (
-                <button
-                  key={p.name}
-                  type="button"
-                  aria-current={!eclipse && i === idx}
-                  title={p.book ? 'Tuhle fázi žáci lepí do knížky v učebnici' : undefined}
-                  onClick={() => jump(p.at)}
-                  className="flex flex-col items-center gap-1 rounded-2xl py-2 px-1 text-xs leading-tight text-center transition-colors"
-                  style={{ background: !eclipse && i === idx ? '#fde9c6' : '#f4f6fb', fontWeight: p.book ? 700 : 500, color: p.book ? '#0f1d4d' : '#7a84a3' }}
-                >
-                  <img src={thumbs[i]} alt="" className="w-11 h-11" />
-                  {p.name}
-                </button>
-              ))}
             </div>
           </div>
         </div>
