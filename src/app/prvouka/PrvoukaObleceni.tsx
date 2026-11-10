@@ -33,7 +33,7 @@ const ITEMS: Item[] = [
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'kratasy', pieces: [] },
   { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'dziny', pieces: [{ src: 'nas-dziny', box: [36, 269, 173, 375], z: 2 }] },
   { id: 'kalhoty', name: 'Kalhoty', slot: 'dolu', thumb: 'kalhoty', pieces: [{ src: 'nas-kalhoty', box: [23, 269, 189, 368], z: 2 }] },
-  { id: 'zimni-kalhoty', name: 'Zimní kalhoty', slot: 'dolu', thumb: 'nas-zimni-kalhoty', pieces: [{ src: 'nas-zimni-kalhoty', box: [47, 292, 167, 363], z: 2 }] },
+  { id: 'zimni-kalhoty', name: 'Zimní kalhoty', slot: 'dolu', thumb: 'nas-zimni-kalhoty', pieces: [{ src: 'nas-zimni-kalhoty', box: [44, 262, 170, 363], z: 2 }] },
   { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'sandaly', pieces: [] },
   { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'tenisky', pieces: [{ src: 'nas-tenisky', box: [36, 357, 173, 389], z: 3 }] },
   { id: 'boty', name: 'Kotníkové boty', slot: 'boty', thumb: 'boty', pieces: [{ src: 'nas-boty', box: [29, 352, 190, 392], z: 3 }] },
@@ -51,7 +51,7 @@ const H_ITEMS: Item[] = [
   { id: 'plastenka', name: 'Pláštěnka', slot: 'bunda', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }] },
   { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/f-zimni-bunda', box: [20, 166, 218, 360], z: 6 }] },
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'hanka/f-kratasy', pieces: [] },
-  { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [53, 364, 181, 426], z: 2 }] },
+  { id: 'leginy', name: 'Legíny', slot: 'dolu', thumb: 'hanka/leginy', pieces: [{ src: 'hanka/leginy', box: [56, 318, 184, 428], z: 2 }] },
   { id: 'dziny', name: 'Džíny', slot: 'dolu', thumb: 'hanka/dziny', pieces: [{ src: 'hanka/dziny', box: [39, 344, 201, 421], z: 2 }] },
   { id: 'tenisky', name: 'Tenisky', slot: 'boty', thumb: 'hanka/f-tenisky', pieces: [] },
   { id: 'sandaly', name: 'Sandály', slot: 'boty', thumb: 'hanka/f-sandaly', pieces: [{ src: 'hanka/sandaly', box: [47, 424, 191, 478], z: 3 }] },
@@ -90,7 +90,7 @@ function mapBox(box: [number, number, number, number], slot: Slot, from: Who, to
 /** Postavy: rámeček, základní obrázek (a jeho varianty bez kraťasů pod dlouhými kalhotami), šatník a co má na sobě vždycky. */
 const CHARS: Record<Who, { kdo: string; komu: string; koho: string; w: number; h: number; base: string; baseBox: [number, number, number, number]; longPants: string[]; items: Item[]; baseIds: Partial<Record<Slot, string>> }> = {
   sam: { kdo: 'Sam', komu: 'Samovi', koho: 'Sama', w: 204, h: 392, base: 'sam', baseBox: [15, 10, 189, 392], longPants: ['dziny', 'kalhoty', 'zimni-kalhoty'], items: ITEMS, baseIds: { vrsek: 'zlute-triko', dolu: 'kratasy', boty: 'sandaly' } },
-  hanka: { kdo: 'Hanka', komu: 'Hance', koho: 'Hanku', w: 240, h: 495, base: 'hanka/hanka', baseBox: [3, 35, 236, 481], longPants: ['leginy', 'dziny'], items: H_ITEMS, baseIds: { vrsek: 'cervene-triko', dolu: 'kratasy' } },
+  hanka: { kdo: 'Hanka', komu: 'Hance', koho: 'Hanku', w: 240, h: 495, base: 'hanka/hanka', baseBox: [3, 35, 236, 481], longPants: ['dziny'], items: H_ITEMS, baseIds: { vrsek: 'cervene-triko', dolu: 'kratasy' } },
 };
 const SHELVES: Array<{ title: string; slots: Slot[] }> = [
   { title: 'Na hlavu a krk', slots: ['hlava', 'krk'] },
@@ -266,7 +266,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
       {!free ? <PrvoukaProgress current={ri} total={rounds.length} lives={0} maxLives={0} /> : null}
       <style>{'@keyframes oblIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}'}</style>
       {feedback ? <PrvoukaFeedbackOverlay isCorrect={feedback.isCorrect} hint={feedback.hint} info={feedback.info} onComplete={afterFeedback} /> : null}
-      {finished ? <GameResultScreen isSuccess onContinue={restart} successText="Oblečeno! 👕" showContinueButton displayType="gameComplete" score={{ correct: clean, total: rounds.length }} /> : null}
+      {finished ? <GameResultScreen isSuccess onContinue={restart} successText="Výborně!" showContinueButton displayType="gameComplete" score={{ correct: clean, total: rounds.length }} /> : null}
     </div>
   );
 }
