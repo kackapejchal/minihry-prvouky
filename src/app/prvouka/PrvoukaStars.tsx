@@ -251,30 +251,69 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         pl = turned.map((p) => ({ ...p, x: w / 2 + (p.x - z.x) * z.z, y: h / 2 + (p.y - z.y) * z.z }));
         by = Object.fromEntries(pl.map((p) => [p.id, p]));
       }
-      for (const cons of list) { const l = lvl(cons); for (const [a, b] of cons.edges) { const pick = all && st.season !== 'vse' && l === 2; line(by[a], by[b], pick ? 1 : l === 2 ? (all ? 0.75 : 0.9) : l === 1 ? 0.28 : 0.07, pick); } }
+      const vse = all && st.season === 'vse';
+      if (all) {
+        // Otočná mapa: kruh oblohy s jemným okrajem, ať mapa nepůsobí jako rozsypané čáry.
+        const pole = by.polarka;
+        const R = Math.max(...pl.filter((p) => (starLvl[p.id] ?? 0) >= 1).map((p) => Math.hypot(p.x - pole.x, p.y - pole.y))) + fs * 2.2;
+        const g = ctx.createRadialGradient(pole.x, pole.y, 0, pole.x, pole.y, R);
+        g.addColorStop(0, 'rgba(70,95,200,.20)'); g.addColorStop(1, 'rgba(70,95,200,.06)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(pole.x, pole.y, R, 0, 6.283); ctx.fill();
+        ctx.strokeStyle = 'rgba(170,190,255,.28)'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.setLineDash([3, 6]); ctx.strokeStyle = 'rgba(170,190,255,.14)';
+        ctx.beginPath(); ctx.arc(pole.x, pole.y, R * 0.5, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
+      }
+      for (const cons of list) {
+        const l = lvl(cons);
+        for (const [a, b] of cons.edges) {
+          const pick = all && !vse && l === 2;
+          if (vse) { ctx.strokeStyle = 'rgba(255,217,138,.62)'; ctx.lineWidth = 1.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(by[a].x, by[a].y); ctx.lineTo(by[b].x, by[b].y); ctx.stroke(); }
+          else line(by[a], by[b], pick ? 1 : l === 2 ? 0.9 : l === 1 ? 0.28 : 0.07, pick);
+        }
+      }
       if (st.view === 'vuz') polarkaGuide(true);
-      for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.55 : 0.2; drawStar(ctx, p, p.id === 'polarka' ? 1.5 : 1); }
+      for (const p of pl) { const l = starLvl[p.id] ?? 2; ctx.globalAlpha = l === 2 ? 1 : l === 1 ? 0.55 : 0.2; drawStar(ctx, vse ? { ...p, r: p.r * 0.8 } : p, p.id === 'polarka' ? 1.5 : vse ? 0.6 : 1); }
       ctx.globalAlpha = 1;
-      const names: Array<{ x: number; y: number; half: number }> = [];
+      // Popisky bez překrývání: každý dostane místo, kde nezakryje jiný popisek.
+      const boxes: Array<{ x0: number; x1: number; y0: number; y1: number }> = [];
+      const overlap = (bx: { x0: number; x1: number; y0: number; y1: number }) => boxes.reduce((acc, o) => acc + Math.max(0, Math.min(bx.x1, o.x1) - Math.max(bx.x0, o.x0)) * Math.max(0, Math.min(bx.y1, o.y1) - Math.max(bx.y0, o.y0)), 0);
+      const place = (text: string, size: number, spots: Array<[number, number]>, color: string, force = true) => {
+        const half = text.length * size * 0.29 + 3;
+        let best: { x: number; y: number; o: number } | null = null;
+        for (const [x, y] of spots) {
+          const cx = Math.min(w - half - 4, Math.max(half + 4, x)), cy = Math.max(size + 4, Math.min(h - 6, y));
+          const o = overlap({ x0: cx - half, x1: cx + half, y0: cy - size, y1: cy + 3 });
+          if (!best || o < best.o) best = { x: cx, y: cy, o };
+          if (o === 0) break;
+        }
+        if (!best || (!force && best.o > 0)) return;
+        boxes.push({ x0: best.x - half, x1: best.x + half, y0: best.y - size, y1: best.y + 3 });
+        label(ctx, text, best.x, best.y, color, size);
+      };
+      if (st.view === 'vuz' || st.view === 'maly-vuz' || all) {
+        const p = by.polarka, size = all ? fs - 3 : fs;
+        place(st.view === 'vuz' ? 'Polárka – sever' : 'Polárka', size, all ? [[p.x, p.y + p.r + size + 6], [p.x, p.y - p.r - 10]] : [[p.x, p.y - p.r - 14]], '#7fd3ff');
+      }
       for (const cons of list) {
         const l = lvl(cons);
         if (l === 0) continue;
         const ts = cons.stars.map((s) => by[s.id]);
-        const top = Math.min(...ts.map((p) => p.y)), cx = ts.reduce((a, p) => a + p.x, 0) / ts.length;
-        label(ctx, cons.name, cx, Math.max(fs + 6, top - (all ? 14 : 26)), l === 2 ? GOLD : 'rgba(255,217,138,.45)', all ? (st.season === 'vse' ? fs - 3 : l === 2 ? fs + 3 : fs - 4) : fs + 4);
+        const x0 = Math.min(...ts.map((p) => p.x)), x1 = Math.max(...ts.map((p) => p.x));
+        const top = Math.min(...ts.map((p) => p.y)), bottom = Math.max(...ts.map((p) => p.y));
+        const cx = (x0 + x1) / 2, cy = (top + bottom) / 2;
+        const size = all ? (vse ? Math.max(11, fs - 4) : l === 2 ? fs + 3 : fs - 4) : fs + 4;
+        const half = cons.name.length * size * 0.29;
+        const spots: Array<[number, number]> = all
+          ? [[cx, top - 10], [cx, bottom + size + 8], [x1 + half + 10, cy + size / 3], [x0 - half - 10, cy + size / 3], [cx, cy + size / 3]]
+          : [[cx, Math.max(fs + 6, top - 26)]];
+        place(cons.name, size, spots, l === 2 ? GOLD : 'rgba(255,217,138,.45)');
         // Jména jasných hvězd: u jednoho souhvězdí vždy, na celé obloze jen u vybraného období.
-        if (!all || (st.season !== 'vse' && l === 2)) for (const id of cons.named ?? []) {
+        if (!all || (!vse && l === 2)) for (const id of cons.named ?? []) {
           if (id === 'polarka') continue;
-          const p = by[id], size = fs - 2, half = p.name.length * size * 0.29;
-          // Pod hvězdu, a když tam už je jiné jméno (Kastor a Pollux), tak nad ni.
-          const spots = [p.y + p.r + fs + (all ? 2 : 6), p.y - p.r - 8];
-          const y = spots.find((yy) => !names.some((b) => Math.abs(b.x - p.x) < b.half + half && Math.abs(b.y - yy) < size));
-          if (y === undefined) continue;
-          names.push({ x: p.x, y, half });
-          label(ctx, p.name, p.x, y, '#dfe6ff', size);
+          const p = by[id], sz = fs - 2;
+          place(p.name, sz, [[p.x, p.y + p.r + fs + (all ? 2 : 6)], [p.x, p.y - p.r - 8]], '#dfe6ff', false);
         }
       }
-      if (st.view === 'vuz' || st.view === 'maly-vuz' || all) { const p = by.polarka; label(ctx, st.view === 'vuz' ? 'Polárka – sever' : 'Polárka', p.x, all ? p.y + p.r + fs + 4 : p.y - p.r - 14, '#7fd3ff', all ? fs - 2 : fs); }
       return;
     }
 
