@@ -138,7 +138,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const [cleanRounds, setCleanRounds] = useState(0);
   const [roundDone, setRoundDone] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [feedback, setFeedback] = useState<{ isCorrect: boolean; hint?: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ isCorrect: boolean; hint?: string; info?: string } | null>(null);
   const flash = useRef<{ x: number; y: number; t: number; ok: boolean } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [box, setBox] = useState({ w: 800, h: 600 });
@@ -442,7 +442,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
     if (r.type === 'polarka') {
       const ok = hit.id === 'polarka';
       flash.current = { x: hit.x, y: hit.y, t: now, ok };
-      if (ok) { setRoundDone(true); setFeedback({ isCorrect: true }); if (mistakes === 0) setCleanRounds((n) => n + 1); }
+      if (ok) { setRoundDone(true); setFeedback({ isCorrect: true, info: POLARKA_TEXT }); if (mistakes === 0) setCleanRounds((n) => n + 1); }
       else { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: 'Prodluž čáru od dvou modře označených hvězd asi pětkrát.' }); }
       return;
     }
@@ -451,14 +451,15 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
     flash.current = { x: hit.x, y: hit.y, t: now, ok };
     if (!ok) { setMistakes((m) => m + 1); setFeedback({ isCorrect: false, hint: `Hledej hvězdu s číslem ${step + 1}.` }); return; }
     setStep(step + 1);
-    if (step + 1 === ord.length) { setRoundDone(true); setFeedback({ isCorrect: true }); if (mistakes === 0) setCleanRounds((n) => n + 1); }
+    if (step + 1 === ord.length) { setRoundDone(true); setFeedback({ isCorrect: true, info: c!.text }); if (mistakes === 0) setCleanRounds((n) => n + 1); }
   };
 
   const next = () => { if (round + 1 < rounds.length) resetRound(round + 1); else setFinished(true); };
   // Po správně spojeném souhvězdí (a okně SPRÁVNĚ!) se samo přejde na další kolo – chvíli zůstane vidět hotový tvar a text.
   useEffect(() => {
     if (mode !== 'hra' || !roundDone || feedback || finished) return;
-    const t = setTimeout(next, 3500);
+    // Text už byl v okně SPRÁVNĚ!, takže hned po jeho zavření další kolo.
+    const t = setTimeout(next, isGame ? 300 : 3500);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, roundDone, feedback, finished, round]);
@@ -530,7 +531,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
               {roundDone ? (
                 <>
                   <p className="text-lg font-bold text-[#1f8a4c]">Výborně! {r.type === 'polarka' ? 'Polárku máš.' : `Souhvězdí ${c!.name} je spojené.`}</p>
-                  <p className="text-base leading-relaxed text-[#4e5871]">{doneText}</p>
+                  {isGame ? null : <p className="text-base leading-relaxed text-[#4e5871]">{doneText}</p>}
                   <p className="text-sm font-bold text-[#9aa6d1]">{round + 1 < rounds.length ? 'Za chvíli pokračuje další kolo…' : 'Za chvíli uvidíš výsledek…'}</p>
                   {isGame ? null : <button
                     type="button"
@@ -639,7 +640,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
         </div>
       </aside>
 
-      {feedback ? <PrvoukaFeedbackOverlay isCorrect={feedback.isCorrect} hint={feedback.hint} onComplete={() => setFeedback(null)} /> : null}
+      {feedback ? <PrvoukaFeedbackOverlay isCorrect={feedback.isCorrect} hint={feedback.hint} info={feedback.info} onComplete={() => setFeedback(null)} /> : null}
       {finished ? (
         <GameResultScreen
           isSuccess

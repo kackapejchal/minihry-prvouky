@@ -93,13 +93,14 @@ export function PrvoukaProgress({ current, total, lives, maxLives = 3 }: { curre
 /* ---------------------------------------------------------- zpětná vazba */
 
 /** Překryv SPRÁVNĚ! / ZKUS ZNOVU! – stejný jako v Rozřaď čísla, navíc krátká nápověda. */
-export function PrvoukaFeedbackOverlay({ isCorrect, hint, onComplete }: { isCorrect: boolean; hint?: string; onComplete: () => void }) {
+/** info = krátký text pod SPRÁVNĚ! (např. co je to za souhvězdí); okno pak zůstane déle. */
+export function PrvoukaFeedbackOverlay({ isCorrect, hint, info, onComplete }: { isCorrect: boolean; hint?: string; info?: string; onComplete: () => void }) {
   const isMobile = useIsMobile();
   const s = isMobile ? 1 : useDesktopScaleValue();
   useEffect(() => {
-    const timer = setTimeout(onComplete, isCorrect ? 1300 : hint ? 2600 : 1500);
+    const timer = setTimeout(onComplete, isCorrect ? (info ? 3000 + info.length * 35 : 1300) : hint ? 2600 : 1500);
     return () => clearTimeout(timer);
-  }, [onComplete, isCorrect, hint]);
+  }, [onComplete, isCorrect, hint, info]);
   return (
     <motion.div
       className="fixed inset-0 flex items-center justify-center z-50 p-4"
@@ -118,6 +119,9 @@ export function PrvoukaFeedbackOverlay({ isCorrect, hint, onComplete }: { isCorr
       >
         <div className="text-white" style={{ fontSize: 80 * s, lineHeight: 1, marginBottom: 12 * s }}>{isCorrect ? '✓' : '✗'}</div>
         <div className="text-white" style={{ fontSize: 44 * s, fontWeight: 'bold' }}>{isCorrect ? 'SPRÁVNĚ!' : 'ZKUS ZNOVU!'}</div>
+        {isCorrect && info ? (
+          <div className="text-white mt-3" style={{ fontSize: 22 * s, fontWeight: 600, lineHeight: 1.35, maxWidth: 640 * s }}>{info}</div>
+        ) : null}
         {!isCorrect && hint ? (
           <div className="text-white mt-3" style={{ fontSize: 22 * s, fontWeight: 600, lineHeight: 1.35, maxWidth: 640 * s }}>{hint}</div>
         ) : null}
