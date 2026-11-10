@@ -178,9 +178,40 @@ function duration(kind: 'skok' | 'micek', b: JumpBody) {
   return kind === 'skok' ? (2 * Math.sqrt(2 * EARTH_G * EARTH_JUMP_M)) / g : HOLD + Math.sqrt((2 * DROP_M) / g);
 }
 
-/** Dítě s batohem z ilustrací Vividbooks (Matematika 1. ročník, „Seřaď a porovnej“), vyříznuté bez pozadí. Nohy na čáře y. */
-const KID_SRC = `${import.meta.env.BASE_URL}prvouka/ill/skok-dite.png`;
+/** Skákající robot (vektor, ostrý v každé velikosti) v barvách Vividbooks. Nohy na čáře y. */
 export function Kid({ x, y, size, inline = false }: { x: number; y: number; size: number; inline?: boolean }) {
-  const hgt = size * 2, wid = hgt * (175 / 455);
-  return <img src={KID_SRC} alt="" draggable={false} className={`select-none pointer-events-none ${inline ? '' : 'absolute'}`} style={inline ? { width: wid, height: hgt } : { left: x - wid / 2, top: y - hgt, width: wid, height: hgt }} />;
+  const hgt = size * 2, wid = hgt * 0.72;
+  const line = { stroke: '#1b2350', strokeWidth: 2.2, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
+  return (
+    <svg viewBox="0 0 72 100" className={inline ? '' : 'absolute'} style={inline ? { width: wid, height: hgt, overflow: 'visible' } : { left: x - wid / 2, top: y - hgt, width: wid, height: hgt, overflow: 'visible' }} aria-hidden="true">
+      {/* anténa */}
+      <line x1="36" y1="4" x2="36" y2="12" {...line} />
+      <circle cx="36" cy="4" r="3.2" fill="#f0a12c" {...line} />
+      {/* ruce */}
+      <path d="M14 46 Q6 40 6 30" fill="none" stroke="#1b2350" strokeWidth={7} strokeLinecap="round" />
+      <path d="M14 46 Q6 40 6 30" fill="none" stroke="#cfd6ea" strokeWidth={4.2} strokeLinecap="round" />
+      <circle cx="6" cy="28" r="4" fill="#f0a12c" {...line} />
+      <path d="M58 46 Q66 40 66 30" fill="none" stroke="#1b2350" strokeWidth={7} strokeLinecap="round" />
+      <path d="M58 46 Q66 40 66 30" fill="none" stroke="#cfd6ea" strokeWidth={4.2} strokeLinecap="round" />
+      <circle cx="66" cy="28" r="4" fill="#f0a12c" {...line} />
+      {/* nohy */}
+      <rect x="22" y="72" width="8" height="16" rx="3" fill="#cfd6ea" {...line} />
+      <rect x="42" y="72" width="8" height="16" rx="3" fill="#cfd6ea" {...line} />
+      <rect x="17" y="86" width="16" height="8" rx="4" fill="#f0a12c" {...line} />
+      <rect x="39" y="86" width="16" height="8" rx="4" fill="#f0a12c" {...line} />
+      {/* tělo */}
+      <rect x="14" y="40" width="44" height="34" rx="10" fill="#ffffff" {...line} />
+      <rect x="25" y="49" width="22" height="14" rx="4" fill="#eef1f8" {...line} strokeWidth={1.6} />
+      <circle cx="31" cy="56" r="2.6" fill="#f0a12c" />
+      <circle cx="41" cy="56" r="2.6" fill="#7fd3ff" />
+      {/* hlava s obrazovkou */}
+      <rect x="16" y="12" width="40" height="28" rx="10" fill="#ffffff" {...line} />
+      <rect x="21" y="17" width="30" height="18" rx="6" fill="#1b2350" />
+      <circle cx="30" cy="25" r="3" fill="#7fd3ff" />
+      <circle cx="42" cy="25" r="3" fill="#7fd3ff" />
+      <path d="M31 30 Q36 33.5 41 30" fill="none" stroke="#7fd3ff" strokeWidth={2} strokeLinecap="round" />
+      <rect x="11" y="21" width="5" height="10" rx="2" fill="#f0a12c" {...line} strokeWidth={1.6} />
+      <rect x="56" y="21" width="5" height="10" rx="2" fill="#f0a12c" {...line} strokeWidth={1.6} />
+    </svg>
+  );
 }
