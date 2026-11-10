@@ -133,6 +133,8 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const lastT = useRef(0);
   // Celá obloha: souhvězdí pod myší (rozsvítí se a ukáže jméno) a poslední polohy hvězd na obrazovce.
   const hover = useRef<string | null>(null);
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  const setHover = (id: string | null) => { if (hover.current !== id) { hover.current = id; setHoverId(id); } };
   const skyPos = useRef<Record<string, Placed>>({});
   // Hra
   const [round, setRound] = useState(0);
@@ -424,8 +426,8 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   };
   const skyActive = mode !== 'hra' && view === 'all' && season === 'vse';
   const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!skyActive) { hover.current = null; return; }
-    hover.current = skyHit(e);
+    if (!skyActive) { setHover(null); return; }
+    setHover(skyHit(e));
     e.currentTarget.style.cursor = hover.current ? 'pointer' : 'default';
   };
   const onTap = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -433,7 +435,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
       const id = skyHit(e);
       if (!id) return;
       // Myš: jméno už je vidět, klepnutí souhvězdí otevře. Dotyk: první klepnutí ukáže jméno, druhé otevře.
-      if (e.pointerType === 'mouse' || hover.current === id) { hover.current = null; setView(id); } else hover.current = id;
+      if (e.pointerType === 'mouse' || hover.current === id) { setHover(null); setView(id); } else setHover(id);
       return;
     }
     if (mode !== 'hra' || roundDone || feedback) return;
@@ -480,7 +482,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   return (
     <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
       <div className={`relative rounded-3xl overflow-hidden bg-[#05081a] min-h-[60svh] lg:min-h-0 ${settings ? NAV_LEFT : ''}`}>
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none', cursor: mode === 'hra' && !roundDone ? 'pointer' : 'default' }} onPointerDown={onTap} onPointerMove={onMove} onPointerLeave={() => { hover.current = null; }} aria-label="Noční obloha se souhvězdím" />
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none', cursor: mode === 'hra' && !roundDone ? 'pointer' : 'default' }} onPointerDown={onTap} onPointerMove={onMove} onPointerLeave={() => setHover(null)} aria-label="Noční obloha se souhvězdím" />
       </div>
 
       <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto">
@@ -634,7 +636,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                   {(season === 'vse' ? (['cely-rok', ...ALL4] as Season[]) : allSeasons ? [season, 'cely-rok' as Season] : [...modelSeasons, 'cely-rok' as Season]).map((sid) => [
                     <p key={`h-${sid}`} className="col-span-4 text-xs font-bold text-[#56628a] mt-2">{seasonOf(sid).icon} {sid === 'cely-rok' ? 'Po celý rok (u Polárky)' : seasonOf(sid).name}</p>,
                     ...CONSTELLATIONS.filter((cons) => cons.season === sid).map((cons) => (
-                    <ConsTile key={cons.id} c={cons} on={view === cons.id} onClick={() => setView(cons.id)} />
+                    <ConsTile key={cons.id} c={cons} on={view === cons.id} hot={hoverId === cons.id} onHover={(h) => { if (view === 'all' && season === 'vse') setHover(h ? cons.id : null); }} onClick={() => { setHover(null); setView(cons.id); }} />
                     )),
                   ])}
                 </div>
@@ -677,14 +679,20 @@ function ConstellationIcon({ c, size = 40, plain = false }: { c: Constellation; 
 }
 
 /** Dlaždice souhvězdí jako dlaždice planet ve Sluneční soustavě: obrázek nahoře, jméno pod ním. */
-function ConsTile({ c, on, check = false, onClick }: { c: Constellation; on: boolean; check?: boolean; onClick: () => void }) {
+function ConsTile({ c, on, hot = false, check = false, onClick, onHover }: { c: Constellation; on: boolean; hot?: boolean; check?: boolean; onClick: () => void; onHover?: (h: boolean) => void }) {
+  const ref = useRef<HTMLButtonElement | null>(null);
+  // Souhvězdí pod myší na mapě: dlaždice se rozsvítí a panel ji ukáže, kdyby byla mimo.
+  useEffect(() => { if (hot) ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [hot]);
   return (
     <button
+      ref={ref}
+      onMouseEnter={() => onHover?.(true)}
+      onMouseLeave={() => onHover?.(false)}
       type="button"
       onClick={onClick}
       aria-pressed={on}
       className="relative flex flex-col items-center gap-1 rounded-2xl py-2 px-1 transition-colors min-w-0"
-      style={{ background: on ? '#fde9c6' : '#f4f6fb', boxShadow: check && on ? 'inset 0 0 0 2px #f0a12c' : 'none' }}
+      style={{ background: on || hot ? '#fde9c6' : '#f4f6fb', boxShadow: (check && on) || hot ? 'inset 0 0 0 2px #f0a12c' : 'none', transform: hot ? 'translateY(-2px)' : 'none' }}
     >
       <ConstellationIcon c={c} size={52} />
       <span className="text-xs font-bold text-[#3b4a8c] text-center leading-tight min-h-[2em] flex items-center">{c.name}</span>
