@@ -18,7 +18,7 @@ const ART = `${import.meta.env.BASE_URL}prvouka/ill/obleceni`;
 
 type Slot = 'hlava' | 'krk' | 'vrsek' | 'bunda' | 'dolu' | 'boty' | 'ruce' | 'destnik';
 interface Piece { src: string; box: [number, number, number, number]; z: number }
-interface Item { id: string; name: string; slot: Slot; pieces: Piece[]; thumb: string }
+interface Item { id: string; name: string; slot: Slot; pieces: Piece[]; thumb: string; /** vlastní poloha pro druhou postavu (když přepočet nestačí – třeba klobouk na Samovy kudrny) */ boxFor?: Partial<Record<'sam' | 'hanka', [number, number, number, number]>> }
 
 // Pozice v rámečku 204 × 392 px (výřez z obrázku s oblečenými postavami). „nas-…“ jsou věci vystřižené
 // přímo z oblečeného Sama, takže sedí přesně; ostatní (tričko, šála, holínky, deštník) jsou ploché kusy.
@@ -26,7 +26,6 @@ const ITEMS: Item[] = [
   { id: 'cepice', name: 'Čepice', slot: 'hlava', thumb: 'cepice', pieces: [{ src: 'nas-cepice', box: [13, 0, 185, 105], z: 9 }] },
   { id: 'sala', name: 'Šála', slot: 'krk', thumb: 'sala', pieces: [{ src: 'sala', box: [59, 162, 151, 256], z: 8 }] },
   { id: 'zlute-triko', name: 'Žluté tričko', slot: 'vrsek', thumb: 'zlute-triko', pieces: [] },
-  { id: 'triko', name: 'Pruhované tričko', slot: 'vrsek', thumb: 'triko', pieces: [{ src: 'triko', box: [31, 156, 179, 263], z: 4 }] },
   { id: 'mikina', name: 'Mikina', slot: 'vrsek', thumb: 'mikina', pieces: [{ src: 'nas-mikina', box: [21, 157, 190, 298], z: 4 }] },
   { id: 'bunda', name: 'Bunda se svetrem', slot: 'bunda', thumb: 'bunda', pieces: [{ src: 'nas-bunda', box: [17, 147, 195, 303], z: 6 }] },
   { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'zimni-bunda', pieces: [{ src: 'nas-zimni-bunda', box: [16, 127, 197, 313], z: 6 }] },
@@ -45,9 +44,9 @@ const ITEMS: Item[] = [
 // Hanka: rámeček 240 × 495 px, obrázky v hanka/ („f-…“ jsou ploché kusy jen na náhled v šatníku).
 const H_ITEMS: Item[] = [
   { id: 'cepice', name: 'Čepice', slot: 'hlava', thumb: 'hanka/cepice', pieces: [{ src: 'hanka/cepice', box: [45, 5, 213, 126], z: 9 }] },
-  { id: 'klobouk', name: 'Klobouk', slot: 'hlava', thumb: 'hanka/f-klobouk', pieces: [{ src: 'hanka/f-klobouk', box: [6, 28, 234, 133], z: 9 }] },
+  { id: 'klobouk', name: 'Klobouk', slot: 'hlava', thumb: 'hanka/f-klobouk', pieces: [{ src: 'hanka/f-klobouk', box: [6, 28, 234, 133], z: 9 }], boxFor: { sam: [-4, -6, 208, 92] } },
   { id: 'cervene-triko', name: 'Červené tričko', slot: 'vrsek', thumb: 'hanka/f-triko', pieces: [] },
-  { id: 'saty', name: 'Šaty', slot: 'vrsek', thumb: 'hanka/f-saty', pieces: [{ src: 'hanka/f-saty', box: [50, 196, 190, 398], z: 4 }] },
+  { id: 'saty', name: 'Šaty', slot: 'vrsek', thumb: 'hanka/f-saty', pieces: [{ src: 'hanka/f-saty', box: [50, 196, 190, 398], z: 4 }], boxFor: { sam: [30, 148, 180, 350] } },
   { id: 'plastenka', name: 'Pláštěnka', slot: 'bunda', thumb: 'hanka/plastenka', pieces: [{ src: 'hanka/plastenka', box: [12, 30, 222, 379], z: 6 }] },
   { id: 'zimni-bunda', name: 'Zimní bunda', slot: 'bunda', thumb: 'hanka/f-zimni-bunda', pieces: [{ src: 'hanka/f-zimni-bunda', box: [20, 166, 218, 360], z: 6 }] },
   { id: 'kratasy', name: 'Kraťasy', slot: 'dolu', thumb: 'hanka/f-kratasy', pieces: [] },
@@ -223,7 +222,7 @@ export function PrvoukaObleceni({ settings = {} }: { settings?: Record<string, a
           <div className="relative mt-16 mb-4" style={{ width: who === 'hanka' ? 'min(48%, 194px)' : 'min(52%, 210px)', aspectRatio: `${C.w} / ${C.h}` }}>
             <img src={`${ART}/${baseSrc}.png`} alt={C.kdo} className="absolute" style={{ left: `${(bx0 / C.w) * 100}%`, top: `${(by0 / C.h) * 100}%`, width: `${((bx1 - bx0) / C.w) * 100}%`, height: `${((by1 - by0) / C.h) * 100}%` }} draggable={false} />
             {worn.flatMap((it) => it.pieces.map((p, i) => {
-              const [x0, y0, x1, y1] = mapBox(p.box, it.slot, it.owner, who);
+              const [x0, y0, x1, y1] = (it.owner !== who && it.boxFor?.[who] && it.pieces.length === 1) ? it.boxFor[who]! : mapBox(p.box, it.slot, it.owner, who);
               return (
                 <img key={it.id + i} src={`${ART}/${p.src}.png`} alt="" draggable={false} className="absolute"
                   style={{ left: `${(x0 / C.w) * 100}%`, top: `${(y0 / C.h) * 100}%`, width: `${((x1 - x0) / C.w) * 100}%`, height: `${((y1 - y0) / C.h) * 100}%`, zIndex: p.z, animation: 'oblIn .3s ease' }} />
