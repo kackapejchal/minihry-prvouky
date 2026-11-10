@@ -486,14 +486,15 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 Zpět
               </button>
             </div>
-            <div className="absolute left-0 right-0 bottom-4 z-10 flex justify-center gap-3">
+            {/* Ovládání ve tmavé liště dole – stejně jako přehrávání v modelech. */}
+            <div className="absolute left-3 right-3 bottom-3 z-10 flex justify-center gap-3 rounded-2xl px-3 py-2" style={{ background: 'rgba(8,12,30,.78)', border: '1px solid rgba(255,255,255,.12)', backdropFilter: 'blur(6px)' }}>
               {([['skok', 'Skoč!'], ['micek', 'Pusť míček']] as const).map(([k, label]) => (
                 <button
                   key={k}
                   type="button"
                   disabled={Boolean(jumpAction)}
                   onClick={() => setJumpAction({ kind: k, t0: performance.now() })}
-                  className="h-12 px-6 rounded-full text-lg font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                  className="h-11 px-6 rounded-full text-base font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
                   style={{ background: '#f0a12c', color: '#2a1700', boxShadow: '0 3px 0 #b8741a' }}
                 >
                   {label}

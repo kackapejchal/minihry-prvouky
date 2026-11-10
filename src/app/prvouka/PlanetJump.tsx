@@ -104,11 +104,11 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
   }, [action]);
 
   const colW = box.w / bodies.length;
-  const groundY = box.h * 0.78;
+  const groundY = box.h * 0.7; // pod povrchem zbývá místo pro ovládací lištu
   // Měřítko: nejvyšší skok (Měsíc ~3 m) se vejde do sloupce, pád z 2 m taky.
   const maxM = Math.max(DROP_M, ...bodies.map(jumpHeight));
   const pxPerM = (groundY - box.h * 0.36) / maxM; // nahoře místo pro název tělesa
-  const kid = Math.max(36, Math.min(64, colW * 0.22));
+  const kid = Math.max(52, Math.min(96, colW * 0.2, box.h * 0.13));
 
   return (
     <div ref={ref} className="absolute inset-0">
@@ -129,7 +129,7 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
         const cx = colW * i + colW * 0.42;
         const peakY = groundY - jumpHeight(b) * pxPerM;
         return (
-          <div key={b} className="absolute top-0 bottom-0" style={{ left: colW * i, width: colW }}>
+          <div key={b} className="absolute top-0 bottom-0 overflow-hidden" style={{ left: colW * i, width: colW }}>
             {i > 0 ? <div className="absolute top-[8%] bottom-[8%] left-0 w-px" style={{ background: 'rgba(255,255,255,.12)' }} /> : null}
             {/* hlavička sloupce */}
             <div className="absolute left-0 right-0 top-3 flex flex-col items-center gap-1 text-white">
@@ -167,7 +167,7 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
               )}
             </div>
             {/* značka nejvyššího bodu skoku: o tolik nad hlavou dítěte (v nejvyšším bodě se jí dotkne hlavou) */}
-            {action?.kind !== 'micek' ? (
+            {shown !== 'micek' ? (
               <>
                 <div className="absolute border-t-2 border-dashed" style={{ left: colW * 0.18, width: colW * 0.48, top: peakY - kid * 1.7, borderColor: 'rgba(127,211,255,.55)' }} />
                 <span className="absolute text-xs md:text-sm font-bold text-[#7fd3ff]" style={{ left: colW * 0.68, top: peakY - kid * 1.7 - 10 }}>{formatMeters(jumpHeight(b))}</span>
@@ -187,11 +187,25 @@ export function JumpStage({ bodies, names, thumbs, action, onDone, weight = 30, 
             ) : null}
             {/* postavička */}
             <Kid x={cx - colW * i} y={groundY - up * pxPerM} size={kid} />
-            {/* povrch */}
-            <div className="absolute left-0 right-0 bottom-0" style={{ top: groundY, backgroundColor: GROUND[b], backgroundImage: `${GAS.includes(b) ? 'linear-gradient(180deg, rgba(255,255,255,.15), rgba(6,10,28,.55)), ' : 'linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.25)), '}url(${surfaces[b] ?? surface(b)})`, backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: 'inset 0 6px 10px rgba(0,0,0,.25)' }} />
-            <span className="absolute left-0 right-0 text-center text-xs md:text-sm font-bold text-white/85" style={{ top: groundY + 10 }}>
-              {GAS.includes(b) ? 'nemá pevný povrch – stojíme na mracích' : ''}
-            </span>
+            {/* povrch: zakřivený okraj planety (robot stojí na „kopečku“ malé planety) */}
+            {(() => {
+              const D = colW * 2.4; // průměr planety – vidíme jen horní oblouk
+              return (
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    left: colW / 2 - D / 2, top: groundY - 2, width: D, height: D,
+                    backgroundColor: GROUND[b],
+                    backgroundImage: `radial-gradient(circle at 50% 0%, rgba(255,255,255,.18), rgba(0,0,0,0) 35%), radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.45) 72%), url(${surfaces[b] ?? surface(b)})`,
+                    backgroundSize: '100% 100%, 100% 100%, cover', backgroundPosition: 'center',
+                    boxShadow: `0 -6px 24px ${GAS.includes(b) ? 'rgba(200,220,255,.18)' : 'rgba(127,211,255,.12)'}`,
+                  }}
+                />
+              );
+            })()}
+            {GAS.includes(b) ? (
+              <span className="absolute left-0 right-0 text-center text-xs md:text-sm font-bold text-white/85" style={{ top: groundY + 14 }}>nemá pevný povrch – stojíme na mracích</span>
+            ) : null}
           </div>
         );
       })}
