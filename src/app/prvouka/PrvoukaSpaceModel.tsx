@@ -271,6 +271,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [clock, setClock] = useState(formatYears(0));
   const [webglError, setWebglError] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  // Na telefonu je ovládání schované v menu v pravém horním rohu, ať nezakrývá planetu.
+  const [menuOpen, setMenuOpen] = useState(false);
   // Den a noc: Země se točí kolem osy, značka „Tady jsme my“ ukazuje, jestli je u nás den, nebo noc.
   const [dayNight, setDayNight] = useState(false);
   const [dayPart, setDayPart] = useState<DayPart>('den');
@@ -453,7 +455,59 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
           {/* Najetí myší nápovědu ukáže, klepnutí (tabule, tablet) ji připne. */}
           <p className={`${noteOpen ? 'block' : 'hidden group-hover:block'} mt-2 rounded-xl px-3 py-2 text-xs md:text-sm text-[#e7ecff] leading-snug`} style={{ background: 'rgba(8,12,30,.88)', border: '1px solid rgba(255,255,255,.14)' }}>{note}</p>
         </div>
-        {view === 'orbit' ? <p className="absolute top-3 right-4 z-10 text-sm md:text-base font-bold text-[#e7ecff] tabular-nums pointer-events-none">Uběhlo {clock}</p> : null}
+        {view === 'orbit' ? <p className="absolute top-3 right-16 lg:right-4 z-10 h-9 lg:h-auto flex items-center text-sm md:text-base font-bold text-[#e7ecff] tabular-nums pointer-events-none">Uběhlo {clock}</p> : null}
+        {/* Telefon: menu s ovládáním v pravém horním rohu + samotné tlačítko přehrávání vlevo dole. */}
+        <div className="lg:hidden">
+          {menuOpen ? <button type="button" aria-label="Zavřít menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 z-20 cursor-default" /> : null}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Nastavení modelu"
+            aria-expanded={menuOpen}
+            className="absolute top-3 right-3 z-30 w-10 h-10 rounded-full flex items-center justify-center text-[#e7ecff] transition-colors"
+            style={{ background: menuOpen ? '#f0a12c' : 'rgba(8,12,30,.78)', color: menuOpen ? '#2a1700' : '#e7ecff', border: '1px solid rgba(255,255,255,.18)' }}
+          >
+            {menuOpen ? (
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
+            )}
+          </button>
+          {menuOpen ? (
+            <div
+              className="absolute top-16 right-3 z-30 w-[min(20rem,calc(100%-1.5rem))] flex flex-col items-start gap-3 rounded-2xl p-4"
+              style={{ background: 'rgba(8,12,30,.92)', border: '1px solid rgba(255,255,255,.14)', backdropFilter: 'blur(6px)' }}
+            >
+              {dayNight ? (
+                <span className="font-bold text-[#e7ecff] tabular-nums">1 s = 3 hodiny</span>
+              ) : (
+                <label className="w-full flex flex-col gap-1 text-xs font-bold uppercase tracking-wide text-[#9aa6d1]">
+                  Rychlost
+                  <span className="flex items-center gap-3">
+                    <input type="range" min={0} max={100} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="flex-1 accent-[#f0a12c]" aria-label="Rychlost" />
+                    <span className="text-sm normal-case tracking-normal text-[#e7ecff] tabular-nums whitespace-nowrap">{speedLabel(speed)}</span>
+                  </span>
+                </label>
+              )}
+              <SpaceSegmented label="Pohled" value={view} onChange={setView} options={[{ value: 'orbit', label: 'Oběžné dráhy' }, { value: 'size', label: 'Skutečné velikosti' }]} />
+              <SpaceSegmented label="Vzhled" value={style} onChange={setStyle} options={[{ value: 'realny', label: 'Opravdový' }, { value: 'kresleny', label: 'Kreslený' }]} />
+              <SpaceSwitch label="Popisky" checked={labels} onChange={setLabels} />
+            </div>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setPlaying((v) => !v)}
+            aria-label={playing ? 'Pozastavit' : 'Spustit'}
+            className="absolute left-3 bottom-3 z-10 w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-95"
+            style={{ background: '#f0a12c', color: '#2a1700' }}
+          >
+            {playing ? (
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="w-5 h-5 ml-0.5" fill="currentColor"><path d="M7 5v14l12-7z" /></svg>
+            )}
+          </button>
+        </div>
         {dayNight ? (
           <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 pointer-events-none flex items-center gap-2 rounded-full px-4 py-2 text-lg font-bold shadow-lg" style={DAY_PART_STYLE[dayPart]}>
             <span className="text-2xl leading-none" aria-hidden="true">{DAY_PART_ICON[dayPart]}</span>
@@ -522,7 +576,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
         ) : null}
         {/* Ovládací lišta: přehrávání, dvě volby „jedna ze dvou“ a vypínač popisků – každý druh vypadá jinak. */}
         <div
-          className="absolute left-3 right-3 bottom-3 z-10 flex flex-wrap xl:flex-nowrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl px-3 py-2"
+          className="absolute left-3 right-3 bottom-3 z-10 hidden lg:flex flex-wrap xl:flex-nowrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl px-3 py-2"
           style={{ background: 'rgba(8,12,30,.78)', border: '1px solid rgba(255,255,255,.12)', backdropFilter: 'blur(6px)' }}
         >
           {/* Na počítači je „Celá soustava“ v panelu vedle; v liště jen na úzké obrazovce, kde je panel až pod modelem. */}
