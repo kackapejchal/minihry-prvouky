@@ -471,7 +471,7 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
                       <div className="absolute -bottom-4 left-4 right-4">
                         <button
                           onClick={() => handlePlayGame(game.id as GameType)}
-                          className="w-1/2 vb-btn vb-btn-primary vb-btn-lg"
+                          className="w-1/2 vb-btn vb-btn-lg !bg-[#4a43e8] hover:!bg-[#3d36d6] !text-white"
                         >
                           <Play className="w-4 h-4" />
                           {game.isModel ? 'Otevřít model' : 'Hraj'}
