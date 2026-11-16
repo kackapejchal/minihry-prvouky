@@ -1,5 +1,7 @@
 import { cardAccent } from '../prvouka/cardAccent';
 import { SlidingSegmented } from '../prvouka/SlidingSegmented';
+// import { TopicPictogram } from '../prvouka/TopicPictogram'; // piktogramy témat – zatím vypnuté
+// import { usePrvoukaIllustrations } from '../prvouka/illustrations';
 import React, { useState, useEffect } from 'react';
 import { prvoukaLandingGame } from '../prvouka/registry';
 import { defaultPrvoukaTopics, findPrvoukaGame } from '../prvouka/data/catalog';
@@ -41,7 +43,7 @@ function formatWorkbookPages(raw: string, grade: number): string {
 
 /** Rozbalovací karta (Pokročilá nastavení, Sdílet): tlačítko nahoře, obsah se rozbalí uvnitř téže karty. */
 const FOLD_CARD = 'rounded-3xl bg-white border border-[#e2e8f0]/70 shadow-[0_1px_3px_rgba(78,88,113,0.06)] overflow-hidden';
-const FOLD_TRIGGER = 'flex items-center gap-3 w-full px-6 py-4 text-left text-lg font-bold text-[#4e5871] hover:bg-[#f7f8fc] transition-colors';
+const FOLD_TRIGGER = 'flex items-center gap-3 w-full px-6 py-4 text-left text-lg font-bold text-[#4e5871] hover:bg-[#f7f8fc] transition-colors outline-none focus-visible:bg-[#f7f8fc]';
 
 interface GameConfiguratorProps {
   gameId: GameType;
@@ -158,6 +160,10 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
   const backgroundColor = getGameBackgroundColor(gameId, settings);
   // Vybraná volba, vypínač a zaškrtávátka mají barvu karty hry (jako v Početníčku).
   const CHIP_ON = cardAccent(prvoukaLandingGame(gameId)?.bg ?? backgroundColor);
+  // Piktogramy témat (jako u aktivit v Početníčku) – obrázek z úloh daného tématu.
+  const prvLanding = prvoukaLandingGame(gameId);
+  const prvData = prvLanding ? findPrvoukaGame(prvLanding.dataId) : undefined;
+  // const illustrations = usePrvoukaIllustrations(); // pro piktogramy témat (zatím vypnuté)
 
   // Získání obrázku a popisku pro aktuální hru
   const gameImage = getGameImage(gameId);
@@ -454,6 +460,11 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
                       <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="#fff" strokeWidth={3.2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
                     ) : null}
                   </span>
+                  {/* Piktogramy témat – zkouška 16. 11., automaticky z obrázků úloh nevypadaly hezky (fotky na bílém, opakující se obrázek).
+                      Na vrácení by chtěly kreslené piktogramy na míru jako v Početníčku.
+                  {key === 'topics' && prvData ? (
+                    <TopicPictogram game={prvData} topicId={String(option.value)} grade={(Number(settings.grade) || prvLanding?.grades?.[0] || 1) as PrvoukaGrade} tint={prvLanding?.bg ?? '#eef1f8'} illustrations={illustrations} />
+                  ) : null} */}
                   <span className="flex flex-col leading-tight">
                     <span className="text-[17px] font-semibold">{title}</span>
                     {pages ? <span className="text-sm text-gray-500 mt-0.5">{pages}</span> : null}
@@ -616,8 +627,11 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
           </Card>
           </>) : null}
 
-          {/* 2. Pokročilá nastavení – tlačítko i obsah v jedné kartě */}
-          {(sortedBasicSettings.length > 0 || foldOnly) && Object.keys(advancedSettings).length > 0 && (
+          {/* 2. Pokročilá nastavení – tlačítko i obsah v jedné kartě.
+              Zatím schovaná (16. 11.): barvu pozadí apod. učitel nepotřebuje. Zůstávají jen u Modelu hvězdné oblohy,
+              kde jsou to jediné volby. Původní podmínka:
+              {(sortedBasicSettings.length > 0 || foldOnly) && Object.keys(advancedSettings).length > 0 && ( */}
+          {foldOnly && Object.keys(advancedSettings).length > 0 && (
             <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
               <div className={FOLD_CARD}>
                 <CollapsibleTrigger asChild>
