@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { GameType, generateGameURL, resolveSharedGameSettings } from './constants/gameRegistry';
-import { PRVOUKA_LANDING_GAMES } from './prvouka/registry';
+import { PRVOUKA_LANDING_GAMES, prvoukaLandingGame } from './prvouka/registry';
 import { parseGameConfigParam } from './utils/gameShareUrl';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AudioManager } from './components/AudioManager';
@@ -78,8 +78,10 @@ const ComponentLoader = ({ children }: { children: React.ReactNode }) => (
 type AppMode = 'admin' | 'configurator' | 'game';
 
 // Simplified game wrapper with responsive button positioning
-const GameWrapper = ({ children, showBackButton, onBackToAdmin, onOpenSettings }: {
+const GameWrapper = ({ children, showBackButton, onBackToAdmin, onOpenSettings, staticBelowLg = false }: {
   children: React.ReactNode;
+  /** Modely (panel pod modelem na tabletu na výšku): tlačítka dole až pod obsahem, ne přes panel. */
+  staticBelowLg?: boolean;
   showBackButton: boolean;
   onBackToAdmin: () => void;
   onOpenSettings: () => void;
@@ -95,7 +97,7 @@ const GameWrapper = ({ children, showBackButton, onBackToAdmin, onOpenSettings }
       {showBackButton && (
         <>
           {/* Desktop - fixed position as before */}
-          <div className="hidden md:block fixed bottom-4 left-4 z-50">
+          <div className={`hidden ${staticBelowLg ? 'lg:block' : 'md:block'} fixed bottom-4 left-4 z-50`}>
             <div className="flex items-center gap-3">
               <button
                 onClick={onBackToAdmin}
@@ -120,7 +122,7 @@ const GameWrapper = ({ children, showBackButton, onBackToAdmin, onOpenSettings }
           </div>
           
           {/* Mobile - static position at bottom */}
-          <div className="md:hidden bg-white border-t border-gray-200 p-4">
+          <div className={`${staticBelowLg ? 'lg:hidden' : 'md:hidden'} bg-white border-t border-gray-200 p-4`}>
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
               <button
                 onClick={onBackToAdmin}
@@ -333,6 +335,7 @@ export default function App() {
               showBackButton={showBackButton}
               onBackToAdmin={handleBackToAdmin}
               onOpenSettings={() => handleConfigureGame(selectedGameId)}
+              staticBelowLg={Boolean(prvoukaLandingGame(selectedGameId as string)?.model)}
             >
               <GameComponent {...gameProps} />
             </GameWrapper>

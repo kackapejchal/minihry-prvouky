@@ -398,7 +398,9 @@ export function drawMoonOrbit(cv: HTMLCanvasElement, day: number, t: number, sti
     spot.addColorStop(0, 'rgba(0,0,0,.85)'); spot.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = spot; ctx.fillRect(cx - er, cy - er, er, er * 2);
     ctx.restore();
-    label(ctx, 'stín Měsíce', (mx + cx - er) / 2, cy - er * 0.9, '#c9d2f0', fs - 1);
+    // Popisek stínu pod čárou (nad ní je jméno Měsíce); na úzkém telefonu, kde by narazil do „Země“, o řádek níž.
+    const sx = (mx + cx - er) / 2, roomy = cx - sx > fs * 4.2;
+    label(ctx, 'stín Měsíce', sx, cy + er + fs + 2 + (roomy ? 0 : fs + 6), '#c9d2f0', fs - 1);
   } else if (eclipse === 'mesic') {
     // Zatmění Měsíce: Země stojí přesně mezi Sluncem a Měsícem a Měsíc zajde do jejího stínu.
     const end = cx + R + mr * 4;
@@ -407,7 +409,8 @@ export function drawMoonOrbit(cv: HTMLCanvasElement, day: number, t: number, sti
     ctx.fillStyle = g2;
     ctx.beginPath(); ctx.moveTo(cx, cy - er); ctx.lineTo(end, cy - er * 0.75); ctx.lineTo(end, cy + er * 0.75); ctx.lineTo(cx, cy + er); ctx.closePath(); ctx.fill();
     drawPlanet(ctx, SPACE_PLANETS[2], cx, cy, er, Math.PI);
-    label(ctx, 'stín Země', (cx + er + mx - mr) / 2, cy - er * 0.95, '#c9d2f0', fs - 1);
+    const sx = (cx + er + mx - mr) / 2, roomy = sx - cx > fs * 4;
+    label(ctx, 'stín Země', sx, cy + er + fs + 2 + (roomy ? 0 : fs + 6), '#c9d2f0', fs - 1);
   }
   ctx.strokeStyle = 'rgba(240,161,44,.55)'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 5]);
   ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(mx, my); ctx.stroke(); ctx.setLineDash([]);

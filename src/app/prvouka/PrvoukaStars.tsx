@@ -13,7 +13,7 @@ import { CONSTELLATIONS, POLARKA_TEXT, SEASONS, constellation, projectScene, pro
 
 // Tlačítka Všechny hry / Nastavení jsou dole vlevo: na počítači uhne jen model vlevo (NAV_LEFT),
 // panel vpravo jde až dolů. Na mobilu (pod sebou) uhne celá stránka.
-const NAV_SPACE = 'pb-20 lg:pb-5';
+const NAV_SPACE = 'pb-5';
 const NAV_LEFT = 'lg:mb-16';
 // prohlizet = model oblohy, vyber = výběr souhvězdí do hry, hra = spojovačka
 type Mode = 'prohlizet' | 'vyber' | 'hra';

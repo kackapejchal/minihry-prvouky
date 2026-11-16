@@ -611,7 +611,16 @@ function OrderView({ items, illustrations, locked, onAnswer }: { items: PrvoukaO
   const [hint, setHint] = useState<string | null>(null);
   const [pool] = useState(() => shuffle(items, Math.random));
   const done = placed >= items.length;
-  const slotWidth = isMobile ? 76 : Math.min(150, 1000 / items.length) * s;
+  // Všechny v jedné řadě; když se na šířku (tablet na výšku) nevejdou, tak ve dvou stejně dlouhých řadách (4 + 4, ne 5 + 3).
+  const gapX = isMobile ? 6 : 12 * s;
+  const avail = typeof window !== 'undefined' ? window.innerWidth * 0.92 : 1000;
+  let slotWidth = isMobile ? 76 : Math.min(150, 1000 / items.length) * s;
+  let rowMax: number | undefined;
+  if (!isMobile && items.length * (slotWidth + gapX) > avail) {
+    const cols = Math.ceil(items.length / 2);
+    slotWidth = Math.min(150 * s, (avail - gapX * (cols - 1)) / cols);
+    rowMax = cols * (slotWidth + gapX) + 2;
+  }
   const pictureSize = isMobile ? 48 : slotWidth * 0.62;
 
   const tap = (item: PrvoukaOrderItem) => {
@@ -639,7 +648,7 @@ function OrderView({ items, illustrations, locked, onAnswer }: { items: PrvoukaO
 
   return (
     <div className="flex flex-col items-center w-full" style={{ gap: isMobile ? 14 : 26 * s, maxWidth: '96vw' }}>
-      <div className="flex flex-wrap justify-center" style={{ gap: isMobile ? 6 : 12 * s }}>
+      <div className="flex flex-wrap justify-center" style={{ gap: gapX, maxWidth: rowMax }}>
         {items.map((item, position) => {
           const filled = position < placed;
           return (
@@ -662,7 +671,7 @@ function OrderView({ items, illustrations, locked, onAnswer }: { items: PrvoukaO
           );
         })}
       </div>
-      <div className="flex flex-wrap justify-center" style={{ gap: isMobile ? 8 : 14 * s, minHeight: slotWidth * 1.1 }}>
+      <div className="flex flex-wrap justify-center" style={{ gap: isMobile ? 8 : 14 * s, minHeight: slotWidth * 1.1, maxWidth: rowMax }}>
         {pool.filter((item) => items.findIndex((x) => x.id === item.id) >= placed).map((item) => (
           <motion.button
             key={item.id}

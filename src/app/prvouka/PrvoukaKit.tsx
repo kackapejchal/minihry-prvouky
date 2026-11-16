@@ -44,7 +44,9 @@ export function useDesktopScale(): number {
   const compute = () => {
     if (typeof window === 'undefined') return 1;
     // Spodní mez je nízko, aby se i v nízkém okně notebooku vešlo zadání, úloha i skóre dole.
-    return Math.max(0.55, Math.min(2.4, Math.min(window.innerWidth / 1100, window.innerHeight / 760)));
+    // Tablet na výšku (okno vyšší než široké): úloha je v jednom sloupci, stačí jí užší plocha – jinak by byla malá a dole prázdno.
+    const portrait = window.innerWidth >= 768 && window.innerHeight > window.innerWidth;
+    return Math.max(0.55, Math.min(2.4, Math.min(window.innerWidth / (portrait ? 860 : 1100), window.innerHeight / (portrait ? 1000 : 760))));
   };
   const [scale, setScale] = useState(compute);
   useEffect(() => {

@@ -36,7 +36,7 @@ export function PrvoukaSpaceModel({ model, settings }: { model: 'soustava' | 'me
 /** Volný pruh dole pro tlačítka Všechny hry / Nastavení – jen když je aplikace ukazuje (hra spuštěná z rozcestníku). */
 // Tlačítka Všechny hry / Nastavení jsou dole vlevo: na počítači uhne jen model vlevo (NAV_LEFT),
 // panel vpravo jde až dolů. Na mobilu (pod sebou) uhne celá stránka.
-const NAV_SPACE = 'pb-20 lg:pb-5';
+const NAV_SPACE = 'pb-5';
 const NAV_LEFT = 'lg:mb-16';
 const PANEL = 'rounded-3xl bg-white text-[#0f1d4d] p-5 flex flex-col gap-3 min-w-0';
 const planetIcon = (id: PlanetKey) => `${import.meta.env.BASE_URL}prvouka/tretak/planety/${id}.webp`;
@@ -104,6 +104,12 @@ function SpaceSwitch({ label, checked, onChange }: { label: string; checked: boo
       {label}
     </button>
   );
+}
+
+/** Na telefonu a tabletu je panel pod modelem: po klepnutí na kartu (animace, porovnání…) se stránka posune nahoru k modelu, ať dítě vidí, co se spustilo. */
+function scrollToModel(el: Element | null | undefined) {
+  if (!el || typeof window === 'undefined' || window.innerWidth >= 1024) return;
+  if (el.getBoundingClientRect().top < -8) window.setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
 }
 
 function czPlural(n: number, one: string, few: string, many: string) {
@@ -268,6 +274,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [race, setRace] = useState(false);
   // Porovnej se Zemí: velký pohled planeta vedle Země ve skutečném poměru.
   const [compare, setCompare] = useState(false);
+  useEffect(() => { if (compare || dayNight || race) scrollToModel(containerRef.current); }, [compare, dayNight, race]);
   // Porovnání ukazuje planety velké – malé obrázky z panelu by byly rozpixlované, tak se vykreslí ostřejší.
   const [compareThumbs, setCompareThumbs] = useState<Partial<Record<SolarBodyId, string>>>({});
   useEffect(() => {
@@ -1049,6 +1056,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   const [seenBirth, setSeenBirth] = useState<{ moon: boolean; earth: boolean }>({ moon: false, earth: false });
   // Proč není zatmění každý měsíc: animace z boku.
   const [why, setWhy] = useState(false);
+  useEffect(() => { if (eclipse || birth || earthBirth || why) scrollToModel(orbitRef.current?.parentElement); }, [eclipse, birth, earthBirth, why]); // eslint-disable-line react-hooks/exhaustive-deps
   const eclipseRef = useRef<Eclipse>(null);
   eclipseRef.current = eclipse;
   const dayRef = useRef(day);
