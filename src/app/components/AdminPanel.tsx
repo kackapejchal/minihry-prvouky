@@ -73,6 +73,27 @@ const LazyGameImage = React.memo(({ src, alt, className, objectPosition }: { src
 
 LazyGameImage.displayName = 'LazyGameImage';
 
+
+/** Tlačítko na kartě má sytější odstín barvy karty (jako v Početníčku). */
+function cardAccent(bg: string, dark = false): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(bg ?? '');
+  if (!m) return dark ? '#3d36d6' : '#4a43e8';
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (h * 60 + 360) % 360;
+  // Pastelová žlutá a oranžová by po ztmavení zhnědly – dostanou čistý oranžový / zlatý tón.
+  const k = dark ? 6 : 0;
+  // Jemné tóny jako v Početníčku (zelené tlačítko #55b886 u zelené karty).
+  if (h >= 25 && h < 50) return `hsl(32 74% ${55 - k}%)`;
+  if (h >= 50 && h < 75) return `hsl(42 72% ${50 - k}%)`;
+  if (h >= 75 && h < 180) return `hsl(${Math.round(h)} 40% ${52 - k}%)`;
+  if (h < 25 || h >= 330) return `hsl(${Math.round(h)} 62% ${58 - k}%)`;
+  return `hsl(${Math.round(h)} 58% ${58 - k}%)`;
+}
+
 export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: AdminPanelProps) => {
   const isPrvouka = subject === 'prvouka';
   const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
@@ -383,7 +404,7 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
         <div className="flex flex-wrap justify-center gap-3">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
+            className={`px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
               selectedCategory === null
                 ? 'bg-[#0f1d4d] text-white'
                 : 'bg-[#e3e8f6] text-[#0f1d4d] hover:bg-[#d6ddf0]'
@@ -395,7 +416,7 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-3 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
+              className={`px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
                 selectedCategory === category
                   ? 'bg-[#0f1d4d] text-white'
                   : 'bg-[#e3e8f6] text-[#0f1d4d] hover:bg-[#d6ddf0]'
@@ -471,7 +492,8 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
                       <div className="absolute -bottom-4 left-4 right-4">
                         <button
                           onClick={() => handlePlayGame(game.id as GameType)}
-                          className="w-1/2 vb-btn vb-btn-lg !bg-[#4a43e8] hover:!bg-[#3d36d6] !text-white"
+                          className="w-1/2 vb-btn vb-btn-lg !text-white hover:brightness-95"
+                          style={{ background: cardAccent(game.bg) }}
                         >
                           <Play className="w-4 h-4" />
                           {game.isModel ? 'Otevřít model' : 'Hraj'}

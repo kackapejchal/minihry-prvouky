@@ -20,7 +20,7 @@ import { ShareConfigQr, ShareQrOverlay } from './ShareConfigQr';
 const ACCENT = '#5d6fc8';
 /** Zapnuté volby (zaškrtávátka, vypínače) – stejná fialová jako přepínače; zelená patří jen tlačítku Hrát. */
 const CHIP_ON = '#0f1d4d';
-const SEGMENT = 'h-10 px-5 rounded-full text-[15px] font-bold whitespace-nowrap transition-all';
+const SEGMENT = 'h-10 px-5 rounded-xl text-[15px] font-bold whitespace-nowrap transition-all';
 
 /**
  * „1/2/18–21“ (ročník/díl/strana) → „2. díl, s. 18–21“; jiný ročník než zvolený se vypíše celý
@@ -354,7 +354,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
         if ((setting.options?.length ?? 0) > 0 && (setting.options?.length ?? 0) <= 6) {
           return (
             // Spojený přepínač: jedna šedá kapsle, vybraná možnost je v ní tmavá „pilulka“ (jako zapnuté tlačítko ve hrách).
-            <div className="inline-flex max-w-full rounded-full p-1.5" style={{ background: '#e3e8f6' }} role="radiogroup" aria-label={setting.name}>
+            <div className="inline-flex max-w-full rounded-2xl p-1.5" style={{ background: '#e3e8f6' }} role="radiogroup" aria-label={setting.name}>
               {setting.options!.map((option) => {
                 const active = value?.toString() === option.value.toString();
                 return (
@@ -536,7 +536,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           <Button
             onClick={handlePlayGame}
-            className="flex-1 vb-btn vb-btn-primary !h-16 !text-xl !rounded-full !bg-[#f0a12c] hover:!bg-[#f5ad3e] !text-[#2a1700] !shadow-none"
+            className="flex-1 vb-btn vb-btn-primary !h-16 !text-xl !rounded-2xl !bg-[#f0a12c] hover:!bg-[#f5ad3e] !text-[#2a1700] !shadow-none"
             size="lg"
           >
             <Play className="w-6 h-6 mr-3" />
@@ -547,7 +547,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
             onClick={() => setIsQrOpen(true)}
             disabled={!generatedUrl}
             variant="outline"
-            className="sm:min-w-[13rem] vb-btn !h-16 !text-xl !rounded-full !bg-white hover:!bg-[#f4f6fc] !text-[#0f1d4d] !border-0 !shadow-none"
+            className="sm:min-w-[13rem] vb-btn !h-16 !text-xl !rounded-2xl !bg-white hover:!bg-[#f4f6fc] !text-[#0f1d4d] !border-0 !shadow-none"
             size="lg"
           >
             <QrCode className="w-6 h-6 mr-3" />
