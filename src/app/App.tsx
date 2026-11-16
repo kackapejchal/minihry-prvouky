@@ -122,7 +122,7 @@ const GameWrapper = ({ children, showBackButton, onBackToAdmin, onOpenSettings, 
           </div>
           
           {/* Mobile - static position at bottom */}
-          <div className={`${staticBelowLg ? 'lg:hidden' : 'md:hidden'} bg-white border-t border-gray-200 p-4`}>
+          <div className={staticBelowLg ? 'lg:hidden bg-[#eef1f8] px-3 md:px-5 pt-3 pb-4' : 'md:hidden bg-white border-t border-gray-200 p-4'}>
             <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
               <button
                 onClick={onBackToAdmin}

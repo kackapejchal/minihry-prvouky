@@ -37,7 +37,7 @@ export function PrvoukaSpaceModel({ model, settings }: { model: 'soustava' | 'me
 /** Volný pruh dole pro tlačítka Všechny hry / Nastavení – jen když je aplikace ukazuje (hra spuštěná z rozcestníku). */
 // Tlačítka Všechny hry / Nastavení jsou dole vlevo: na počítači uhne jen model vlevo (NAV_LEFT),
 // panel vpravo jde až dolů. Na mobilu (pod sebou) uhne celá stránka.
-const NAV_SPACE = 'pb-5';
+const NAV_SPACE = 'pb-0 lg:pb-5';
 const NAV_LEFT = 'lg:mb-16';
 const PANEL = 'rounded-3xl bg-white text-[#0f1d4d] p-5 flex flex-col gap-3 min-w-0';
 const planetIcon = (id: PlanetKey) => `${import.meta.env.BASE_URL}prvouka/tretak/planety/${id}.webp`;
@@ -380,7 +380,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   return (
     // Na počítači přesně na výšku okna: spodní pruh (pb-20) zůstane volný pro tlačítka
     // Všechny hry / Nastavení a lišta modelu pod ně nesjede. Delší panel roluje sám.
-    <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,24vw)] lg:grid-rows-[minmax(0,1fr)]`}>
+    <div className={`w-full lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,24vw)] lg:grid-rows-[minmax(0,1fr)]`}>
       <div ref={containerRef} className={`relative rounded-3xl overflow-hidden bg-[#04060f] ${MODEL_H} ${settings ? NAV_LEFT : ''}`}>
         <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((v) => !v)} label="Planety" />
         {webglError ? (
@@ -1130,7 +1130,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   // Rozložení 2/3 + 1/3 jako Sluneční soustava: velký pohled shora s tmavou lištou, vpravo panel
   // s Měsícem tak, jak ho vidíme ze Země, popisem, všemi fázemi a zatměním.
   return (
-    <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
+    <div className={`w-full lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
       <div className={`relative rounded-3xl overflow-hidden bg-[#060a1c] ${MODEL_H} ${settings ? NAV_LEFT : ''}`}>
         <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((v) => !v)} label="Fáze Měsíce" />
         <canvas

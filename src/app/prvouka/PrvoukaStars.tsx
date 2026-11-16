@@ -14,7 +14,7 @@ import { CONSTELLATIONS, POLARKA_TEXT, SEASONS, constellation, projectScene, pro
 
 // Tlačítka Všechny hry / Nastavení jsou dole vlevo: na počítači uhne jen model vlevo (NAV_LEFT),
 // panel vpravo jde až dolů. Na mobilu (pod sebou) uhne celá stránka.
-const NAV_SPACE = 'pb-5';
+const NAV_SPACE = 'pb-0 lg:pb-5';
 const NAV_LEFT = 'lg:mb-16';
 // prohlizet = model oblohy, vyber = výběr souhvězdí do hry, hra = spojovačka
 type Mode = 'prohlizet' | 'vyber' | 'hra';
@@ -587,7 +587,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const doneText = r.type === 'polarka' ? POLARKA_TEXT : c!.text;
 
   return (
-    <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
+    <div className={`w-full lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
       {/* Model oblohy: na telefonu/tabletu panel v menu vpravo nahoře. Ve hře zůstává panel pod oblohou – je v něm zadání. */}
       <div className={`relative rounded-3xl overflow-hidden bg-[#05081a] ${isGame ? 'min-h-[60svh] lg:min-h-0' : MODEL_H} ${settings ? NAV_LEFT : ''}`}>
         {!isGame ? <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((v) => !v)} label="Souhvězdí" /> : null}
