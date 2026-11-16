@@ -80,7 +80,7 @@ function SpaceButton({ pressed, onClick, children }: { pressed?: boolean; onClic
 function SpaceSegmented<T extends string>({ label, value, onChange, options }: { label: string; value: T; onChange: (value: T) => void; options: Array<{ value: T; label: string }> }) {
   return (
     <div className="flex items-center gap-2" role="radiogroup" aria-label={label}>
-      <div className="flex rounded-xl p-1" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.14)' }}>
+      <div className="flex rounded-full p-1" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.14)' }}>
         {options.map((option) => {
           const active = option.value === value;
           return (
@@ -90,7 +90,7 @@ function SpaceSegmented<T extends string>({ label, value, onChange, options }: {
               role="radio"
               aria-checked={active}
               onClick={() => onChange(option.value)}
-              className="rounded-lg px-3 2xl:px-4 py-1.5 text-sm 2xl:text-base font-bold whitespace-nowrap transition-colors"
+              className="rounded-full px-3 2xl:px-4 py-1.5 text-sm 2xl:text-base font-bold whitespace-nowrap transition-colors"
               style={active ? { background: '#fff', color: '#0f1d4d' } : { background: 'transparent', color: '#e7ecff' }}
             >
               {option.label}
