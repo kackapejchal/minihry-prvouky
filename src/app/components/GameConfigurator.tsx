@@ -1,3 +1,4 @@
+import { cardAccent } from '../prvouka/cardAccent';
 import React, { useState, useEffect } from 'react';
 import { prvoukaLandingGame } from '../prvouka/registry';
 import { defaultPrvoukaTopics, findPrvoukaGame } from '../prvouka/data/catalog';
@@ -19,7 +20,6 @@ import { ShareConfigQr, ShareQrOverlay } from './ShareConfigQr';
 /** Barvy a tvary převzaté z menu Početníčku (1. stupeň). */
 const ACCENT = '#5d6fc8';
 /** Zapnuté volby (zaškrtávátka, vypínače) – stejná fialová jako přepínače; zelená patří jen tlačítku Hrát. */
-const CHIP_ON = '#0f1d4d';
 const SEGMENT = 'h-10 px-5 rounded-full text-[15px] font-bold whitespace-nowrap transition-all';
 
 /**
@@ -155,6 +155,8 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
 
   // Získání barvy pozadí pro aktuální hru
   const backgroundColor = getGameBackgroundColor(gameId, settings);
+  // Vybraná volba, vypínač a zaškrtávátka mají barvu karty hry (jako v Početníčku).
+  const CHIP_ON = cardAccent(prvoukaLandingGame(gameId)?.bg ?? backgroundColor);
 
   // Získání obrázku a popisku pro aktuální hru
   const gameImage = getGameImage(gameId);
@@ -365,7 +367,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
                     aria-checked={active}
                     onClick={() => handleSettingChange(key, typeof setting.defaultValue === 'number' ? Number(option.value) : option.value)}
                     className={SEGMENT}
-                    style={active ? { background: '#0f1d4d', color: '#fff' } : { background: 'transparent', color: '#0f1d4d' }}
+                    style={active ? { background: CHIP_ON, color: '#fff' } : { background: 'transparent', color: '#0f1d4d' }}
                   >
                     {option.label}
                   </button>
@@ -536,7 +538,8 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           <Button
             onClick={handlePlayGame}
-            className="flex-1 vb-btn vb-btn-primary !h-16 !text-xl !rounded-2xl !bg-[#f0a12c] hover:!bg-[#f5ad3e] !text-[#2a1700] !shadow-none"
+            className="flex-1 vb-btn !h-16 !text-xl !rounded-2xl !text-white !shadow-none hover:brightness-95"
+            style={{ background: CHIP_ON }}
             size="lg"
           >
             <Play className="w-6 h-6 mr-3" />
