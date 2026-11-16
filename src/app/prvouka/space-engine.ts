@@ -376,7 +376,8 @@ export function drawMoonOrbit(cv: HTMLCanvasElement, day: number, t: number, sti
   ctx.fillStyle = sg; ctx.fillRect(0, 0, w * 0.35, h);
   ctx.strokeStyle = 'rgba(255,210,120,.35)'; ctx.lineWidth = 2;
   for (let i = 1; i <= 5; i++) { const y = (h * i) / 6; ctx.beginPath(); ctx.moveTo(12, y); ctx.lineTo(48, y); ctx.lineTo(42, y - 5); ctx.moveTo(48, y); ctx.lineTo(42, y + 5); ctx.stroke(); }
-  label(ctx, 'světlo ze Slunce', 80, h / 6 - 12, '#ffd98a', fs - 1);
+  // Popisek je vystředěný na x – posunout tak, aby měl od levého kraje vzdušnou mezeru i při velkém písmu.
+  label(ctx, 'světlo ze Slunce', Math.max(80, 28 + (fs - 1) * 4.7), h / 6 - 12, '#ffd98a', fs - 1);
   const { cx, cy, R } = orbitLayout(w, h);
   const er = Math.max(16, R * 0.2);
   ctx.strokeStyle = 'rgba(160,180,255,.3)'; ctx.setLineDash([4, 6]);
