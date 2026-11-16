@@ -18,3 +18,12 @@ export function cardAccent(bg: string, dark = false): string {
   if (h < 25 || h >= 330) return `hsl(${Math.round(h)} 62% ${58 - k}%)`;
   return `hsl(${Math.round(h)} 58% ${58 - k}%)`;
 }
+
+/** Velmi světlý odstín barvy karty – podklad obrázku, aby postava na bílém nesplývala se stránkou. */
+export function cardTint(bg: string, amount = 0.45): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(bg ?? '');
+  if (!m) return '#f4f6fb';
+  const n = parseInt(m[1], 16);
+  const mix = (c: number) => Math.round(c * amount + 255 * (1 - amount));
+  return `rgb(${mix(n >> 16)}, ${mix((n >> 8) & 255)}, ${mix(n & 255)})`;
+}

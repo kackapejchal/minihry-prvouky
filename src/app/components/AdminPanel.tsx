@@ -1,4 +1,4 @@
-import { cardAccent } from '../prvouka/cardAccent';
+import { cardAccent, cardTint } from '../prvouka/cardAccent';
 import React, { useState, Suspense } from 'react';
 import { GAME_REGISTRY, GameType, GameConfig } from '../constants/gameRegistry';
 import { Button } from './ui/button';
@@ -441,7 +441,7 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
                     }}
                   >
                     {/* Game Image Area - podle Figma designu */}
-                    <div className="h-[215px] rounded-t-3xl overflow-hidden bg-white">
+                    <div className="h-[215px] rounded-t-3xl overflow-hidden" style={{ background: cardTint(game.bg) }}>
                       {game.image ? (
                         <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-6xl rounded-t-3xl">Loading...</div>}>
                           <LazyGameImage
