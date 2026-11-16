@@ -1,4 +1,5 @@
 import { cardAccent } from '../prvouka/cardAccent';
+import { SlidingSegmented } from '../prvouka/SlidingSegmented';
 import React, { useState, useEffect } from 'react';
 import { prvoukaLandingGame } from '../prvouka/registry';
 import { defaultPrvoukaTopics, findPrvoukaGame } from '../prvouka/data/catalog';
@@ -20,7 +21,7 @@ import { ShareConfigQr, ShareQrOverlay } from './ShareConfigQr';
 /** Barvy a tvary převzaté z menu Početníčku (1. stupeň). */
 const ACCENT = '#5d6fc8';
 /** Zapnuté volby (zaškrtávátka, vypínače) – stejná fialová jako přepínače; zelená patří jen tlačítku Hrát. */
-const SEGMENT = 'h-10 px-5 rounded-full text-[15px] font-bold whitespace-nowrap transition-all';
+const SEGMENT = 'h-10 px-5 text-[15px]';
 
 /**
  * „1/2/18–21“ (ročník/díl/strana) → „2. díl, s. 18–21“; jiný ročník než zvolený se vypíše celý
@@ -355,25 +356,19 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
         // Málo možností (ročník, počet úloh, vzhled…) = pilulky jako v Početníčku, víc možností = rozbalovací seznam.
         if ((setting.options?.length ?? 0) > 0 && (setting.options?.length ?? 0) <= 6) {
           return (
-            // Spojený přepínač: jedna šedá kapsle, vybraná možnost je v ní tmavá „pilulka“ (jako zapnuté tlačítko ve hrách).
-            <div className="inline-flex max-w-full rounded-full p-1.5" style={{ background: '#e3e8f6' }} role="radiogroup" aria-label={setting.name}>
-              {setting.options!.map((option) => {
-                const active = value?.toString() === option.value.toString();
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => handleSettingChange(key, typeof setting.defaultValue === 'number' ? Number(option.value) : option.value)}
-                    className={SEGMENT}
-                    style={active ? { background: CHIP_ON, color: '#fff' } : { background: 'transparent', color: '#0f1d4d' }}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
+            // Spojený přepínač jako v Početníčku: vybraná pilulka (v barvě hry) plynule odjede na novou volbu.
+            <SlidingSegmented
+              label={setting.name}
+              value={value?.toString() ?? ''}
+              onChange={(v) => handleSettingChange(key, typeof setting.defaultValue === 'number' ? Number(v) : v)}
+              options={setting.options!.map((o) => ({ value: o.value.toString(), label: o.label }))}
+              trackStyle={{ background: '#e3e8f6' }}
+              pillColor={CHIP_ON}
+              textOn="#fff"
+              textOff="#0f1d4d"
+              className="!p-1.5"
+              buttonClassName={SEGMENT}
+            />
           );
         }
         return (

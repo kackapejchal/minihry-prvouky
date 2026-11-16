@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { SlidingSegmented } from './SlidingSegmented';
 import { Volume2 } from 'lucide-react';
 import { canSpeak, speakCzech, stopSpeaking } from './data/speech';
 import {
@@ -79,26 +80,17 @@ function SpaceButton({ pressed, onClick, children }: { pressed?: boolean; onClic
 /** Volba „jedna z několika“: jedna tmavá kapsle, vybraná část je bílá (jako zapnuté tlačítko). */
 function SpaceSegmented<T extends string>({ label, value, onChange, options }: { label: string; value: T; onChange: (value: T) => void; options: Array<{ value: T; label: string }> }) {
   return (
-    <div className="flex items-center gap-2" role="radiogroup" aria-label={label}>
-      <div className="flex rounded-full p-1" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.14)' }}>
-        {options.map((option) => {
-          const active = option.value === value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => onChange(option.value)}
-              className="rounded-full px-3 2xl:px-4 py-1.5 text-sm 2xl:text-base font-bold whitespace-nowrap transition-colors"
-              style={active ? { background: '#fff', color: '#0f1d4d' } : { background: 'transparent', color: '#e7ecff' }}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <SlidingSegmented
+      label={label}
+      value={value}
+      onChange={onChange}
+      options={options}
+      trackStyle={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.14)' }}
+      pillColor="#fff"
+      textOn="#0f1d4d"
+      textOff="#e7ecff"
+      buttonClassName="px-3 2xl:px-4 py-1.5 text-sm 2xl:text-base"
+    />
   );
 }
 
