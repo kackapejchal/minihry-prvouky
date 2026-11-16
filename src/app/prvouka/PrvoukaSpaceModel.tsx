@@ -19,10 +19,8 @@ import {
 } from './space-engine';
 import { SolarScene3D, yearsPerSecond, type DayPart, type SolarBodyId, type SolarStyle } from './solar-3d';
 import { MoonBirth } from './MoonBirth';
-import { TempStage, TEMPS, type TempBody } from './PlanetTemp';
 import { EarthBirth } from './EarthBirth';
 import { EclipseWhy } from './EclipseWhy';
-import { Kid, JumpStage, PULL, GAS, JUMP_CHOICES, jumpHeight, formatMeters, formatKg, TIMES, type JumpBody } from './PlanetJump';
 
 /**
  * Interaktivní modely 3. ročníku (Putování vesmírem, Schovaná v Mléčné dráze, Jediná obyvatelná):
@@ -278,55 +276,6 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [dayPart, setDayPart] = useState<DayPart>('den');
   // Závod planet: všechny vyrazí ze startovní čáry, panel počítá oběhy.
   const [race, setRace] = useState(false);
-  // Skákání na planetách: Země + dvě vybraná tělesa vedle sebe – skok, pád míčku a váha.
-  const [jump, setJump] = useState(false);
-  // Jaká je tu teplota: teploměr Země vedle vybraného tělesa.
-  const [temp, setTemp] = useState(false);
-  const [jumpBodies, setJumpBodies] = useState<JumpBody[]>(['mesic', 'jupiter']);
-  const [weight, setWeight] = useState(30);
-  const [jumpAction, setJumpAction] = useState<{ kind: 'skok' | 'micek'; t0: number } | null>(null);
-  // Po otevření skákání se panel posune k výběru váhy, ať je hned vidět.
-  const jumpPanelRef = useRef<HTMLDivElement | null>(null);
-  // Při přepnutí na jinou planetu se skákání přepne na ni (u Slunce a komety skákat nejde – zavře se).
-  useEffect(() => {
-    if (!jump) return;
-    if ((JUMP_CHOICES as string[]).includes(selected)) { setJumpBodies([selected as JumpBody]); setJumpAction(null); }
-    else setJump(false);
-  }, [selected]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Povrch pod nohama „vyfocený“ z 3D modelu ve zvoleném vzhledu: výřez ze středu koule.
-  const [jumpSurfaces, setJumpSurfaces] = useState<Partial<Record<JumpBody, string>>>({});
-  useEffect(() => {
-    if (!jump) return;
-    const scene = sceneRef.current;
-    if (!scene) return;
-    let cancelled = false;
-    // Snímek z 3D modelu občas vyjde prázdný (černý) – pak to po chvíli zkusí znovu,
-    // a když ani tak nevyjde, zůstane kreslený povrch (JumpStage má zálohu).
-    const grab = (id: JumpBody, tries: number) => {
-      const url = scene.thumbnail(id as SolarBodyId, 900);
-      if (!url) { if (tries > 0) window.setTimeout(() => !cancelled && grab(id, tries - 1), 400); return; }
-      const img = new Image();
-      img.onload = () => {
-        if (cancelled) return;
-        const c = document.createElement('canvas'); c.width = 900; c.height = 300;
-        const S = img.width;
-        const k = 1 / (RING_FACTOR[id as PlanetKey] ?? 1);
-        const ctx2 = c.getContext('2d')!;
-        ctx2.drawImage(img, S * (0.5 - 0.22 * k), S * (0.5 - 0.08 * k), S * 0.44 * k, S * 0.147 * k, 0, 0, 900, 300);
-        const px = ctx2.getImageData(0, 0, 900, 300).data;
-        let sum = 0; for (let i = 0; i < px.length; i += 400) sum += px[i] + px[i + 1] + px[i + 2];
-        const bright = sum / (px.length / 400) / 3;
-        if (bright < 18) { if (tries > 0) window.setTimeout(() => !cancelled && grab(id, tries - 1), 400); return; }
-        const data = c.toDataURL('image/jpeg', 0.85);
-        setJumpSurfaces((m) => ({ ...m, [id]: data }));
-      };
-      img.src = url;
-    };
-    setJumpSurfaces({});
-    for (const id of ['zeme', ...jumpBodies] as JumpBody[]) grab(id, 5);
-    return () => { cancelled = true; };
-  }, [jump, jumpBodies, style]);
-  useEffect(() => { if (jump) window.setTimeout(() => jumpPanelRef.current?.scrollIntoView({ block: 'start' }), 80); }, [jump]);
   // Porovnej se Zemí: velký pohled planeta vedle Země ve skutečném poměru.
   const [compare, setCompare] = useState(false);
   // Porovnání ukazuje planety velké – malé obrázky z panelu by byly rozpixlované, tak se vykreslí ostřejší.
@@ -411,8 +360,6 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
     sceneRef.current?.select(id);
   };
   const overview = () => {
-    setJump(false);
-    setTemp(false);
     setDayNight(false);
     setCompare(false);
     setFocused(false);
@@ -526,53 +473,6 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             thumbs={compareThumbs}
             onClose={() => setCompare(false)}
           />
-        ) : null}
-        {temp && (selected as string) in TEMPS ? (
-          <div className="absolute inset-0 z-30 text-white" style={{ background: 'radial-gradient(circle at 50% 30%, #16205a 0%, #060a1c 80%)' }}>
-            {COMPARE_STARS.map((st, i) => <span key={i} className="absolute rounded-full bg-white pointer-events-none" style={{ left: `${st.x}%`, top: `${st.y}%`, width: st.s, height: st.s, opacity: st.o }} />)}
-            <TempStage body={selected as TempBody} names={Object.fromEntries((['zeme', 'mesic', ...SPACE_PLANETS.map((p) => p.id)] as SolarBodyId[]).map((id) => [id, bodyName(id)]))} thumbs={thumbs} />
-            <div className="absolute left-4 top-3 z-10">
-              <button type="button" onClick={() => setTemp(false)} className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors">
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-                Zpět
-              </button>
-            </div>
-            <p className="absolute left-0 right-0 bottom-6 px-8 text-center text-base md:text-xl font-bold leading-snug" style={{ textShadow: '0 2px 10px rgba(0,0,0,.8)' }}>{TEMPS[selected as TempBody].text}</p>
-          </div>
-        ) : null}
-        {jump ? (
-          <div className="absolute inset-0 z-30 text-white" style={{ background: 'radial-gradient(circle at 50% 30%, #16205a 0%, #060a1c 80%)' }}>
-            <JumpStage
-              bodies={['zeme', ...jumpBodies]}
-              names={Object.fromEntries((['zeme', ...JUMP_CHOICES] as SolarBodyId[]).map((id) => [id, bodyName(id)]))}
-              thumbs={thumbs}
-              action={jumpAction}
-              weight={weight}
-              surfaces={jumpSurfaces}
-              onDone={() => setJumpAction(null)}
-            />
-            <div className="absolute left-4 top-3 z-10">
-              <button type="button" onClick={() => { setJump(false); setJumpAction(null); }} className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors">
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-                Zpět
-              </button>
-            </div>
-            {/* Tlačítka dole přímo na povrchu, bez lišty. */}
-            <div className="absolute left-3 right-3 bottom-4 z-10 flex justify-center gap-3">
-              {([['skok', 'Skoč!'], ['micek', 'Pusť míček']] as const).map(([k, label]) => (
-                <button
-                  key={k}
-                  type="button"
-                  disabled={Boolean(jumpAction)}
-                  onClick={() => setJumpAction({ kind: k, t0: performance.now() })}
-                  className="h-11 px-6 rounded-full text-base font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-                  style={{ background: '#f0a12c', color: '#2a1700', boxShadow: '0 3px 0 #b8741a' }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
         ) : null}
         {/* Ovládací lišta: přehrávání, dvě volby „jedna ze dvou“ a vypínač popisků – každý druh vypadá jinak. */}
         <div
@@ -760,7 +660,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => { setJump(false); setCompare(true); }}
+                onClick={() => setCompare(true)}
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: `linear-gradient(90deg, ${PLANET_CARD[planet.id]} 0%, #2f6fd1 100%)` }}
               >
@@ -773,35 +673,6 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                   <span className="block text-xs opacity-90">Postav ji vedle Země →</span>
                 </span>
               </button>
-              <button
-                type="button"
-                onClick={() => { setCompare(false); setTemp(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #2a3fd6 0%, #5b72f0 55%, #b9c6ff 100%)' }}
-              >
-                <span className="absolute right-5 top-1"><Kid x={0} y={0} size={40} inline /></span>
-                <span className="absolute left-3 bottom-2.5">
-                  <span className="block text-xl font-bold leading-tight">Skoč si tady</span>
-                  <span className="block text-xs opacity-90">Jak vysoko a kolik vážíš? →</span>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setJump(false); setCompare(false); setTemp(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #c73a24 0%, #e8692f 55%, #f0a12c 100%)' }}
-              >
-                {/* malý teploměr */}
-                <svg viewBox="0 0 24 60" className="absolute right-6 top-3 h-16" aria-hidden="true">
-                  <rect x="8" y="2" width="8" height="42" rx="4" fill="rgba(255,255,255,.25)" stroke="#fff" strokeWidth="2" />
-                  <rect x="10" y="18" width="4" height="28" rx="2" fill="#ffde00" />
-                  <circle cx="12" cy="50" r="8" fill="#ffde00" stroke="#fff" strokeWidth="2" />
-                </svg>
-                <span className="absolute left-3 bottom-2.5">
-                  <span className="block text-xl font-bold leading-tight">Jaká je tu teplota?</span>
-                  <span className="block text-xs opacity-90">Teploměr vedle Země →</span>
-                </span>
-              </button>
               </div>
             </div>
           ) : null}
@@ -811,7 +682,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => { setJump(false); setCompare(true); }}
+                onClick={() => setCompare(true)}
                 className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
                 style={{ background: 'linear-gradient(90deg, #7d7b75 0%, #2f6fd1 100%)' }}
               >
@@ -824,69 +695,9 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                   <span className="block text-xs opacity-90">Kolik Měsíců se vejde přes Zemi? →</span>
                 </span>
               </button>
-              <button
-                type="button"
-                onClick={() => { setCompare(false); setTemp(false); setJumpBodies([selected as JumpBody]); setJumpAction(null); setJump(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #2a3fd6 0%, #5b72f0 55%, #b9c6ff 100%)' }}
-              >
-                <span className="absolute right-5 top-1"><Kid x={0} y={0} size={40} inline /></span>
-                <span className="absolute left-3 bottom-2.5">
-                  <span className="block text-xl font-bold leading-tight">Skoč si tady</span>
-                  <span className="block text-xs opacity-90">Jak vysoko a kolik vážíš? →</span>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setJump(false); setCompare(false); setTemp(true); }}
-                className="relative w-full overflow-hidden rounded-2xl h-24 p-3 text-left text-white hover:-translate-y-0.5 transition-transform"
-                style={{ background: 'linear-gradient(90deg, #c73a24 0%, #e8692f 55%, #f0a12c 100%)' }}
-              >
-                {/* malý teploměr */}
-                <svg viewBox="0 0 24 60" className="absolute right-6 top-3 h-16" aria-hidden="true">
-                  <rect x="8" y="2" width="8" height="42" rx="4" fill="rgba(255,255,255,.25)" stroke="#fff" strokeWidth="2" />
-                  <rect x="10" y="18" width="4" height="28" rx="2" fill="#ffde00" />
-                  <circle cx="12" cy="50" r="8" fill="#ffde00" stroke="#fff" strokeWidth="2" />
-                </svg>
-                <span className="absolute left-3 bottom-2.5">
-                  <span className="block text-xl font-bold leading-tight">Jaká je tu teplota?</span>
-                  <span className="block text-xs opacity-90">Teploměr vedle Země →</span>
-                </span>
-              </button>
               </div>
             </div>
           ) : null}
-          {jump ? (() => {
-            const there = jumpBodies[0];
-            // Dvě dlaždice vedle sebe (Země / tahle planeta) ve stylu dlaždic Typ / Oběh / Velikost.
-            return (
-              <>
-                <div ref={jumpPanelRef} className="scroll-mt-4 rounded-2xl bg-[#f4f6fb] p-4 flex flex-col gap-3">
-                  <label htmlFor="moje-vaha" className="text-base font-bold text-[#0f1d4d]">Kolik vážíš na Zemi?</label>
-                  {/* Vlastní váha: napsat číslo, nebo upravit tlačítky − / +. */}
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setWeight((v) => Math.max(5, v - 1))} aria-label="O kilo méně" className="w-11 h-11 rounded-full bg-white text-2xl font-bold text-[#0f1d4d] shadow-[0_2px_0_#d5dbea] active:translate-y-[1px]">−</button>
-                    <div className="flex-1 flex items-baseline justify-center gap-1.5 h-14 rounded-2xl bg-white border-2 border-[#e2e7f3] focus-within:border-[#f0a12c]">
-                      <input
-                        id="moje-vaha"
-                        type="number"
-                        inputMode="numeric"
-                        min={5}
-                        max={150}
-                        value={weight}
-                        onChange={(e) => { const n = Math.round(Number(e.target.value)); if (Number.isFinite(n)) setWeight(Math.max(0, Math.min(150, n))); }}
-                        onBlur={() => setWeight((v) => Math.max(5, v))}
-                        className="w-20 bg-transparent text-center text-3xl font-bold tabular-nums text-[#0f1d4d] outline-none self-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                      />
-                      <span className="text-lg font-bold text-[#56628a] self-center">kg</span>
-                    </div>
-                    <button type="button" onClick={() => setWeight((v) => Math.min(150, v + 1))} aria-label="O kilo víc" className="w-11 h-11 rounded-full bg-white text-2xl font-bold text-[#0f1d4d] shadow-[0_2px_0_#d5dbea] active:translate-y-[1px]">+</button>
-                  </div>
-                  <p className="text-sm leading-snug text-[#4e5871]">{PULL[there] < 0.95 ? `${bodyName(there as SolarBodyId)} tě přitahuje méně než Země: vyskočíš výš a váha by ukázala méně.` : PULL[there] > 1.05 ? `${bodyName(there as SolarBodyId)} tě přitahuje víc než Země: vyskočíš níž a váha by ukázala víc.` : `${bodyName(there as SolarBodyId)} tě přitahuje skoro stejně jako Země.`} Ty se přitom nezměníš.{GAS.includes(there) ? ' Pevný povrch ale nemá – jako bychom stáli na mracích.' : ''}</p>
-                </div>
-              </>
-            );
-          })() : null}
           {selected === 'zeme' ? (
             <div className={dayNight ? 'rounded-2xl p-4 bg-[#eef1f8]' : 'pt-1'}>
               {dayNight ? (
