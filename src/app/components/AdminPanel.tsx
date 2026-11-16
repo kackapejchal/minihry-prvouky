@@ -385,8 +385,8 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
             onClick={() => setSelectedCategory(null)}
             className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
               selectedCategory === null
-                ? 'bg-[#4a43e8] text-white shadow-[0_4px_12px_rgba(74,67,232,0.3)]'
-                : 'bg-[#eef1f8] text-[#4e5871] hover:bg-[#e2e7f3]'
+                ? 'bg-[#0f1d4d] text-white'
+                : 'bg-[#e3e8f6] text-[#0f1d4d] hover:bg-[#d6ddf0]'
             }`}
           >
             Všechny hry
@@ -397,8 +397,8 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
               onClick={() => setSelectedCategory(category)}
               className={`px-6 py-3 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
                 selectedCategory === category
-                  ? 'bg-[#4a43e8] text-white shadow-[0_4px_12px_rgba(74,67,232,0.3)]'
-                  : 'bg-[#eef1f8] text-[#4e5871] hover:bg-[#e2e7f3]'
+                  ? 'bg-[#0f1d4d] text-white'
+                  : 'bg-[#e3e8f6] text-[#0f1d4d] hover:bg-[#d6ddf0]'
               }`}
             >
               {category}
@@ -471,7 +471,7 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
                       <div className="absolute -bottom-4 left-4 right-4">
                         <button
                           onClick={() => handlePlayGame(game.id as GameType)}
-                          className="w-1/2 bg-[#4a43e8] hover:bg-[#3d36d6] text-white px-4 py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                          className="w-1/2 vb-btn vb-btn-primary vb-btn-lg"
                         >
                           <Play className="w-4 h-4" />
                           {game.isModel ? 'Otevřít model' : 'Hraj'}

@@ -19,7 +19,7 @@ import { ShareConfigQr, ShareQrOverlay } from './ShareConfigQr';
 /** Barvy a tvary převzaté z menu Početníčku (1. stupeň). */
 const ACCENT = '#5d6fc8';
 /** Zapnuté volby (zaškrtávátka, vypínače) – stejná fialová jako přepínače; zelená patří jen tlačítku Hrát. */
-const CHIP_ON = ACCENT;
+const CHIP_ON = '#0f1d4d';
 const SEGMENT = 'h-10 px-5 rounded-full text-[15px] font-bold whitespace-nowrap transition-all';
 
 /**
@@ -353,8 +353,8 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
         // Málo možností (ročník, počet úloh, vzhled…) = pilulky jako v Početníčku, víc možností = rozbalovací seznam.
         if ((setting.options?.length ?? 0) > 0 && (setting.options?.length ?? 0) <= 6) {
           return (
-            // Spojený přepínač: jedna šedá kapsle, vybraná možnost je v ní plná fialová „pilulka“.
-            <div className="inline-flex max-w-full rounded-full p-1.5" style={{ background: '#eef1f8' }} role="radiogroup" aria-label={setting.name}>
+            // Spojený přepínač: jedna šedá kapsle, vybraná možnost je v ní tmavá „pilulka“ (jako zapnuté tlačítko ve hrách).
+            <div className="inline-flex max-w-full rounded-full p-1.5" style={{ background: '#e3e8f6' }} role="radiogroup" aria-label={setting.name}>
               {setting.options!.map((option) => {
                 const active = value?.toString() === option.value.toString();
                 return (
@@ -365,7 +365,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
                     aria-checked={active}
                     onClick={() => handleSettingChange(key, typeof setting.defaultValue === 'number' ? Number(option.value) : option.value)}
                     className={SEGMENT}
-                    style={active ? { background: ACCENT, color: '#fff', boxShadow: '0 2px 6px rgba(93,111,200,.35)' } : { background: 'transparent', color: '#4e5871' }}
+                    style={active ? { background: '#0f1d4d', color: '#fff' } : { background: 'transparent', color: '#0f1d4d' }}
                   >
                     {option.label}
                   </button>
@@ -536,7 +536,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           <Button
             onClick={handlePlayGame}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xl py-8 rounded-3xl shadow-xl border-4 border-white/30 hover:scale-105 transition-all duration-200"
+            className="flex-1 vb-btn vb-btn-primary !h-16 !text-xl !rounded-full !bg-[#f0a12c] hover:!bg-[#f5ad3e] !text-[#2a1700] !shadow-none"
             size="lg"
           >
             <Play className="w-6 h-6 mr-3" />
@@ -547,7 +547,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
             onClick={() => setIsQrOpen(true)}
             disabled={!generatedUrl}
             variant="outline"
-            className="sm:min-w-[13rem] bg-white text-blue-700 border-4 border-blue-200 hover:bg-blue-50 text-xl py-8 rounded-3xl shadow-xl hover:scale-105 transition-all duration-200"
+            className="sm:min-w-[13rem] vb-btn !h-16 !text-xl !rounded-full !bg-white hover:!bg-[#f4f6fc] !text-[#0f1d4d] !border-0 !shadow-none"
             size="lg"
           >
             <QrCode className="w-6 h-6 mr-3" />
@@ -568,7 +568,7 @@ export function GameConfigurator({ gameId, onBack, onPlayGame }: GameConfigurato
                 <button
                   type="button"
                   onClick={handleResetToDefaults}
-                  className="inline-flex items-center gap-2 h-9 px-4 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] text-sm font-semibold text-[#4e5871] transition-colors"
+                  className="vb-btn vb-btn-sm"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Obnovit
