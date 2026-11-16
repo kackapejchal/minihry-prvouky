@@ -22,7 +22,8 @@ export function PanelToggle({ open, onToggle, label }: { open: boolean; onToggle
     </button>
   );
 }
-/** Třídy panelu: na počítači vedle modelu, na telefonu/tabletu vyjede přes model pod tlačítkem menu. */
-export const panelClass = (open: boolean) => `rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto ${open ? 'max-lg:fixed max-lg:left-3 max-lg:right-3 max-lg:top-[5.25rem] max-lg:bottom-3 max-lg:z-[60] max-lg:overflow-y-auto max-lg:shadow-2xl' : 'max-lg:hidden'}`;
+/** Třídy panelu: na počítači vedle modelu, na telefonu/tabletu se otevře uvnitř modelu (s mezerou ke krajům) pod tlačítkem menu. */
+export const panelClass = (open: boolean) => `rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto ${open ? 'max-lg:fixed max-lg:left-6 max-lg:right-6 max-lg:top-[4.75rem] max-lg:bottom-[6.5rem] md:max-lg:left-8 md:max-lg:right-8 md:max-lg:top-[5.25rem] md:max-lg:bottom-[7rem] max-lg:z-[60] max-lg:overflow-y-auto max-lg:shadow-[0_12px_40px_rgba(0,0,0,.45)]' : 'max-lg:hidden'}`;
 /** Model na telefonu/tabletu přes celou výšku obrazovky (panel je v menu). */
-export const MODEL_H = 'h-[calc(100svh-1.5rem)] md:h-[calc(100svh-2.5rem)] lg:h-auto lg:min-h-0';
+// Pod modelem musí zůstat vidět tlačítka Všechny hry / Nastavení (lišta asi 4,5 rem).
+export const MODEL_H = 'h-[calc(100svh-6.5rem)] md:h-[calc(100svh-7.5rem)] lg:h-auto lg:min-h-0';

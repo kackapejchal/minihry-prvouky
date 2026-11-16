@@ -387,7 +387,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
           <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-[#e7ecff] text-lg">Tenhle prohlížeč neumí 3D grafiku (WebGL). Zkus jiný prohlížeč nebo novější zařízení.</p>
         ) : null}
         <div className="group absolute top-3 left-4 z-20 max-w-[min(26rem,70%)]">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 h-10">
             <span className="text-sm md:text-base font-bold text-[#e7ecff]">{noteShort}</span>
             <button
               type="button"
@@ -1059,6 +1059,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   const [seenBirth, setSeenBirth] = useState<{ moon: boolean; earth: boolean }>({ moon: false, earth: false });
   // Proč není zatmění každý měsíc: animace z boku.
   const [why, setWhy] = useState(false);
+  const [moonMenu, setMoonMenu] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   useEffect(() => { if (eclipse || birth || earthBirth || why) { setPanelOpen(false); scrollToModel(orbitRef.current?.parentElement); } }, [eclipse, birth, earthBirth, why]); // eslint-disable-line react-hooks/exhaustive-deps
   const eclipseRef = useRef<Eclipse>(null);
@@ -1147,7 +1148,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
         {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} next={seenBirth.moon ? undefined : { question: 'Chceš vidět, jak vznikl Měsíc?', label: 'Podívej se, jak vznikl Měsíc', onClick: () => { setEarthBirth(false); setSeenBirth((v) => ({ ...v, moon: true })); setBirth(true); } }} /> : null}
         {why ? <EclipseWhy onClose={() => setWhy(false)} /> : null}
         <div className="group absolute top-3 right-[4.75rem] sm:right-44 lg:right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 h-10">
             <span className="text-sm md:text-base font-bold text-[#e7ecff]">Chyť Měsíc a táhni ho</span>
             <button
               type="button"
@@ -1164,7 +1165,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           </p>
         </div>
         <div
-          className="absolute left-3 right-3 bottom-3 z-10 flex flex-wrap xl:flex-nowrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-2"
+          className="absolute left-3 right-3 bottom-3 z-10 hidden lg:flex flex-wrap xl:flex-nowrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-2"
           style={{ background: 'rgba(8,12,30,.78)', border: '1px solid rgba(255,255,255,.12)', backdropFilter: 'blur(6px)' }}
         >
           <button
@@ -1200,6 +1201,66 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           <span className="font-bold text-[#e7ecff] tabular-nums whitespace-nowrap">{today ? `Dnes (${today})` : dayFromNewLabel(day)}</span>
           <SpaceButton onClick={() => { setPlaying(false); setEclipse(null); setDay(todayMoonDay()); setToday(new Date().toLocaleDateString('cs-CZ')); }}>Dnes na obloze</SpaceButton>
           <SpaceSwitch label="Nápověda D / C" checked={hintDC} onChange={setHintDC} />
+        </div>
+        {/* Telefon a tablet: jako u Sluneční soustavy – Přehrát vlevo dole, nastavení (posuvník dnů, Dnes na obloze, nápověda) vpravo dole. */}
+        <div className="lg:hidden">
+          {moonMenu ? <button type="button" aria-label="Zavřít menu" onClick={() => setMoonMenu(false)} className="absolute inset-0 z-20 cursor-default" /> : null}
+          <button
+            type="button"
+            aria-label={playing ? 'Pozastavit' : 'Spustit'}
+            onClick={() => { setToday(null); setEclipse(null); setPlaying((v) => !v); }}
+            className="absolute left-3 bottom-4 z-10 vb-btn vb-btn-primary vb-btn-icon !w-12 !h-12"
+          >
+            {playing ? (
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="w-5 h-5 ml-0.5" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z" /></svg>
+            )}
+          </button>
+          <span className="absolute left-[4.5rem] bottom-4 z-10 h-12 flex items-center text-sm md:text-base font-bold text-[#e7ecff] tabular-nums whitespace-nowrap pointer-events-none">{today ? `Dnes (${today})` : dayFromNewLabel(day)}</span>
+          <button
+            type="button"
+            onClick={() => setMoonMenu((v) => !v)}
+            aria-label="Nastavení modelu"
+            aria-expanded={moonMenu}
+            className={`absolute bottom-4 right-3 z-30 vb-btn vb-btn-dark vb-btn-icon !w-12 !h-12${moonMenu ? ' vb-btn-on' : ''}`}
+          >
+            {moonMenu ? (
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
+            )}
+          </button>
+          {moonMenu ? (
+            <div
+              className="absolute bottom-20 right-3 z-30 w-[min(20rem,calc(100%-1.5rem))] flex flex-col items-start gap-3 rounded-2xl p-4"
+              style={{ background: 'rgba(8,12,30,.92)', border: '1px solid rgba(255,255,255,.14)', backdropFilter: 'blur(6px)' }}
+            >
+              <span className="text-xs font-bold uppercase tracking-wide text-[#9aa6d1]">Den od novu</span>
+              <div className="w-full flex">
+          <div className="relative h-8 flex items-center flex-1">
+            <div className="absolute inset-x-0 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,.18)' }} />
+            <div className="absolute left-0 h-1.5 rounded-full bg-[#f0a12c]" style={{ width: `${timelinePos(day) * 100}%` }} />
+            {MOON_PHASE_INFO.map((p, i) => (
+              <span key={p.name} className="absolute w-1.5 h-1.5 rounded-full -translate-x-1/2" style={{ left: `${((i + 0.5) / MOON_PHASE_INFO.length) * 100}%`, background: 'rgba(255,255,255,.45)' }} />
+            ))}
+            <div className="absolute w-5 h-5 rounded-full bg-white -translate-x-1/2 pointer-events-none" style={{ left: `${timelinePos(day) * 100}%`, border: '4px solid #f0a12c' }} />
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.001}
+              value={timelinePos(day)}
+              aria-label="Den od novu"
+              onChange={(e) => jump(timelineDay(Number(e.target.value)))}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+          </div>
+              </div>
+              <SpaceButton onClick={() => { setMoonMenu(false); setPlaying(false); setEclipse(null); setDay(todayMoonDay()); setToday(new Date().toLocaleDateString('cs-CZ')); }}>Dnes na obloze</SpaceButton>
+              <SpaceSwitch label="Nápověda D / C" checked={hintDC} onChange={setHintDC} />
+            </div>
+          ) : null}
         </div>
       </div>
 
