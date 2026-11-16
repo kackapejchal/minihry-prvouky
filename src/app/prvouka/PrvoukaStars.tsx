@@ -595,7 +595,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
               <button
                 type="button"
                 onClick={() => setMode(isGame ? 'vyber' : 'prohlizet')}
-                className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors"
+                className="vb-btn"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
                 {mode === 'hra' ? (isGame ? 'Jiná souhvězdí' : 'Konec hry') : 'Zpět na oblohu'}
@@ -644,7 +644,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                   {isGame ? null : <button
                     type="button"
                     onClick={() => showOnSky(r.type === 'polarka' ? 'vuz' : c!.id)}
-                    className="self-start h-11 px-5 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] font-bold text-[#4e5871] transition-colors"
+                    className="self-start vb-btn"
                   >
                     ✨ Prohlédnout na obloze
                   </button>}
@@ -691,8 +691,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                 type="button"
                 disabled={picked.length === 0}
                 onClick={startGame}
-                className="w-full h-12 rounded-full font-bold text-[#2a1700] transition disabled:opacity-40"
-                style={{ background: '#f0a12c', boxShadow: '0 3px 0 #b8741a' }}
+                className="w-full vb-btn vb-btn-primary vb-btn-lg"
               >
                 {picked.length === 0 ? 'Vyber aspoň jedno souhvězdí' : `Začít hru (${picked.length}) →`}
               </button>

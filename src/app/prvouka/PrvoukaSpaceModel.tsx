@@ -445,8 +445,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             type="button"
             onClick={() => setPlaying((v) => !v)}
             aria-label={playing ? 'Pozastavit' : 'Spustit'}
-            className="absolute left-3 bottom-3 z-10 w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-95"
-            style={{ background: '#f0a12c', color: '#2a1700' }}
+            className="absolute left-3 bottom-4 z-10 vb-btn vb-btn-primary vb-btn-icon !w-12 !h-12"
           >
             {playing ? (
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
@@ -490,8 +489,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
               type="button"
               onClick={() => setPlaying((v) => !v)}
               aria-label={playing ? 'Pozastavit' : 'Spustit'}
-              className="w-11 h-11 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
-              style={{ background: '#f0a12c', color: '#2a1700' }}
+              className="vb-btn vb-btn-primary vb-btn-icon"
             >
               {playing ? (
                 <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
@@ -539,7 +537,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             <button
               type="button"
               onClick={overview}
-              className="flex-shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors"
+              className="flex-shrink-0 vb-btn"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
               Celá soustava
@@ -550,11 +548,11 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
           </div>
           <h2 className="relative text-3xl font-bold text-center mt-2">{planet?.name ?? other?.name}</h2>
           <div className="relative flex-1 flex items-center justify-between mt-1">
-            <button type="button" onClick={() => step(-1)} aria-label="Předchozí" className="w-10 h-10 rounded-full bg-white text-[#0f1d4d] flex items-center justify-center hover:scale-105 transition-transform">
+            <button type="button" onClick={() => step(-1)} aria-label="Předchozí" className="vb-btn vb-btn-icon">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             </button>
             <BodyImage id={selected} size={128} src={thumbs[selected]} />
-            <button type="button" onClick={() => step(1)} aria-label="Další" className="w-10 h-10 rounded-full bg-white text-[#0f1d4d] flex items-center justify-center hover:scale-105 transition-transform">
+            <button type="button" onClick={() => step(1)} aria-label="Další" className="vb-btn vb-btn-icon">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           </div>
@@ -597,7 +595,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             <button
               type="button"
               onClick={() => choose(selected)}
-              className="h-11 rounded-full bg-[#eef1f8] hover:bg-[#e2e7f3] font-bold text-[#4e5871] transition-colors"
+              className="vb-btn"
             >
               {`Přiblížit ${bodyAccusative(selected)}`}
             </button>
@@ -711,7 +709,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                   <button
                     type="button"
                     onClick={() => setDayNight(false)}
-                    className="mt-3 inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#e2e7f3] transition-colors"
+                    className="mt-3 vb-btn"
                   >
                     <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
                     Zpět na oběh kolem Slunce
@@ -755,7 +753,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 <button
                   type="button"
                   onClick={() => setRace(false)}
-                  className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors"
+                  className="vb-btn"
                 >
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
                   Konec závodu
@@ -945,7 +943,7 @@ function CompareWithEarth({ other, name, ratio, text: textOverride, thumbs, onCl
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full bg-white text-[#0f1d4d] text-sm font-bold hover:bg-[#eef1f8] transition-colors"
+          className="vb-btn"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
           Zpět do modelu
@@ -1171,8 +1169,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
             type="button"
             aria-label={playing ? 'Pozastavit' : 'Spustit'}
             onClick={() => { setToday(null); setEclipse(null); setPlaying((v) => !v); }}
-            className="w-11 h-11 flex-shrink-0 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
-            style={{ background: '#f0a12c', color: '#2a1700' }}
+            className="flex-shrink-0 vb-btn vb-btn-primary vb-btn-icon"
           >
             {playing ? (
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
@@ -1212,11 +1209,11 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#9aa6d1] py-2">Takhle ho vidíme ze Země</span>
           </div>
           <div className="relative flex items-center justify-between gap-3 px-5 mt-1">
-            <button type="button" onClick={() => stepPhase(-1)} aria-label="Předchozí fáze" className="w-10 h-10 flex-shrink-0 rounded-full bg-white text-[#0f1d4d] flex items-center justify-center hover:scale-105 transition-transform">
+            <button type="button" onClick={() => stepPhase(-1)} aria-label="Předchozí fáze" className="flex-shrink-0 vb-btn vb-btn-icon">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             </button>
             <h2 className="text-3xl font-bold text-center leading-tight">{birth ? 'Jak vznikl Měsíc' : eclipseInfo ? eclipseInfo.name : phase.name}</h2>
-            <button type="button" onClick={() => stepPhase(1)} aria-label="Další fáze" className="w-10 h-10 flex-shrink-0 rounded-full bg-white text-[#0f1d4d] flex items-center justify-center hover:scale-105 transition-transform">
+            <button type="button" onClick={() => stepPhase(1)} aria-label="Další fáze" className="flex-shrink-0 vb-btn vb-btn-icon">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           </div>

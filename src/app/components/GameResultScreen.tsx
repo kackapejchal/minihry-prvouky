@@ -131,8 +131,8 @@ export function GameResultScreen({
         {showContinueButton && (
           <motion.button
             onClick={handleContinue}
-            // Stejný styl jako tlačítka Všechny hry / Nastavení dole, jen větší – je to hlavní akce obrazovky.
-            className="px-10 py-3.5 bg-white hover:bg-[#f4f5fa] rounded-full border-2 border-[#4e5871] text-[#4e5871] font-bold shadow-[0_4px_0_#4e5871] active:translate-y-[4px] active:shadow-none transition-colors"
+            // Hlavní akce obrazovky – oranžové tlačítko jako v ostatních hrách.
+            className="vb-btn vb-btn-primary vb-btn-lg !px-10"
             whileHover={{ y: -2 }}
           >
             <span className="text-xl">Pokračovat</span>
