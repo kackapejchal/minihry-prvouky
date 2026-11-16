@@ -404,7 +404,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
         </div>
         {view === 'orbit' && !panelOpen ? <p className="absolute top-3 right-[4.75rem] sm:right-44 lg:right-4 z-10 h-10 lg:h-auto flex items-center text-sm md:text-base font-bold text-[#e7ecff] tabular-nums pointer-events-none">Uběhlo {clock}</p> : null}
         {/* Telefon: menu s ovládáním v pravém horním rohu + samotné tlačítko přehrávání vlevo dole. */}
-        <div className="lg:hidden">
+        <div>
           {menuOpen ? <button type="button" aria-label="Zavřít menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 z-20 cursor-default" /> : null}
           <button
             type="button"
@@ -472,9 +472,9 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             onClose={() => setCompare(false)}
           />
         ) : null}
-        {/* Ovládací lišta: přehrávání, dvě volby „jedna ze dvou“ a vypínač popisků – každý druh vypadá jinak. */}
+        {/* Původní dlouhá lišta – od 16. 11. schovaná i na počítači, ovládání je jako na telefonu (Přehrát vlevo dole, nastavení vpravo dole). */}
         <div
-          className="absolute left-3 right-3 bottom-3 z-10 hidden lg:flex flex-wrap xl:flex-nowrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl px-3 py-2"
+          className="absolute left-3 right-3 bottom-3 z-10 hidden flex-wrap xl:flex-nowrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl px-3 py-2"
           style={{ background: 'rgba(8,12,30,.78)', border: '1px solid rgba(255,255,255,.12)', backdropFilter: 'blur(6px)' }}
         >
           {/* Na počítači je „Celá soustava“ v panelu vedle; v liště jen na úzké obrazovce, kde je panel až pod modelem. */}
@@ -1165,7 +1165,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           </p>
         </div>
         <div
-          className="absolute left-3 right-3 bottom-3 z-10 hidden lg:flex flex-wrap xl:flex-nowrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-2"
+          className="absolute left-3 right-3 bottom-3 z-10 hidden flex-wrap xl:flex-nowrap items-center gap-x-4 gap-y-2 rounded-2xl px-3 py-2"
           style={{ background: 'rgba(8,12,30,.78)', border: '1px solid rgba(255,255,255,.12)', backdropFilter: 'blur(6px)' }}
         >
           <button
@@ -1203,7 +1203,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
           <SpaceSwitch label="Nápověda D / C" checked={hintDC} onChange={setHintDC} />
         </div>
         {/* Telefon a tablet: jako u Sluneční soustavy – Přehrát vlevo dole, nastavení (posuvník dnů, Dnes na obloze, nápověda) vpravo dole. */}
-        <div className="lg:hidden">
+        <div>
           {moonMenu ? <button type="button" aria-label="Zavřít menu" onClick={() => setMoonMenu(false)} className="absolute inset-0 z-20 cursor-default" /> : null}
           <button
             type="button"
