@@ -90,6 +90,7 @@ function cardAccent(bg: string, dark = false): string {
   if (h >= 25 && h < 50) return `hsl(32 74% ${55 - k}%)`;
   if (h >= 50 && h < 75) return `hsl(42 72% ${50 - k}%)`;
   if (h >= 75 && h < 180) return `hsl(${Math.round(h)} 40% ${52 - k}%)`;
+  if (h >= 180 && h < 210) return `hsl(${Math.round(h)} 52% ${44 - k}%)`;
   if (h < 25 || h >= 330) return `hsl(${Math.round(h)} 62% ${58 - k}%)`;
   return `hsl(${Math.round(h)} 58% ${58 - k}%)`;
 }
