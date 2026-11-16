@@ -13,7 +13,7 @@ const ILLUSTRATIONS = 'https://qypiuvqglsmxdsnyazih.supabase.co/storage/v1/objec
 export type PrvoukaGameType =
   | 'prvoukaZvirata' | 'prvoukaOvoce' | 'prvoukaHodiny' | 'prvoukaRokDen' | 'prvoukaBezpecnost'
   | 'prvoukaVesmir' | 'prvoukaMesic' | 'prvoukaPodminky' | 'prvoukaSymboly' | 'prvoukaZeme'
-  | 'prvoukaModelSoustava' | 'prvoukaModelMesic' | 'prvoukaHvezdy' | 'prvoukaSouhvezdi' | 'prvoukaObleceni';
+  | 'prvoukaModelSoustava' | 'prvoukaModelMesic' | 'prvoukaHvezdy' | 'prvoukaSouhvezdi';
 
 export interface PrvoukaLandingGame {
   id: PrvoukaGameType;
@@ -38,7 +38,7 @@ export interface PrvoukaLandingGame {
   /** Ročníky, které konfigurátor nabídne (výchozí 1. a 2.). */
   grades?: PrvoukaGrade[];
   /** Interaktivní model místo kvízu (Sluneční soustava, fáze Měsíce). */
-  model?: 'soustava' | 'mesic' | 'hvezdy' | 'souhvezdi' | 'obleceni';
+  model?: 'soustava' | 'mesic' | 'hvezdy' | 'souhvezdi';
 }
 
 const TRETAK = `${import.meta.env.BASE_URL}prvouka/tretak/karty`;
@@ -156,20 +156,6 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     model: 'souhvezdi',
   },
   {
-    id: 'prvoukaObleceni',
-    dataId: 'obleceni',
-    name: 'Jaké je venku počasí?',
-    description: 'podle oblečení Sama a Hanky poznej, jaké je venku počasí.',
-    longDescription: 'Sam nebo Hanka jsou oblečení ven a děti podle oblečení poznávají, jaké je venku počasí: prší, sněží, je horko, nebo fouká. U špatné odpovědi hra vysvětlí, proč oblečení k tomu počasí nesedí (třeba v zimní bundě by v horku bylo horko).',
-    icon: '🧥',
-    bg: '#E3EEFC',
-    playBg: '#e3eefc',
-    image: `${import.meta.env.BASE_URL}prvouka/ill/obleceni/karta.jpg`,
-    iconImage: `${import.meta.env.BASE_URL}prvouka/ill/obleceni/ikona.jpg`,
-    grades: [1, 2],
-    model: 'obleceni',
-  },
-  {
     id: 'prvoukaVesmir',
     dataId: 'vesmir',
     name: 'Sluneční soustava',
@@ -243,7 +229,7 @@ export function prvoukaLandingGame(id: string): PrvoukaLandingGame | undefined {
 /** Skupiny na rozcestníku prvouky (jako „Poznávám čísla“ u matematiky). */
 export const PRVOUKA_GAME_GROUPS: Array<{ title: string; games: PrvoukaGameType[] }> = [
   { title: 'Poznávám přírodu', games: ['prvoukaZvirata', 'prvoukaOvoce'] },
-  { title: 'Orientace v čase', games: ['prvoukaObleceni', 'prvoukaHodiny', 'prvoukaRokDen'] },
+  { title: 'Orientace v čase', games: ['prvoukaHodiny', 'prvoukaRokDen'] },
   { title: 'Bezpečí a zdraví', games: ['prvoukaBezpecnost'] },
   { title: '3. ročník: Vesmír a Země', games: ['prvoukaModelSoustava', 'prvoukaModelMesic', 'prvoukaHvezdy', 'prvoukaVesmir', 'prvoukaMesic', 'prvoukaSouhvezdi', 'prvoukaPodminky'] },
   { title: '3. ročník: Naše republika', games: ['prvoukaSymboly', 'prvoukaZeme'] },
@@ -313,22 +299,6 @@ export function prvoukaGameSettings(game: PrvoukaLandingGame, backgroundSettings
           { value: 10, label: '10 úloh' },
         ],
         description: 'Každá úloha je jedno souhvězdí; když je ve vybraných obdobích souhvězdí méně, hrají se všechna',
-      },
-    };
-  }
-  if (game.model === 'obleceni') {
-    return {
-      weather: {
-        name: 'Jaké počasí',
-        type: 'multiselect' as const,
-        defaultValue: ['prsi', 'snezi', 'horko', 'fouka'],
-        options: [
-          { value: 'prsi', label: '🌧️ Prší' },
-          { value: 'snezi', label: '❄️ Sněží a mrzne' },
-          { value: 'horko', label: '☀️ Horko' },
-          { value: 'fouka', label: '🌬️ Fouká' },
-        ],
-        description: 'Každé počasí je jedna úloha (postava je oblečená a děti hádají)',
       },
     };
   }
