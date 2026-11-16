@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { PanelToggle, panelClass, MODEL_H } from './ModelPanel';
 import { GameResultScreen } from '../components/GameResultScreen';
 import { PrvoukaFeedbackOverlay } from './PrvoukaKit';
 import { rng, prefersReducedMotion } from './space-engine';
@@ -150,6 +151,9 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
   const skyPos = useRef<Record<string, Placed>>({});
   // Hra
   const [round, setRound] = useState(0);
+  const [panelOpen, setPanelOpen] = useState(false);
+  // Po výběru souhvězdí nebo období v menu se menu zavře, ať je vidět obloha.
+  useEffect(() => { setPanelOpen(false); }, [view, season]);
   // Spojovačka podle čísel: kolik hvězd z pořadí už dítě spojilo.
   const [step, setStep] = useState(0);
   const [mistakes, setMistakes] = useState(0);
@@ -584,11 +588,13 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
 
   return (
     <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
-      <div className={`relative rounded-3xl overflow-hidden bg-[#05081a] min-h-[60svh] lg:min-h-0 ${settings ? NAV_LEFT : ''}`}>
+      {/* Model oblohy: na telefonu/tabletu panel v menu vpravo nahoře. Ve hře zůstává panel pod oblohou – je v něm zadání. */}
+      <div className={`relative rounded-3xl overflow-hidden bg-[#05081a] ${isGame ? 'min-h-[60svh] lg:min-h-0' : MODEL_H} ${settings ? NAV_LEFT : ''}`}>
+        {!isGame ? <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((v) => !v)} label="Souhvězdí" /> : null}
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: 'none', cursor: mode === 'hra' && !roundDone ? 'pointer' : 'default' }} onPointerDown={onTap} onPointerMove={(e) => (isDrawing ? drawMove(e) : onMove(e))} onPointerUp={drawUp} onPointerCancel={drawUp} onPointerLeave={() => setHover(null)} aria-label="Noční obloha se souhvězdím" />
       </div>
 
-      <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto">
+      <aside className={isGame ? "rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto" : panelClass(panelOpen)}>
         <div className="relative flex-shrink-0 px-5 pt-5 pb-5 text-white" style={{ background: 'linear-gradient(180deg, #121c55 0%, #0b1236 100%)' }}>
           {/* Ve hře a ve výběru je „zpět“ nahoře, stejně jako u Závodu planet ve Sluneční soustavě. */}
           {!isGame && mode !== 'prohlizet' ? (

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { PanelToggle, panelClass, MODEL_H } from './ModelPanel';
 import { SlidingSegmented } from './SlidingSegmented';
 import { Volume2 } from 'lucide-react';
 import { canSpeak, speakCzech, stopSpeaking } from './data/speech';
@@ -274,7 +275,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
   const [race, setRace] = useState(false);
   // Porovnej se Zemí: velký pohled planeta vedle Země ve skutečném poměru.
   const [compare, setCompare] = useState(false);
-  useEffect(() => { if (compare || dayNight || race) scrollToModel(containerRef.current); }, [compare, dayNight, race]);
+  const [panelOpen, setPanelOpen] = useState(false);
+  useEffect(() => { if (compare || dayNight || race) { setPanelOpen(false); scrollToModel(containerRef.current); } }, [compare, dayNight, race]);
   // Porovnání ukazuje planety velké – malé obrázky z panelu by byly rozpixlované, tak se vykreslí ostřejší.
   const [compareThumbs, setCompareThumbs] = useState<Partial<Record<SolarBodyId, string>>>({});
   useEffect(() => {
@@ -379,7 +381,8 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
     // Na počítači přesně na výšku okna: spodní pruh (pb-20) zůstane volný pro tlačítka
     // Všechny hry / Nastavení a lišta modelu pod ně nesjede. Delší panel roluje sám.
     <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,24vw)] lg:grid-rows-[minmax(0,1fr)]`}>
-      <div ref={containerRef} className={`relative rounded-3xl overflow-hidden bg-[#04060f] min-h-[60svh] lg:min-h-0 ${settings ? NAV_LEFT : ''}`}>
+      <div ref={containerRef} className={`relative rounded-3xl overflow-hidden bg-[#04060f] ${MODEL_H} ${settings ? NAV_LEFT : ''}`}>
+        <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((v) => !v)} label="Planety" />
         {webglError ? (
           <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-[#e7ecff] text-lg">Tenhle prohlížeč neumí 3D grafiku (WebGL). Zkus jiný prohlížeč nebo novější zařízení.</p>
         ) : null}
@@ -399,7 +402,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
           {/* Najetí myší nápovědu ukáže, klepnutí (tabule, tablet) ji připne. */}
           <p className={`${noteOpen ? 'block' : 'hidden group-hover:block'} mt-2 rounded-xl px-3 py-2 text-xs md:text-sm text-[#e7ecff] leading-snug`} style={{ background: 'rgba(8,12,30,.88)', border: '1px solid rgba(255,255,255,.14)' }}>{note}</p>
         </div>
-        {view === 'orbit' ? <p className="absolute top-3 right-16 lg:right-4 z-10 h-9 lg:h-auto flex items-center text-sm md:text-base font-bold text-[#e7ecff] tabular-nums pointer-events-none">Uběhlo {clock}</p> : null}
+        {view === 'orbit' && !panelOpen ? <p className="absolute top-3 right-[4.75rem] sm:right-44 lg:right-4 z-10 h-10 lg:h-auto flex items-center text-sm md:text-base font-bold text-[#e7ecff] tabular-nums pointer-events-none">Uběhlo {clock}</p> : null}
         {/* Telefon: menu s ovládáním v pravém horním rohu + samotné tlačítko přehrávání vlevo dole. */}
         <div className="lg:hidden">
           {menuOpen ? <button type="button" aria-label="Zavřít menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 z-20 cursor-default" /> : null}
@@ -408,7 +411,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Nastavení modelu"
             aria-expanded={menuOpen}
-            className={`absolute top-3 right-3 z-30 vb-btn vb-btn-dark vb-btn-icon${menuOpen ? ' vb-btn-on' : ''}`}
+            className={`absolute bottom-4 right-3 z-30 vb-btn vb-btn-dark vb-btn-icon !w-12 !h-12${menuOpen ? ' vb-btn-on' : ''}`}
           >
             {menuOpen ? (
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -418,7 +421,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
           </button>
           {menuOpen ? (
             <div
-              className="absolute top-16 right-3 z-30 w-[min(20rem,calc(100%-1.5rem))] flex flex-col items-start gap-3 rounded-2xl p-4"
+              className="absolute bottom-20 right-3 z-30 w-[min(20rem,calc(100%-1.5rem))] flex flex-col items-start gap-3 rounded-2xl p-4"
               style={{ background: 'rgba(8,12,30,.92)', border: '1px solid rgba(255,255,255,.14)', backdropFilter: 'blur(6px)' }}
             >
               {dayNight ? (
@@ -519,7 +522,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
         </div>
       </div>
 
-      <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto" aria-live="polite">
+      <aside className={panelClass(panelOpen)} aria-live="polite">
         {focused ? (
         <>
         {/* Vesmírná hlavička: název, velká planeta, šipky na předchozí / další těleso a řada všech těles. */}
@@ -1056,7 +1059,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   const [seenBirth, setSeenBirth] = useState<{ moon: boolean; earth: boolean }>({ moon: false, earth: false });
   // Proč není zatmění každý měsíc: animace z boku.
   const [why, setWhy] = useState(false);
-  useEffect(() => { if (eclipse || birth || earthBirth || why) scrollToModel(orbitRef.current?.parentElement); }, [eclipse, birth, earthBirth, why]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [panelOpen, setPanelOpen] = useState(false);
+  useEffect(() => { if (eclipse || birth || earthBirth || why) { setPanelOpen(false); scrollToModel(orbitRef.current?.parentElement); } }, [eclipse, birth, earthBirth, why]); // eslint-disable-line react-hooks/exhaustive-deps
   const eclipseRef = useRef<Eclipse>(null);
   eclipseRef.current = eclipse;
   const dayRef = useRef(day);
@@ -1126,7 +1130,8 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
   // s Měsícem tak, jak ho vidíme ze Země, popisem, všemi fázemi a zatměním.
   return (
     <div className={`w-full min-h-[100svh] lg:h-[100svh] bg-[#eef1f8] p-3 md:p-5 ${settings ? NAV_SPACE : ''} grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,29vw)] lg:grid-rows-[minmax(0,1fr)]`}>
-      <div className={`relative rounded-3xl overflow-hidden bg-[#060a1c] min-h-[60svh] lg:min-h-0 ${settings ? NAV_LEFT : ''}`}>
+      <div className={`relative rounded-3xl overflow-hidden bg-[#060a1c] ${MODEL_H} ${settings ? NAV_LEFT : ''}`}>
+        <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((v) => !v)} label="Fáze Měsíce" />
         <canvas
           ref={orbitRef}
           className="absolute inset-0 w-full h-full"
@@ -1141,7 +1146,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
         {birth ? <MoonBirth onClose={() => setBirth(false)} next={seenBirth.earth ? undefined : { question: 'Chceš vidět, jak vznikla Země?', label: 'Podívej se, jak vznikla Země', onClick: () => { setBirth(false); setSeenBirth((v) => ({ ...v, earth: true })); setEarthBirth(true); } }} /> : null}
         {earthBirth ? <EarthBirth onClose={() => setEarthBirth(false)} next={seenBirth.moon ? undefined : { question: 'Chceš vidět, jak vznikl Měsíc?', label: 'Podívej se, jak vznikl Měsíc', onClick: () => { setEarthBirth(false); setSeenBirth((v) => ({ ...v, moon: true })); setBirth(true); } }} /> : null}
         {why ? <EclipseWhy onClose={() => setWhy(false)} /> : null}
-        <div className="group absolute top-3 right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
+        <div className="group absolute top-3 right-[4.75rem] sm:right-44 lg:right-4 z-20 max-w-[min(24rem,60%)] flex flex-col items-end">
           <div className="flex items-center gap-2">
             <span className="text-sm md:text-base font-bold text-[#e7ecff]">Chyť Měsíc a táhni ho</span>
             <button
@@ -1198,7 +1203,7 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
         </div>
       </div>
 
-      <aside className="rounded-3xl bg-white text-[#0f1d4d] flex flex-col min-w-0 overflow-hidden lg:overflow-y-auto" aria-live="polite">
+      <aside className={panelClass(panelOpen)} aria-live="polite">
         <div className="relative flex-shrink-0 h-[300px] text-white overflow-hidden bg-[#060a1c]">
           {/* Obloha začíná pod nadpisem, ať Měsíc nezakrývá název fáze. */}
           <canvas ref={skyRef} className="absolute left-0 right-0 bottom-0 w-full" style={{ top: 92, height: 'calc(100% - 92px)' }} aria-label="Jak Měsíc vidíme ze Země." />
