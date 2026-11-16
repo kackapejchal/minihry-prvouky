@@ -249,10 +249,10 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
     games: group.games
       .map((id) => prvoukaLandingGame(id))
       .filter((game): game is NonNullable<typeof game> => Boolean(game))
-      .map((game) => ({ id: game.id, name: game.name, description: game.description, bg: game.bg, image: game.image, emoji: game.icon, imagePosition: game.imagePosition, isModel: Boolean(game.model) && game.model !== 'souhvezdi' })),
+      .map((game) => ({ id: game.id, name: game.name, description: game.description, bg: game.bg, image: game.image, emoji: game.icon, imagePosition: game.imagePosition, imageFit: game.imageFit, isModel: Boolean(game.model) && game.model !== 'souhvezdi' })),
   }));
 
-  const gameGroups: Array<{ title: string; games: Array<{ id: string; name: string; description: string; bg: string; image?: string; emoji?: string; imagePosition?: string; isModel?: boolean }> }> =
+  const gameGroups: Array<{ title: string; games: Array<{ id: string; name: string; description: string; bg: string; image?: string; emoji?: string; imagePosition?: string; imageFit?: 'cover' | 'contain'; isModel?: boolean }> }> =
     isPrvouka ? prvoukaGameGroups : mathGameGroups;
 
   // Filtrování kategorií podle vybrané kategorie
@@ -447,7 +447,7 @@ export const AdminPanel = React.memo(({ onConfigureGame, subject = 'math' }: Adm
                           <LazyGameImage
                             src={game.image}
                             alt={game.name}
-                            className="w-full h-full object-cover rounded-t-3xl"
+                            className={`w-full h-full rounded-t-3xl ${game.imageFit === 'contain' ? 'object-contain pt-2' : 'object-cover'}`}
                             objectPosition={game.imagePosition}
                           />
                         </Suspense>

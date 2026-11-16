@@ -33,6 +33,8 @@ export interface PrvoukaLandingGame {
   image: string;
   /** Výřez obrázku na kartě (`object-position`), když střed usekne hlavu. */
   imagePosition?: string;
+  /** contain = celý obrázek se vejde do karty (postava se neořízne). */
+  imageFit?: 'cover' | 'contain';
   /** Čtvercová ikona do okna s nastavením – když by čtvercový výřez z karty motiv usekl. */
   iconImage?: string;
   /** Ročníky, které konfigurátor nabídne (výchozí 1. a 2.). */
@@ -66,7 +68,8 @@ export const PRVOUKA_LANDING_GAMES: PrvoukaLandingGame[] = [
     bg: '#e0f2e6',
     playBg: '#E7F9EE',
     image: `${ILLUSTRATIONS}/ovoce-zelenina-1300.png`,
-    imagePosition: 'center 15%',
+    imagePosition: 'center bottom',
+    imageFit: 'contain',
   },
   {
     id: 'prvoukaHodiny',
