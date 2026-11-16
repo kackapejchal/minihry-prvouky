@@ -38,7 +38,6 @@ export function PrvoukaSpaceModel({ model, settings }: { model: 'soustava' | 'me
 const NAV_SPACE = 'pb-20 lg:pb-5';
 const NAV_LEFT = 'lg:mb-16';
 const PANEL = 'rounded-3xl bg-white text-[#0f1d4d] p-5 flex flex-col gap-3 min-w-0';
-const SPACE_BUTTON = 'rounded-full px-4 py-2 text-sm 2xl:text-base font-bold border whitespace-nowrap transition-colors';
 const planetIcon = (id: PlanetKey) => `${import.meta.env.BASE_URL}prvouka/tretak/planety/${id}.webp`;
 
 function ReadButton({ text, iconOnly = false }: { text: string; iconOnly?: boolean }) {
@@ -51,14 +50,14 @@ function ReadButton({ text, iconOnly = false }: { text: string; iconOnly?: boole
         onClick={() => speakCzech(text)}
         aria-label="Přečíst"
         title="Přečíst"
-        className="flex-shrink-0 w-10 h-10 rounded-full border border-[#d5dbeb] bg-[#f5f7fc] hover:bg-[#eef1f8] flex items-center justify-center text-[#0f1d4d] transition-colors"
+        className="flex-shrink-0 vb-btn vb-btn-icon"
       >
         <Volume2 size={20} />
       </button>
     );
   }
   return (
-    <button type="button" onClick={() => speakCzech(text)} className="self-start inline-flex items-center gap-2 rounded-full border border-[#d5dbeb] bg-[#f5f7fc] px-4 py-2 font-bold">
+    <button type="button" onClick={() => speakCzech(text)} className="self-start vb-btn">
       <Volume2 size={18} /> Přečíst
     </button>
   );
@@ -70,15 +69,14 @@ function SpaceButton({ pressed, onClick, children }: { pressed?: boolean; onClic
       type="button"
       aria-pressed={pressed}
       onClick={onClick}
-      className={SPACE_BUTTON}
-      style={pressed ? { background: '#f0a12c', color: '#2a1700', borderColor: 'transparent' } : { background: 'rgba(255,255,255,.1)', color: '#e7ecff', borderColor: 'rgba(255,255,255,.2)' }}
+      className={`vb-btn vb-btn-dark vb-btn-sm${pressed ? ' vb-btn-on' : ''}`}
     >
       {children}
     </button>
   );
 }
 
-/** Volba „jedna z několika“: jedna tmavá kapsle, vybraná část je oranžová. */
+/** Volba „jedna z několika“: jedna tmavá kapsle, vybraná část je bílá (jako zapnuté tlačítko). */
 function SpaceSegmented<T extends string>({ label, value, onChange, options }: { label: string; value: T; onChange: (value: T) => void; options: Array<{ value: T; label: string }> }) {
   return (
     <div className="flex items-center gap-2" role="radiogroup" aria-label={label}>
@@ -93,7 +91,7 @@ function SpaceSegmented<T extends string>({ label, value, onChange, options }: {
               aria-checked={active}
               onClick={() => onChange(option.value)}
               className="rounded-full px-3 2xl:px-4 py-1.5 text-sm 2xl:text-base font-bold whitespace-nowrap transition-colors"
-              style={active ? { background: '#f0a12c', color: '#2a1700' } : { background: 'transparent', color: '#e7ecff' }}
+              style={active ? { background: '#fff', color: '#0f1d4d' } : { background: 'transparent', color: '#e7ecff' }}
             >
               {option.label}
             </button>
@@ -411,8 +409,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Nastavení modelu"
             aria-expanded={menuOpen}
-            className="absolute top-3 right-3 z-30 w-10 h-10 rounded-full flex items-center justify-center text-[#e7ecff] transition-colors"
-            style={{ background: menuOpen ? '#f0a12c' : 'rgba(8,12,30,.78)', color: menuOpen ? '#2a1700' : '#e7ecff', border: '1px solid rgba(255,255,255,.18)' }}
+            className={`absolute top-3 right-3 z-30 vb-btn vb-btn-dark vb-btn-icon${menuOpen ? ' vb-btn-on' : ''}`}
           >
             {menuOpen ? (
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -537,7 +534,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
             <button
               type="button"
               onClick={overview}
-              className="flex-shrink-0 vb-btn"
+              className="flex-shrink-0 vb-btn vb-btn-dark"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
               Celá soustava
@@ -548,11 +545,11 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
           </div>
           <h2 className="relative text-3xl font-bold text-center mt-2">{planet?.name ?? other?.name}</h2>
           <div className="relative flex-1 flex items-center justify-between mt-1">
-            <button type="button" onClick={() => step(-1)} aria-label="Předchozí" className="vb-btn vb-btn-icon">
+            <button type="button" onClick={() => step(-1)} aria-label="Předchozí" className="vb-btn vb-btn-dark vb-btn-icon">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             </button>
             <BodyImage id={selected} size={128} src={thumbs[selected]} />
-            <button type="button" onClick={() => step(1)} aria-label="Další" className="vb-btn vb-btn-icon">
+            <button type="button" onClick={() => step(1)} aria-label="Další" className="vb-btn vb-btn-dark vb-btn-icon">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           </div>
@@ -753,7 +750,7 @@ function SolarModel({ settings }: { settings?: Record<string, any> }) {
                 <button
                   type="button"
                   onClick={() => setRace(false)}
-                  className="vb-btn"
+                  className="vb-btn vb-btn-dark"
                 >
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
                   Konec závodu
@@ -943,7 +940,7 @@ function CompareWithEarth({ other, name, ratio, text: textOverride, thumbs, onCl
         <button
           type="button"
           onClick={onClose}
-          className="vb-btn"
+          className="vb-btn vb-btn-dark"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
           Zpět do modelu
@@ -1209,11 +1206,11 @@ function MoonModel({ settings }: { settings?: Record<string, any> }) {
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#9aa6d1] py-2">Takhle ho vidíme ze Země</span>
           </div>
           <div className="relative flex items-center justify-between gap-3 px-5 mt-1">
-            <button type="button" onClick={() => stepPhase(-1)} aria-label="Předchozí fáze" className="flex-shrink-0 vb-btn vb-btn-icon">
+            <button type="button" onClick={() => stepPhase(-1)} aria-label="Předchozí fáze" className="flex-shrink-0 vb-btn vb-btn-dark vb-btn-icon">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             </button>
             <h2 className="text-3xl font-bold text-center leading-tight">{birth ? 'Jak vznikl Měsíc' : eclipseInfo ? eclipseInfo.name : phase.name}</h2>
-            <button type="button" onClick={() => stepPhase(1)} aria-label="Další fáze" className="flex-shrink-0 vb-btn vb-btn-icon">
+            <button type="button" onClick={() => stepPhase(1)} aria-label="Další fáze" className="flex-shrink-0 vb-btn vb-btn-dark vb-btn-icon">
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           </div>

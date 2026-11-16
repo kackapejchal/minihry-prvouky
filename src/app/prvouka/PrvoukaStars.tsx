@@ -595,7 +595,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
               <button
                 type="button"
                 onClick={() => setMode(isGame ? 'vyber' : 'prohlizet')}
-                className="vb-btn"
+                className="vb-btn vb-btn-dark"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
                 {mode === 'hra' ? (isGame ? 'Jiná souhvězdí' : 'Konec hry') : 'Zpět na oblohu'}
@@ -668,8 +668,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                       type="button"
                       onClick={() => setPicked(ids)}
                       aria-pressed={on}
-                      className="h-9 px-3 rounded-full text-sm font-bold transition-colors"
-                      style={on ? { background: '#f0a12c', color: '#2a1700' } : { background: '#f4f6fb', color: '#0f1d4d' }}
+                      className={`vb-btn vb-btn-sm${on ? ' vb-btn-on' : ''}`}
                     >
                       {seasonOf(f).icon} {seasonOf(f).name}
                     </button>
@@ -708,8 +707,7 @@ export function PrvoukaStars({ settings, variant = 'model' }: { settings?: Recor
                       type="button"
                       onClick={() => { setSeason(f); setView('all'); }}
                       aria-pressed={season === f}
-                      className="h-9 px-3 rounded-full text-sm font-bold transition-colors"
-                      style={season === f ? { background: '#f0a12c', color: '#2a1700' } : { background: '#f4f6fb', color: '#0f1d4d' }}
+                      className={`vb-btn vb-btn-sm${season === f ? ' vb-btn-on' : ''}`}
                     >
                       {f === 'vse' ? 'Všechna' : `${seasonOf(f).icon} ${seasonOf(f).name}`}
                     </button>

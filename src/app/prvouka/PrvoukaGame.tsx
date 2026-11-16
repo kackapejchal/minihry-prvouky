@@ -142,8 +142,8 @@ export function PrvoukaGame({ prvoukaGameId, defaultBackground, defaultGrade, se
             <button
               type="button"
               onClick={() => speakCzech(spokenText(question))}
-              className="flex-shrink-0 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
-              style={{ width: isMobile ? 40 : 52 * s, height: isMobile ? 40 : 52 * s, backgroundColor: '#fff', border: `3px solid ${PRVOUKA_COLORS.CARD_BORDER}`, color: PRVOUKA_COLORS.TEXT }}
+              className="flex-shrink-0 vb-btn vb-btn-icon"
+              style={{ width: isMobile ? 40 : 52 * s, height: isMobile ? 40 : 52 * s }}
               aria-label="Přečíst nahlas"
             >
               <Volume2 size={isMobile ? 20 : 26 * s} />
